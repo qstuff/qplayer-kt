@@ -2,6 +2,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+// path to the superpowered SDK
+def superpowered_sdk_path = properties.getProperty('superpowered.dir')
 
 // defs from the root level build.gradle
 def cfg  = rootProject.ext.configuration
@@ -22,7 +27,7 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
-/*
+
         externalNativeBuild {
             System.out.println("==============")
             cmake {
@@ -36,7 +41,6 @@ android {
                 cppFlags '-fsigned-char', "-I${superpowered_sdk_path}"
             }
         }
-*/
     }
 
     buildTypes {
