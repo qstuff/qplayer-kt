@@ -3,4 +3,33 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="q_orange">#FC7614</color>
+    <color name="q_orange_80">#80FC7614</color>
+    <color name="q_orange_40">#40FC7614</color>
+
+    <color name="black">#ff000000</color>
+    <color name="white">#ffffff</color>
+
+    <color name="very_light_gray">#f3f3f3</color>
+
+    <color name="translucent_white">#ccffffff</color>
+
+    <color name="standard_text">#ff555555</color>
+    <color name="light_gray">#ff999999</color>
+    <color name="light_gray_2">#ffdddddd</color>
+
+    <color name="dark_gray">#ff303030</color>
+
+    <color name="red">#ffe60c00</color>
+    <color name="blue">#ff0083ff</color>
+    <color name="blue_90">#900083ff</color>
+
+    <color name="green">#ff00ff00</color>
+    <color name="green_90">#9000ff00</color>
+
+    <color name="light_blue">#d2e9fb</color>
+    <color name="light_blue_2">#04cbde</color>
+
+    <color name="transparent">#00000000</color>
 </resources>

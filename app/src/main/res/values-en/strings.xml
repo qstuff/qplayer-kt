@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- General -->
+    <string name="app_name">q.player</string>
+    <string name="build_type">Release</string>
+
+    <!-- Player -->
+    <string name="player_no_track_loaded">… no track loaded …</string>
+
+    <!-- Browser -->
+    <string name="Queue">queue</string>
+    <string name="Playlists">playlists</string>
+    <string name="Filebrowser">filebrowser</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_ok">Ok</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <string name="dialog_add_to_queue">Add tracks to queue</string>
+    <string name="dialog_clear_queue">Overwrite queue</string>
+    <string name="dialog_add_to_playlist">To playlist</string>
+    <string name="dialog_play">Play now</string>
+
+    <string name="add_tracks_to_queue_dialog_tag">add_tracks_to_queue_dialog_tag</string>
+    <string name="add_tracks_to_queue_dialog_title">Load these tracks into the queue ?</string>
+    <string name="add_tracks_to_queue_dialog_need_name">Please enter a name for the playlist</string>
+
+    <string name="add_m3ulist_to_queue_dialog_tag">add_m3ulist_to_queue_dialog_tag</string>
+    <string name="add_m3ulist_to_queue_dialog_title">Load this playlist into the queue?</string>
+    <string name="add_m3ulist_to_queue_empty_dialog_title">The playlist could not be loaded</string>
+    <string name="add_m3ulist_to_queue_empty_dialog_message">Could not find the tracks referenced in the playlist.\n\nPlease check your files.</string>
+
+    <string name="add_tracks_to_playlist_dialog_tag">add_tracks_to_queue_dialog_tag</string>
+    <string name="add_tracks_to_playlist_dialog_title">Save the queue as playlist</string>
+    <string name="add_tracks_to_playlist_dialog_list_title">Existing playlists</string>
+    <string name="add_tracks_to_playlist_dialog_edittext_hint">Playlist name</string>
+    <string name="add_tracks_to_playlist_dialog_subtitle">Create a new playlist or add the tracks to an existing playlist</string>
+
+    <string name="add_tracks_to_existing_playlist_dialog_tag">add_tracks_to_exiating_playlist_dialog_tag</string>
+    <string name="add_tracks_to_existing_playlist_dialog_title">Add to existing playlist</string>
+    <string name="add_tracks_to_existing_playlist_dialog_message">Append the tracks or overwrite the playlist?</string>
+    <string name="add_tracks_to_existing_playlist_dialog_append">Append</string>
+    <string name="add_tracks_to_existing_playlist_dialog_overwrite">Overwriwe</string>
+
+    <string name="storage_permission_request_message">We need the storage permission to access the sound files on your sdcard</string>
+
+    <string name="dialog_confirm_clear_queue_tag">dialog_confirm_clear_queue_tag</string>
+    <string name="dialog_confirm_clear_queue_title">Clear queue</string>
+    <string name="dialog_confirm_clear_queue_message">Really clear the queue?</string>
+
+    <string name="dialog_crashlytics_opt_in_tag">dialog_crashlytics_opt_in_tag</string>
+    <string name="dialog_crashlytics_opt_in_title">Enable crashreporting?</string>
+    <string name="dialog_crashlytics_opt_in_message">Crashreports are essential for improving the app quality. Crashreports are sent anonymized (see Privacy). You can enable crashreports in the settings and disable it again at any time.</string>
+    <string name="dialog_crashlytics_opt_in_go_to_settings">Go to settings</string>
+    <string name="dialog_crashlytics_opt_in_no_thanks">No thanks</string>
+
+    <!-- More Menu and Settings -->
+    <string name="more_menu_settings">Settings</string>
+    <string name="more_menu_imprint">Imprint</string>
+    <string name="more_menu_privacy">Privacy</string>
+    <string name="more_menu_contact">Feedback</string>
+    <string name="more_menu_licenses">Licenses</string>
+
+    <!-- Basic Playback Settings -->
+    <string name="settings_cat_player_basic_title">Playback Settings</string>
+
+    <string name="settings_track_autostart_title">Autoplay Tracks</string>
+    <string name="settings_track_autostart_summary">If enabled a track is played automatically when selelcted in queue or by skip button</string>
+
+    <string name="settings_track_next_auto_title">Continuous Play</string>
+    <string name="settings_track_next_auto_summary">Play the next track of the queue automatically</string>
+
+    <string name="settings_skip_back_behaviour_title">Skip Back Button behaviour</string>
+    <string name="settings_skip_back_behaviour_summary">If enabled the Skip-Back button brings you to the beginning of the current track and stops there in anay case. Otherwise it jumps to the previous track.</string>
+
+    <string name="settings_skip_shuffle_behaviour_title">Skip behaviour in Shuffle-Mode</string>
+    <string name="settings_skip_shuffle_behaviour_summary">if enabled Skip-Back and Skip-Forward will lead to a random track. If disabled the previous or next track from the queue is chosen.</string>
+
+    <!-- DJ Specific Settings -->
+    <string name="settings_cat_dj_specific_options_title">DJ Settings</string>
+
+    <string name="settings_dj_mastertempo_title">Mastertempo</string>
+    <string name="settings_dj_mastertempo_summary">Enable to keep pitch when changing track speed</string>
+
+    <string name="settings_dj_enable_cue">Enable Cue</string>
+    <string name="settings_dj_enable_cue_summary">Enables setting and playing from a cuepoint</string>
+
+    <string name="settings_dj_stop_playback_on_cue_title">Stop playback on Cue</string>
+    <string name="settings_dj_stop_playback_on_cue_summary">If enabled playback stops when setting a cuepoint</string>
+
+    <string name="settings_dj_enable_remain_blink_title">Timer \"remain\" blinks</string>
+    <string name="settings_dj_remain_blink_summary">If enabled the timer blinks during the last 30 seconds of a track</string>
+
+    <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
+    <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
+
+    <!-- Privacy Settings -->
+    <string name="settings_cat_privacy_title">Privacy Settings</string>
+
+    <string name="settings_privacy_crashreport_title">Crashlytics Crashreporting by Google</string>
+    <string name="settings_privacy_crashreport__summary">If enabled the app sends crashreports to Google Crashlytics.\nFor further information on what data will be collected for the crashreports, please refer to the privacy page.\nThe app needs to be restartet after changing this option to become effective.</string>
+
+    <!-- Feedback Activity -->
+    <string name="feedback_activity_explanation">To have a better understanding of your feedback it is very useful for us when we get some information about your device.\nWe can read this data and you can send them aling with your feedback message.\nBelow you can see what information it is.\nWhen you tap \"Send with device infos\" this information will automatically added to your message. If you don\'t want to send this information please tap \"Send without device infos\"</string>
+    <string name="feedback_activity_device_info_title">Your device infos:</string>
+    <string name="feedback_activity_send_button_with">Send with device infos</string>
+    <string name="feedback_activity_send_button_without">Send without device infos</string>
+
+    <!-- M3UUtils -->
+    <string name="toast_track_not_found">Could not find track from playlist: </string>
+
+</resources>

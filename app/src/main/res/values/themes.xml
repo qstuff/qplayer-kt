@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <!-- The theme in use -->
+    
+    <style name="Theme.QPlayer" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:spinnerStyle">@style/SpinnerAppTheme</item>
+        <!--   theme UI controls like checkboxes and text fields -->
+        <item name="colorAccent">@color/q_orange</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+    
+    <style name="SpinnerAppTheme" parent="android:Widget.Spinner">
+        <item name="android:background">@color/black</item>
+    </style>
+
+    <style name="SpinnerDropDownItemAppTheme" parent="android:Widget.DropDownItem.Spinner">
+        <item name="android:checkMark">@color/q_orange</item>
+    </style>
+    
+</resources>

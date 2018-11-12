@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+      
+    <style name="ListView">
+        
+    </style>
+
+	<style name="ListView.FileList">
+		<item name="android:layout_width">fill_parent</item>
+		<item name="android:layout_height">fill_parent</item>
+		<item name="android:divider">#242424</item>
+		<item name="android:dividerHeight">1dp</item>
+		<item name="android:background">@android:color/black</item>
+	</style>
+
+	<style name="TracklistItemText">
+		<item name="android:textColor">@color/very_light_gray</item>
+		<item name="android:textSize">16sp</item>
+	</style>
+
+	<style name="ListView.ChoosePlayList">
+		<item name="android:divider">#242424</item>
+		<item name="android:dividerHeight">1dp</item>
+	</style>
+
+	<style name="PlaylistItemText">
+		<item name="android:textColor">@color/very_light_gray</item>
+		<item name="android:textSize">16sp</item>
+		<item name="android:padding">10dp</item>
+	</style>
+	
+	<style name="PlayerButtonStyle">
+		<item name="android:background">@drawable/black_rounded_shape</item>
+		<item name="android:gravity">left</item>
+		<item name="android:layout_marginLeft">1dp</item>
+		<item name="android:layout_marginRight">1dp</item>
+		<item name="android:padding">5dp</item>
+		<item name="android:scaleType">fitCenter</item>
+	</style>
+	
+	<style name="PlayerTextStyle">
+		<item name="android:background">@drawable/black_rounded_shape</item>
+		<item name="android:gravity">center</item>
+		<item name="android:padding">5dp</item>
+		<item name="android:textColor">@color/white</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:maxLines">1</item>
+		<item name="android:singleLine">true</item>
+		<item name="android:textSize">@dimen/font_size_player_text</item>
+	</style>
+
+	<style name="DialogTitleStyle">
+		<item name="android:gravity">center</item>
+		<item name="android:padding">5dp</item>
+		<item name="android:textColor">@color/white</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:maxLines">1</item>
+		<item name="android:singleLine">true</item>
+		<item name="android:textSize">17sp</item>
+	</style>
+
+	<style name="DialogTextStyle">
+		<item name="android:gravity">center</item>
+		<item name="android:padding">5dp</item>
+		<item name="android:textColor">@color/white</item>
+		<item name="android:textStyle">normal</item>
+		<item name="android:maxLines">1</item>
+		<item name="android:singleLine">true</item>
+		<item name="android:textSize">16sp</item>
+	</style>
+
+	<style name="ContentTextStyle">
+		<item name="android:background">@drawable/black_rounded_shape</item>
+		<item name="android:gravity">center</item>
+		<item name="android:textColor">@color/white</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:textSize">@dimen/font_size_player_text</item>
+	</style>
+
+</resources>

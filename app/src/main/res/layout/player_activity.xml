@@ -1,8 +1,404 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PlayerActivity"/>
+    android:background="@color/white">
+
+    <!-- Player Version -->
+    <TextView
+        android:id="@+id/player_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/title_textview_height"
+        android:layout_marginTop="4dp"
+        android:paddingStart="@dimen/textview_padding_start"
+        android:layout_alignParentTop="true"
+        android:gravity="start|center_vertical"
+        style="@style/PlayerTextStyle"
+        android:textSize="@dimen/font_size_title_text"
+        android:background="@drawable/black_not_rounded_bottom_right_shape"
+        android:includeFontPadding="false"
+        tools:text="@string/app_name" />
+
+    <!-- Waveform View -->
+    <org.qstuff.qplayer.ui.player.WaveformView
+        android:id="@+id/player_waveform"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/seekbar_height"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="@dimen/jog_wheel_border"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/black_rounded_shape"
+        tools:visibility="gone"/>
+
+    <!-- Track Progress View -->
+    <SeekBar
+        android:id="@+id/player_track_progress"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/seekbar_height"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="@dimen/jog_wheel_border"
+        android:layout_marginBottom="4dp"
+        android:paddingStart="@dimen/rounded_shape_radius"
+        android:paddingEnd="@dimen/rounded_shape_radius"
+        android:minHeight="@dimen/seekbar_height"
+        android:maxHeight="@dimen/seekbar_height"
+        android:background="@color/transparent"
+        android:max="1000"
+        android:progress="0"
+        android:progressDrawable="@drawable/pitchbar_progress"
+        android:thumb="@drawable/seekbar_progress_orange"
+        android:thumbOffset="1dp"/>
+
+    <!-- Cuepoint View -->
+    <org.qstuff.qplayer.ui.player.CuepointView
+        android:id="@+id/player_cuepoint_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/seekbar_height"
+        android:layout_marginLeft="4dp"
+        android:background="@color/transparent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/mid_container"
+        android:layout_marginBottom="4dp"
+        android:visibility="invisible"
+        tools:visibility="gone"
+        tools:background="@color/green_90"/>
+
+    <!-- The Area between TopTitle and Waveform -->
+    <RelativeLayout
+        android:id="@+id/mid_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/player_title"
+        android:layout_above="@+id/player_track_progress"
+        tools:background="@color/q_orange">
+
+        <!-- Vertical Pitch Control -->
+        <FrameLayout
+            android:id="@+id/pitch_control_frame"
+            android:layout_width="@dimen/pitchbar_width"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginTop="@dimen/jog_wheel_border"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/black_rounded_shape">
+
+            <org.qstuff.qplayer.ui.player.VerticalSeekBar
+                android:id="@+id/pitch_control"
+                android:layout_width="@dimen/pitchbar_width"
+                android:layout_height="match_parent"
+                android:background="@color/transparent"
+                android:max="1000"
+                android:progress="500"
+                android:progressDrawable="@android:color/transparent"
+                android:thumb="@drawable/pitchbar_progress_white"
+                android:thumbOffset="17dp" />
+
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/pitch_control_frame"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentTop="true"
+            tools:background="@color/blue">
+
+            <!-- Button column right of pitch control -->
+            <RelativeLayout
+                android:id="@+id/buttonPanel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/jog_wheel_border"
+                android:layout_marginBottom="8dp"
+                android:layout_marginLeft="4dp"
+                android:layout_alignParentTop="true"
+                android:layout_above="@+id/track_info_container"
+                tools:background="@color/green">
+
+                <RelativeLayout
+                    android:id="@+id/pitch_control_value_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:background="@color/transparent"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignRight="@+id/player_buttons_row_two">
+
+                    <ImageButton
+                        android:id="@+id/pitch_control_decrease"
+                        android:layout_width="@dimen/pitch_finetuning_button_width"
+                        android:layout_height="@dimen/textview_height"
+                        android:padding="20dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/black_rounded_left_shape"
+                        android:src="@drawable/ic_keyboard_arrow_left_white_24px" />
+
+                    <ImageButton
+                        android:id="@+id/pitch_control_increase"
+                        android:layout_width="@dimen/pitch_finetuning_button_width"
+                        android:layout_height="@dimen/textview_height"
+                        android:padding="20dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/black_rounded_right_shape"
+                        android:src="@drawable/ic_keyboard_arrow_right_white_24px" />
+
+                    <!-- Pitch Control Value -->
+                    <TextView
+                        android:id="@+id/pitch_control_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/textview_height"
+                        android:layout_toLeftOf="@+id/pitch_control_increase"
+                        android:layout_toRightOf="@+id/pitch_control_decrease"
+                        android:gravity="center"
+                        style="@style/PlayerTextStyle"
+                        android:text="  0,0 %"
+                        android:background="@color/black"
+                        android:visibility="visible"/>
+
+                </RelativeLayout>
+
+                <!-- Pitch Range Setting -->
+                <Spinner
+                    android:id="@+id/pitch_range_setting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/textview_height"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:layout_marginBottom="4dp"
+                    android:gravity="center"
+                    android:spinnerMode="dropdown"
+                    android:background="@drawable/black_rounded_shape"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignRight="@+id/player_buttons_row_two"
+                    android:layout_below="@+id/pitch_control_value_container"/>
+
+                <!-- Player Secondary Buttons Row -->
+                <LinearLayout
+                    android:id="@+id/player_buttons_row_two"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:layout_below="@+id/pitch_range_setting"
+                    android:orientation="horizontal" >
+
+                    <ImageButton
+                        android:id="@+id/player_button_repeat"
+                        style="@style/PlayerButtonStyle"
+                        android:layout_width="@dimen/player_button_width"
+                        android:layout_height="@dimen/player_button_height"
+                        android:layout_marginRight="2dp"
+                        android:padding="@dimen/player_button_padding"
+                        android:src="@drawable/button_loop"/>
+
+                    <ImageButton
+                        android:id="@+id/player_button_shuffle"
+                        style="@style/PlayerButtonStyle"
+                        android:layout_width="@dimen/player_button_width"
+                        android:layout_height="@dimen/player_button_height"
+                        android:layout_marginLeft="2dp"
+                        android:padding="@dimen/player_button_padding"
+                        android:src="@drawable/button_shuffle"/>
+
+                </LinearLayout>
+
+                <!-- Player Main Buttons Row -->
+                <LinearLayout
+                    android:id="@+id/player_buttons_row_one"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/player_button_previous"
+                        style="@style/PlayerButtonStyle"
+                        android:layout_width="@dimen/player_button_width"
+                        android:layout_height="@dimen/player_button_height"
+                        android:layout_marginRight="2dp"
+                        android:padding="@dimen/player_button_padding"
+                        android:src="@drawable/button_previous" />
+
+                    <ImageView
+                        android:id="@+id/player_button_next"
+                        style="@style/PlayerButtonStyle"
+                        android:layout_width="@dimen/player_button_width"
+                        android:layout_height="@dimen/player_button_height"
+                        android:layout_marginLeft="2dp"
+                        android:padding="@dimen/player_button_padding"
+                        android:src="@drawable/button_next"/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/track_info_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_alignParentBottom="true">
+
+                <!-- Current Track Title -->
+                <TextView
+                    android:id="@+id/player_text_current_track"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/textview_height"
+                    android:paddingStart="@dimen/textview_padding_start"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginBottom="4dp"
+                    style="@style/PlayerTextStyle"
+                    android:textColor="@color/q_orange"
+                    android:gravity="start|center_vertical"
+                    android:text="@string/player_no_track_loaded"
+                    android:includeFontPadding="false"
+                    android:background="@drawable/black_not_rounded_top_right_shape"/>
+
+                <!-- Background -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/textview_height"
+                    android:layout_marginLeft="4dp"
+                    android:background="@drawable/black_rounded_shape">
+
+                    <!-- Total Track Time -->
+                    <TextView
+                        android:id="@+id/player_text_total_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/textview_height"
+                        android:paddingStart="@dimen/textview_padding_start"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentLeft="true"
+                        android:gravity="start|center_vertical"
+                        style="@style/PlayerTextStyle"
+                        android:includeFontPadding="false"
+                        tools:text="total: 00:00:00" />
+
+                    <!-- Dynamic Track Time (Elapsed or Remain)-->
+                    <TextView
+                        android:id="@+id/player_text_dynamic_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/textview_height"
+                        android:paddingEnd="@dimen/textview_padding_end"
+                        android:layout_alignParentRight="true"
+                        android:gravity="end|center_vertical"
+                        android:layout_centerVertical="true"
+                        android:textColor="@color/q_orange"
+                        style="@style/PlayerTextStyle"
+                        android:includeFontPadding="false"
+                        tools:text="remain: 00:00:00" />
+
+                </RelativeLayout>
+
+            </LinearLayout>
+
+            <!-- Jog Wheel Area -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="4dp"
+                android:layout_marginBottom="0dp"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@+id/buttonPanel"
+                android:layout_above="@+id/track_info_container"
+                tools:background="@color/red">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/player_button_height"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginBottom="@dimen/jog_wheel_border"
+                    android:layout_alignParentBottom="true"
+                    android:background="@drawable/black_rounded_shape"/>
+
+                <TextView
+                    android:id="@+id/pitch_reset_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/textview_height"
+                    android:paddingStart="@dimen/textview_padding_start"
+                    android:layout_marginTop="@dimen/jog_wheel_border"
+                    android:gravity="start|center_vertical"
+                    style="@style/PlayerTextStyle"
+                    android:text="reset"
+                    android:layout_alignParentLeft="true"
+                    android:includeFontPadding="false"
+                    android:background="@drawable/black_rounded_shape"/>
+
+                <!-- MasterTempo Button -->
+                <TextView
+                    android:id="@+id/mastertempo_indicator"
+                    style="@style/PlayerTextStyle"
+                    android:layout_width="@dimen/textview_height"
+                    android:layout_height="@dimen/textview_height"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_below="@+id/pitch_reset_button"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false"
+                    android:background="@drawable/black_rounded_shape"
+                    android:textColor="@color/white"
+                    android:text="M"/>
+
+                <!-- Cue Button -->
+                <TextView
+                    android:id="@+id/player_button_cue"
+                    style="@style/PlayerTextStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/player_button_height"
+                    android:paddingStart="@dimen/textview_padding_start"
+                    android:layout_marginTop="@dimen/cue_button_top_margin"
+                    android:layout_below="@+id/pitch_reset_button"
+                    android:src="@null"
+                    android:text="cue"
+                    android:gravity="start|center_vertical"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/font_size_player_text"
+                    android:includeFontPadding="false"
+                    android:background="@drawable/black_rounded_shape"/>
+
+                <!-- JogWheel -->
+                <org.qstuff.qplayer.ui.player.JogWheelBackgroundView
+                    android:id="@+id/jog_wheel_background"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentRight="true"
+                    tools:background="@color/green_90"/>
+
+                <org.qstuff.qplayer.ui.player.JogWheelFrameLayout
+                    android:id="@+id/jog_wheel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginBottom="@dimen/jog_wheel_border"
+                    android:layout_marginTop="@dimen/jog_wheel_border"
+                    android:layout_marginRight="@dimen/jog_wheel_margin_right"
+                    android:layout_marginLeft="@dimen/jog_wheel_margin_right"
+                    android:layout_alignParentRight="true"
+                    tools:background="@color/blue_90"/>
+
+                <!-- Play/Pause Button -->
+                <ImageView
+                    android:id="@+id/player_button_play"
+                    style="@style/PlayerButtonStyle"
+                    android:layout_width="@dimen/player_button_width"
+                    android:layout_height="@dimen/player_button_height"
+                    android:layout_marginBottom="@dimen/jog_wheel_border"
+                    android:padding="@dimen/player_button_padding"
+                    android:src="@drawable/button_play_selected"
+                    android:layout_alignParentBottom="true"/>
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

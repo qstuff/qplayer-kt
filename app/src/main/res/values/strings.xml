@@ -1,3 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- General -->
     <string name="app_name">qplayer</string>
+    <string name="build_type">Release</string>
+
+    <!-- Player -->
+    <string name="player_no_track_loaded">… kein track geladen …</string>
+
+    <!-- Browser -->
+    <string name="Queue">queue</string>
+    <string name="Playlists">playlists</string>
+    <string name="Filebrowser">filebrowser</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_ok">Ok</string>
+    <string name="dialog_cancel">Abbrechen</string>
+
+    <string name="dialog_add_to_queue">In die Queue laden</string>
+    <string name="dialog_clear_queue">Queue überschreiben</string>
+    <string name="dialog_add_to_playlist">In die Playlist</string>
+    <string name="dialog_play">Sofort abspiele</string>
+
+    <string name="add_tracks_to_queue_dialog_tag">add_tracks_to_queue_dialog_tag</string>
+    <string name="add_tracks_to_queue_dialog_title">Diese Tracks in die Queue laden?</string>
+    <string name="add_tracks_to_queue_dialog_need_name">Bitte einen Namen für die Playlist eingeben</string>
+
+    <string name="add_m3ulist_to_queue_dialog_tag">add_m3ulist_to_queue_dialog_tag</string>
+    <string name="add_m3ulist_to_queue_dialog_title">Diese Playlist in die Queue laden?</string>
+    <string name="add_m3ulist_to_queue_empty_dialog_title">Die Playlist konnte nicht geladen werden</string>
+    <string name="add_m3ulist_to_queue_empty_dialog_message">Die in der Playlist referenzierten Tracks wurden nicht gefunden.\n\nBitte überprüfe deine Dateien.</string>
+
+    <string name="add_tracks_to_playlist_dialog_tag">add_tracks_to_playlist_dialog_tag</string>
+    <string name="add_tracks_to_playlist_dialog_title">Queue als Playlist speichern</string>
+    <string name="add_tracks_to_playlist_dialog_list_title">Vorhandene Playlists</string>
+    <string name="add_tracks_to_playlist_dialog_edittext_hint">Name für Playlist eingeben</string>
+    <string name="add_tracks_to_playlist_dialog_subtitle">Lege eine neue Playlist an, oder füge die Tracks zu einer vorhandenen hinzu</string>
+
+    <string name="add_tracks_to_existing_playlist_dialog_tag">add_tracks_to_exiating_playlist_dialog_tag</string>
+    <string name="add_tracks_to_existing_playlist_dialog_title">In vorhandener Playlist speichern</string>
+    <string name="add_tracks_to_existing_playlist_dialog_message">Tracks ans Ende anhängen oder Playlist überschreiben?</string>
+    <string name="add_tracks_to_existing_playlist_dialog_append">Anhängen</string>
+    <string name="add_tracks_to_existing_playlist_dialog_overwrite">Überschreiben</string>
+
+    <string name="add_playlist_to_queue_dialog_tag">add_playlist_to_queue_dialog_tag</string>
+
+    <string name="storage_permission_request_message">Um Tracks von der SD Karte abspielen zu können benötigt die App Zugriffsberechtung</string>
+
+    <string name="dialog_confirm_clear_queue_tag">dialog_confirm_clear_queue_tag</string>
+    <string name="dialog_confirm_clear_queue_title">Queue löschen</string>
+    <string name="dialog_confirm_clear_queue_message">Die Queue wirklich löschen?</string>
+
+    <string name="dialog_crashlytics_opt_in_tag">dialog_crashlytics_opt_in_tag</string>
+    <string name="dialog_crashlytics_opt_in_title">Fehlerberichte aktivieren?</string>
+    <string name="dialog_crashlytics_opt_in_message">Zur ständigen Verbesserung der App sind Fehlerberichte von Abstürzen sehr hilfreich. Die Fehlerberichte werden anonymisiert verschickt (siehe Datenschutz). Du kannst die Fehlerberichte in den Einstellungen aktivieren und jederzeit wieder ausschalten.</string>
+    <string name="dialog_crashlytics_opt_in_go_to_settings">Direkt zu Einstellungen</string>
+    <string name="dialog_crashlytics_opt_in_no_thanks">Nein Danke</string>
+
+    <!-- More Menu and Settings -->
+    <string name="more_menu_settings">Einstellungen</string>
+    <string name="more_menu_imprint">Impressum</string>
+    <string name="more_menu_privacy">Datenschutzerklärung</string>
+    <string name="more_menu_contact">Feedback</string>
+    <string name="more_menu_licenses">Lizenzen</string>
+
+    <!-- Basic Playback Settings -->
+    <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
+
+    <string name="settings_track_autostart_title">Tracks sofort abspielen</string>
+    <string name="settings_track_autostart_summary">Wenn aktiviert wird ein Track nach Auswahl in der Queue oder nach Skip sofort abgespielt</string>
+
+    <string name="settings_track_next_auto_title">Continuous Play</string>
+    <string name="settings_track_next_auto_summary">Den nächsten Track in der Queue automatisch abspielen</string>
+
+    <string name="settings_skip_back_behaviour_title">Skip-Back Verhalten</string>
+    <string name="settings_skip_back_behaviour_summary">Wenn aktiviert führt Skip-Back zum Anfang des Tracks und stoppt dort auf jeden Fall. Wenn deaktiviert wird zum vorherigen Track gesprungen.</string>
+
+    <string name="settings_skip_shuffle_behaviour_title">Skip Verhalten im Shuffle-Mode</string>
+    <string name="settings_skip_shuffle_behaviour_summary">Wenn aktiviert führen Skip-Forward und Skip-Back zu einem Random Track. Wenn deaktiviert zum jeweils vorherigen oder nächsten Track in der Queue.</string>
+
+    <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
+    <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>
+
+    <!-- DJ Specific Settings -->
+    <string name="settings_cat_dj_specific_options_title">Einstellungen für DJ Features</string>
+
+    <string name="settings_dj_mastertempo_title">Mastertempo</string>
+    <string name="settings_dj_mastertempo_summary">Keine Tonhöhenverschiebung beim Tempoänderungen wenn aktiviert</string>
+
+    <string name="settings_dj_enable_cue">Cue-Punkt setzen</string>
+    <string name="settings_dj_enable_cue_summary">Aktivieren um einen Cue-Punkt setzen zu können (Tap auf CUE aktiviert, Long-Tap löscht den Cue-Punkt).</string>
+
+    <string name="settings_dj_stop_playback_on_cue_title">Wiedergabe stoppen beim Cue-Punkt setzen</string>
+    <string name="settings_dj_stop_playback_on_cue_summary">Wenn aktiviert stoppt die Wiedergabe beim Setzen eines Cue-Punktes</string>
+
+    <string name="settings_dj_enable_remain_blink_title">Zeitanzeige für \"remain\" blinkt</string>
+    <string name="settings_dj_remain_blink_summary">Wenn aktiviert blinkt die Zeitanzeige während der letzten 30 Sekunden eines Tracks</string>
+
+    <!-- Privacy Settings -->
+    <string name="settings_cat_privacy_title">Einstellungen für Datenschutz</string>
+    <string name="settings_privacy_crashreport_title">Google Crashlytics Crashreporting</string>
+    <string name="settings_privacy_crashreport__summary">Wenn aktiviert sendet die App Crashreports zu Google Crashlytics.\nWeitere Informationen darüber welche Daten für die Crashreports erhoben werden findest du in der Datenschutzerklärung.\nDie App muss neu gestartet werden wenn diese Einstellung geändert wird um wirksam zu werden.</string>
+
+    <!-- Feedback Activity -->
+    <string name="feedback_activity_explanation">Um dein Feedback besser zu verstehen ist es für uns sehr nützlich wenn wir bestimmte Informationen zu deinem Gerät erhalten.\nDiese Daten lesen wir aus und du kannst sie uns zusammen mit deinem Feedback zuschicken.\nUnten kannst du sehen um welche Informationen es sich handelt.\nWenn du auf &quot;Mit Geräteinfos Senden&quot; tappst werden die Geräteinfos automatisch in die Nachricht eingefügt.\nWenn du die Geräteinfos nicht mitschicken möchtest dann tapp auf &quot;Ohne Geräteinfos Senden&quot;.</string>
+    <string name="feedback_activity_device_info_title">Deine Geräteinformationen:</string>
+    <string name="feedback_activity_send_button_with">Mit Geräteinfos senden</string>
+    <string name="feedback_activity_send_button_without">Ohne Geräteinfos senden</string>
+
+    <!-- PlayerService -->
+    <string name="notification_channel_id" translatable="false">qplayer_notification_channel_01</string>
+    <string name="notification_channel_name" translatable="false">qplayer control channel</string>
+    <string name="notification_channel_description" translatable="false">qplayer notification controls</string>
+
+    <!-- M3UUtils -->
+    <string name="toast_track_not_found">Track aus playlist wurde nicht gefunden: </string>
+
 </resources>

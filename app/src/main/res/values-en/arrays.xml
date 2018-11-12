@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string-array name="pitch_range_values_names">
+        <item>± 8 %</item>
+        <item>± 15 %</item>
+        <item>± 50 %</item>
+        <item>± 100 %</item>
+    </string-array>
+
+    
+</resources>
