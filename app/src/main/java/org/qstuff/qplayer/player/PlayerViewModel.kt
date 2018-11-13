@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.ui.player
+package org.qstuff.qplayer.player
 
 import android.arch.lifecycle.ViewModel
 

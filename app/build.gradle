@@ -110,6 +110,9 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
 
+    // Logging
+    implementation "com.jakewharton.timber:timber:${libs.timber}"
+
     implementation "com.crashlytics.sdk.android:crashlytics:${libs.crashlytics}"
 
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

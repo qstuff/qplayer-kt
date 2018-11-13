@@ -1,0 +1,63 @@
+package org.qstuff.qplayer.datasource
+
+import android.arch.persistence.room.ColumnInfo
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.ForeignKey
+import android.arch.persistence.room.Ignore
+import android.arch.persistence.room.Index
+import android.arch.persistence.room.PrimaryKey
+
+import java.io.File
+import java.io.Serializable
+
+import android.arch.persistence.room.ForeignKey.CASCADE
+
+/**
+ * Created by Claus Chierici (github@antamauna.net) on 2/19/15
+ *
+ * Copyright (C) 2015 Claus Chierici, All rights reserved.
+ */
+//@Entity(tableName = "Tracks", foreignKeys = ForeignKey(entity = Playlist::class, parentColumns = arrayOf("name"), childColumns = arrayOf("playlist_name"), onDelete = CASCADE), indices = Index(value = "name"))
+class Track : Serializable {
+
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 0
+
+    @ColumnInfo(name = "name")
+    var name = ""
+
+    @ColumnInfo(name = "uri")
+    var uri = ""
+
+    @ColumnInfo(name = "cuePosition")
+    var cuePosition: Long = 0
+
+    @ColumnInfo(name = "autoplay")
+    var isAutoplay: Boolean = false
+
+    @ColumnInfo(name = "playlist_name")
+    var playlistName = ""
+
+
+    constructor() {}
+
+    @Ignore
+    constructor(file: File) {
+        this.uri = file.absolutePath
+        this.name = file.name
+    }
+
+    @Ignore
+    constructor(name: String, uri: String) {
+        this.uri = uri
+        this.name = name
+        isAutoplay = false
+    }
+
+    @Ignore
+    constructor(name: String, uri: String, autoplay: Boolean) {
+        this.uri = uri
+        this.name = name
+        this.isAutoplay = autoplay
+    }
+}

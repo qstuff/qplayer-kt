@@ -21,7 +21,7 @@
         tools:text="@string/app_name" />
 
     <!-- Waveform View -->
-    <org.qstuff.qplayer.ui.player.WaveformView
+    <org.qstuff.qplayer.player.WaveformView
         android:id="@+id/player_waveform"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
