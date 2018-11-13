@@ -86,7 +86,7 @@
             android:layout_alignParentBottom="true"
             android:background="@drawable/black_rounded_shape">
 
-            <org.qstuff.qplayer.ui.player.VerticalSeekBar
+            <org.qstuff.qplayer.player.VerticalSeekBar
                 android:id="@+id/pitch_control"
                 android:layout_width="@dimen/pitchbar_width"
                 android:layout_height="match_parent"
@@ -366,14 +366,14 @@
                     android:background="@drawable/black_rounded_shape"/>
 
                 <!-- JogWheel -->
-                <org.qstuff.qplayer.ui.player.JogWheelBackgroundView
+                <org.qstuff.qplayer.player.JogWheelBackgroundView
                     android:id="@+id/jog_wheel_background"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_alignParentRight="true"
                     tools:background="@color/green_90"/>
 
-                <org.qstuff.qplayer.ui.player.JogWheelFrameLayout
+                <org.qstuff.qplayer.player.JogWheelFrameLayout
                     android:id="@+id/jog_wheel"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
