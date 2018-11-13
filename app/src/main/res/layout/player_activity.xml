@@ -51,7 +51,7 @@
         android:thumbOffset="1dp"/>
 
     <!-- Cuepoint View -->
-    <org.qstuff.qplayer.ui.player.CuepointView
+    <org.qstuff.qplayer.player.CuepointView
         android:id="@+id/player_cuepoint_view"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
