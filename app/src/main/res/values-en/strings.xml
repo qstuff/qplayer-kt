@@ -2,7 +2,7 @@
 <resources>
 
     <!-- General -->
-    <string name="app_name">q.player</string>
+    <string name="app_name">qdeck</string>
     <string name="build_type">Release</string>
 
     <!-- Player -->

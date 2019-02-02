@@ -2,7 +2,7 @@
 
 <resources>
 
-    <string name="app_name" translatable="false">qplayer α</string>
+    <string name="app_name" translatable="false">qdeck α</string>
     <string name="build_type" translatable="false">Debug</string>
 
 </resources>
