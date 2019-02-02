@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player
+package org.qstuff.qplayer.player.jogwheel
 
 import android.content.Context
 import android.util.AttributeSet

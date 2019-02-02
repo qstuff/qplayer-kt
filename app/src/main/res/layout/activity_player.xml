@@ -25,7 +25,7 @@
         tools:ignore="RtlSymmetry" />
 
     <!-- Cuepoint View -->
-    <org.qstuff.qplayer.player.CuepointView
+    <org.qstuff.qplayer.player.waveform.CuepointView
         android:id="@+id/cuepointView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
@@ -58,7 +58,7 @@
         android:thumbOffset="1dp"/>
 
     <!-- Waveform View -->
-    <org.qstuff.qplayer.player.WaveformView
+    <org.qstuff.qplayer.player.waveform.WaveformView
         android:id="@+id/waveformView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
@@ -397,14 +397,14 @@
                 tools:ignore="HardcodedText,RtlSymmetry" />
 
             <!-- JogWheel -->
-            <org.qstuff.qplayer.player.JogWheelBackgroundView
+            <org.qstuff.qplayer.player.jogwheel.JogWheelBackgroundView
                 android:id="@+id/jogWheelBackgroundView"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 tools:background="@color/green_90"/>
 
-            <org.qstuff.qplayer.player.JogWheelFrameLayout
+            <org.qstuff.qplayer.player.jogwheel.JogWheelFrameLayout
                 android:id="@+id/jogWheel"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -429,5 +429,28 @@
         </RelativeLayout>
 
     </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/trackProgressBar"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/black_rounded_shape"
+        android:layout_marginBottom="@dimen/jog_wheel_border"
+        android:orientation="vertical"
+        tools:background="@color/green">
+
+        <org.qstuff.qplayer.player.contentbrowser.SlidingTabLayout
+            android:id="@+id/contentTabbar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tabbar_height"/>
+
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/contentPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:background="@color/blue"/>
+
+    </LinearLayout>
 
 </RelativeLayout>
