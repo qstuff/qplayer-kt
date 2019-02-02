@@ -1,15 +1,14 @@
 package org.qstuff.qplayer.player
 
 import android.content.Context
-import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
-import android.support.v7.widget.AppCompatSeekBar
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.widget.SeekBar
+import androidx.appcompat.widget.AppCompatSeekBar
 
 import org.qstuff.qplayer.R
 

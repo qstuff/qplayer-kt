@@ -1,16 +1,12 @@
 package org.qstuff.qplayer.datasource
 
-import android.arch.persistence.room.ColumnInfo
-import android.arch.persistence.room.Entity
-import android.arch.persistence.room.ForeignKey
-import android.arch.persistence.room.Ignore
-import android.arch.persistence.room.Index
-import android.arch.persistence.room.PrimaryKey
 
+import androidx.room.ColumnInfo
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import java.io.File
 import java.io.Serializable
 
-import android.arch.persistence.room.ForeignKey.CASCADE
 
 /**
  * Created by Claus Chierici (github@antamauna.net) on 2/19/15
