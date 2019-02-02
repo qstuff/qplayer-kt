@@ -4,7 +4,7 @@
 
     <!-- The theme in use -->
     
-    <style name="Theme.QPlayer" parent="Theme.AppCompat.NoActionBar">
+    <style name="Theme.QPlayer" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:spinnerStyle">@style/SpinnerAppTheme</item>
         <!--   theme UI controls like checkboxes and text fields -->
         <item name="colorAccent">@color/q_orange</item>

@@ -49,4 +49,5 @@
     <dimen name="tab_strip_bottom_padding">10px</dimen>
     <dimen name="tab_strip_bottom_padding_Selected">15px</dimen>
 
+    <dimen name="future_button_margin">8dp</dimen>
 </resources>

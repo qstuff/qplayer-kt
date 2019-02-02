@@ -39,5 +39,6 @@
     <dimen name="cue_button_top_margin">47dp</dimen>
     <dimen name="cue_marker_width">20dp</dimen>
     <dimen name="cue_marker_top_margin">5dp</dimen>
-    
+
+    <dimen name="future_button_margin">75dp</dimen>
 </resources>
