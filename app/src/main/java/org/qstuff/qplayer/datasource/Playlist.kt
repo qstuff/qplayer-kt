@@ -31,7 +31,6 @@ class Playlist : Serializable {
     @ColumnInfo(name = "name")
     var name = ""
 
-    constructor() {}
 
     @Ignore
     constructor(name: String) {

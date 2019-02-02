@@ -35,8 +35,6 @@ class Track : Serializable {
     var playlistName = ""
 
 
-    constructor() {}
-
     @Ignore
     constructor(file: File) {
         this.uri = file.absolutePath
