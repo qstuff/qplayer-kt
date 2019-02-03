@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.datasource
+package org.qstuff.qplayer.datasource.model
 
 
 class TrackData {

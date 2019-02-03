@@ -435,12 +435,12 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/trackProgressBar"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/black_rounded_shape"
+        android:background="@color/white"
         android:layout_marginBottom="@dimen/jog_wheel_border"
         android:orientation="vertical"
         tools:background="@color/green">
 
-        <org.qstuff.qplayer.player.contentbrowser.SlidingTabLayout
+        <org.qstuff.qplayer.contentbrowser.SlidingTabLayout
             android:id="@+id/contentTabbar"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tabbar_height"/>

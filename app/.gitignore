@@ -12,6 +12,9 @@
 bin/
 gen/
 out/
+libs/
+libs/HGDialV2-release.aar
+libs/HGDialV2-debug.aar
 
 # Gradle files
 .gradle/
@@ -34,6 +37,7 @@ captures/
 
 # IntelliJ
 *.iml
+.idea/
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/gradle.xml

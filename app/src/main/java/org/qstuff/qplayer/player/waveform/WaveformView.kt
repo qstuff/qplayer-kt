@@ -9,7 +9,7 @@ import android.view.View
 import android.view.ViewTreeObserver
 
 import org.qstuff.qplayer.R
-import org.qstuff.qplayer.datasource.TrackData
+import org.qstuff.qplayer.datasource.model.TrackData
 import timber.log.Timber
 
 

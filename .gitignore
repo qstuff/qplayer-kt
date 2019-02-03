@@ -16,6 +16,8 @@ out/
 libs/
 libs/HGDialV2-release.aar
 libs/HGDialV2-debug.aar
+HGDialV2-release/HGDialV2-release.aar
+HGDialV2-release/build.gradle
 
 # Gradle files
 .gradle/

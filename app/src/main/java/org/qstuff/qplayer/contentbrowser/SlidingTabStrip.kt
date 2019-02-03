@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.contentbrowser
+package org.qstuff.qplayer.contentbrowser
 
 import android.content.Context
 import android.graphics.Canvas
