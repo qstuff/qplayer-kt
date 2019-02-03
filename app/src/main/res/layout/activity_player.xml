@@ -79,7 +79,7 @@
         android:layout_alignBottom="@+id/midContainer"
         android:background="@drawable/black_rounded_shape">
 
-        <org.qstuff.qplayer.player.VerticalSeekBar
+        <org.qstuff.qplayer.player.pitchcontrol.PitchControlVerticalSeekBar
             android:id="@+id/pitchControl"
             android:layout_width="@dimen/pitchbar_width"
             android:layout_height="match_parent"

@@ -107,7 +107,7 @@ class WaveformView : View {
     }
 
     private fun setupDimensions() {
-        Timber.d("setupDimensions(): %d", height)
+        Timber.v("setupDimensions(): %d", height)
 
         viewHeight = height
 
@@ -117,10 +117,10 @@ class WaveformView : View {
         waveFormHeight = (viewHeight - 2 * topMargin).toInt()
         waveFormCenterY = viewHeight / 2
 
-        Timber.d("setupDimensions(): view width:           %d", width)
-        Timber.d("setupDimensions(): waveFormWidth width:  %d", waveFormWidth)
-        Timber.d("setupDimensions(): view height:          %d", viewHeight)
-        Timber.d("setupDimensions(): waveFormHeight width: %d", waveFormHeight)
+        Timber.v("setupDimensions(): view width:           %d", width)
+        Timber.v("setupDimensions(): waveFormWidth width:  %d", waveFormWidth)
+        Timber.v("setupDimensions(): view height:          %d", viewHeight)
+        Timber.v("setupDimensions(): waveFormHeight width: %d", waveFormHeight)
     }
 
     fun updateWaveform(data: TrackData?) {

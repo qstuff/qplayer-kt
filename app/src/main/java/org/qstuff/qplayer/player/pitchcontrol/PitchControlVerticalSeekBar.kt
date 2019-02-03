@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player
+package org.qstuff.qplayer.player.pitchcontrol
 
 import android.content.Context
 import android.graphics.Canvas
@@ -17,7 +17,7 @@ import org.qstuff.qplayer.R
  *
  * @author claus chierici (cc@codeyard.de)
  */
-class VerticalSeekBar : AppCompatSeekBar {
+class PitchControlVerticalSeekBar : AppCompatSeekBar {
 
     private lateinit var rect: Rect
     private lateinit var paint: Paint

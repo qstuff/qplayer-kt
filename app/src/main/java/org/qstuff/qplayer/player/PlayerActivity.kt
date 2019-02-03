@@ -1,19 +1,23 @@
 package org.qstuff.qplayer.player
 
 
+import android.content.pm.PackageManager
+import android.os.Build
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
 import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
 
 import android.os.Bundle
+import android.text.Html
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import kotlinx.android.synthetic.main.activity_player.*
+import org.qstuff.qplayer.BuildConfig
+import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.contentbrowser.ContentListFragment
-import java.util.*
 
 /**
  *
@@ -29,6 +33,7 @@ class PlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
+        setupTitle()
         setupJogWheel()
         setupContentSection()
 
@@ -50,15 +55,28 @@ class PlayerActivity : AppCompatActivity() {
     // private
     //
 
+    private fun setupTitle() {
+
+        var debugTitleSuffix =""
+        if (BuildConfig.DEBUG) {
+            try {
+                val packageInfo = packageManager.getPackageInfo(packageName, 0)
+                debugTitleSuffix = ("-α build: ${packageInfo.versionCode} API-${Build.VERSION.SDK_INT} ${(application as QDeqApplication).getDPI()})")
+            } catch(e: PackageManager.NameNotFoundException) {
+                e.printStackTrace()
+            }
+        }
+        playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>" + debugTitleSuffix)
+    }
+
     private fun setupJogWheel() {
         jogWheelContainer = com.WarwickWestonWright.HGDialV2.HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, jogWheel)
         jogWheelDial = jogWheelContainer.hgDialV2Active
         jogWheelInterface = (object: HGDialV2.IHGDial {
-            override fun onDown(p0: HGDialInfo?) {
-            }
 
-            override fun onPointerDown(p0: HGDialInfo?) {
-            }
+            override fun onDown(p0: HGDialInfo?) {}
+            override fun onPointerDown(p0: HGDialInfo?) {}
+            override fun onPointerUp(p0: HGDialInfo?) {}
 
             override fun onUp(p0: HGDialInfo?) {
                 jogWheelDial.doManualTextureDial(0.0)
@@ -67,12 +85,9 @@ class PlayerActivity : AppCompatActivity() {
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
-                val angle = (hgDialInfo.getTextureAngle() * 100).toFloat()
+                val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
 
                 // FIXME: onJogWheelMoved.onNext(angle)
-            }
-
-            override fun onPointerUp(p0: HGDialInfo?) {
             }
         })
     }
