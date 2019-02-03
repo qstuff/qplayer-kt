@@ -178,7 +178,7 @@ class QMediaPlayerService : Service() {
         Timber.d("createPlayer():")
 
         player = QDeqPlayerSuperpoweredImpl()
-        player!!.create(null, this)
+        player!!.create(this)
     }
 
     @SuppressLint("SetTextI18n")
