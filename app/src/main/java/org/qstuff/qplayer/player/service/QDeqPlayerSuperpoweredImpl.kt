@@ -2,8 +2,10 @@ package org.qstuff.qplayer.player.service
 
 import android.content.Context
 import android.media.AudioManager
+import androidx.lifecycle.MutableLiveData
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.datasource.model.TrackData
 
-import java.io.File
 import timber.log.Timber
 
 /**
@@ -22,7 +24,8 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     private var samplerate = 44100
     private var buffersize = 512
 
-    //private lateinit var playerController: PlayerController
+    private lateinit var onPlayerStatusUpdate: MutableLiveData<Track>
+    private lateinit var currentTrack: Track
 
     //
     // JNI/NDK
@@ -39,36 +42,32 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     private external fun analyzeData(path: String): ByteArray
     private external fun destroyNative()
 
-//    fun setPlayerController(@NonNull playerController: PlayerController) {
-//        this.playerController = playerController
-//    }
-
     //
     // QPlayerWrapper
     //
 
-    override fun create(ctx: Context) {
+    override fun create(context: Context) {
         Timber.d("create():")
 
         // Get the device's sample rate and buffer size to enable low-latency Android audio output, if available.
         val samplerateString: String? = null
         val buffersizeString: String? = null
 
-        val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         samplerate = Integer.parseInt(audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE))
         buffersize = Integer.parseInt(audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER))
 
         SuperpoweredNative(samplerate, buffersize)
     }
 
-    override fun loadTrackSync(file: File) {
-        loadTrack(file.absolutePath)
-        //loadedFile = file
+    override fun loadTrackSync(track: Track) {
+        loadTrack(track.uri)
+        currentTrack = track
     }
 
-    override fun loadTrackASync(file: File) {
-        loadTrack(file.absolutePath)
-        //loadedFile = file
+    override fun loadTrackASync(track: Track) {
+        loadTrack(track.uri)
+        currentTrack = track
     }
 
     override fun play() {
@@ -107,11 +106,14 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
 
     override fun getDurationMillis() = getDurationMs()
 
-    override fun getWaveformData(file: File) {
-        Timber.d("getWaveformData() %s", file.name)
+    override fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>) {
+        Timber.d("getWaveformData() %s", track.name)
 
-        val data = analyzeData(file.absolutePath)
-//        playerController!!.onWaveformUpdateSubject.onNext(TrackData(data))
+        onWaveformDataUpdate.postValue(TrackData(analyzeData(track.uri)))
+    }
+
+    override fun setTrackStatusObserver(onPlayerStatusUpdate: MutableLiveData<Track>) {
+        this.onPlayerStatusUpdate = onPlayerStatusUpdate
     }
 
     //
@@ -120,31 +122,19 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
 
     fun onPrepared() {
         Timber.d("onPrepared()")
-/*
-        if (playerController != null)
-            playerController!!.onPreparedSubject.onNext(Track(loadedFile))
-        else
-            Timber.d("onPrepared(): playerController NULL")
-*/
+        currentTrack.trackStatus = Track.TrackStatus.PREPARED
+        onPlayerStatusUpdate.postValue(currentTrack)
     }
 
     fun onCompletion() {
         Timber.d("onCompletion()")
-/*
-        if (playerController != null)
-            playerController!!.onCompletionSubject.onNext(Track(loadedFile))
-        else
-            Timber.d("onCompletion(): playerController NULL")
-*/
+        currentTrack.trackStatus = Track.TrackStatus.COMPLETED
+        onPlayerStatusUpdate.postValue(currentTrack)
     }
 
     fun onError() {
         Timber.d("onError()")
-/*
-        if (playerController != null)
-            playerController!!.onErrorSubject.onNext(Track(loadedFile))
-        else
-            Timber.d("onError(): playerController NULL")
-*/
+        currentTrack.trackStatus = Track.TrackStatus.ERROR
+        onPlayerStatusUpdate.postValue(currentTrack)
     }
 }

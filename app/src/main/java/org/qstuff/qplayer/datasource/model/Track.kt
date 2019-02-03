@@ -34,6 +34,8 @@ class Track : Serializable {
     @ColumnInfo(name = "playlist_name")
     var playlistName = ""
 
+    @Ignore
+    var trackStatus = TrackStatus.UNDEFINED
 
     @Ignore
     constructor(file: File) {
@@ -53,5 +55,12 @@ class Track : Serializable {
         this.uri = uri
         this.name = name
         this.isAutoplay = autoplay
+    }
+
+    enum class TrackStatus(value: Int) {
+        UNDEFINED(-1),
+        PREPARED(0),
+        COMPLETED(1),
+        ERROR(2)
     }
 }

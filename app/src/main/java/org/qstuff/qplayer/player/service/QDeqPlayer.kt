@@ -1,6 +1,9 @@
 package org.qstuff.qplayer.player.service
 
 import android.content.Context
+import androidx.lifecycle.MutableLiveData
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.datasource.model.TrackData
 
 import java.io.File
 
@@ -8,8 +11,8 @@ interface QDeqPlayer {
 
     fun create(qctx: Context)
 
-    fun loadTrackSync(file: File)
-    fun loadTrackASync(file: File)
+    fun loadTrackSync(track: Track)
+    fun loadTrackASync(track: Track)
 
     fun play()
     fun pause()
@@ -25,8 +28,7 @@ interface QDeqPlayer {
     fun getCurrentPositionMillis(): Double
     fun getDurationMillis(): Double
 
-    fun getWaveformData(file: File)
+    fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>)
 
-//    fun setPlayerController(playerController: PlayerController)
-
+    fun setTrackStatusObserver(onPlayerStatusUpdate: MutableLiveData<Track>)
 }

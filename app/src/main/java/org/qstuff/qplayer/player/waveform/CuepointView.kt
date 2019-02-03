@@ -98,16 +98,16 @@ class CuepointView : View {
     }
 
     private fun setupDimensions() {
-        Timber.d("setupDimensions(): %d", height)
+        Timber.v("setupDimensions(): %d", height)
 
         viewHeight = height
         waveFormWidth = (width - 2 * sideMargin).toInt()
 
-        Timber.d("setupDimensions(): waveFormWidth: %d", waveFormWidth)
+        Timber.v("setupDimensions(): waveFormWidth: %d", waveFormWidth)
 
         stretchFactor = waveFormWidth.toFloat() / 1000
 
-        Timber.d("setupDimensions(): stretchFactor: %f", stretchFactor)
+        Timber.v("setupDimensions(): stretchFactor: %f", stretchFactor)
     }
 
     override fun onDraw(canvas: Canvas) {

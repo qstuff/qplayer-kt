@@ -25,6 +25,22 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name=".player.service.QMediaPlayerService"
+            android:exported="false"
+            android:enabled="true">
+        </service>
+
+        <receiver
+            android:name=".player.service.QMediaPlayerService$NotificationBroadcastReceiver"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="org.qstuff.qplayer.player.service.ACTION_PLAYER_TOGGLED" />
+                <action android:name="org.qstuff.qplayer.player.service.ACTION_NOTIFICATION_CLICKED" />
+                <action android:name="org.qstuff.qplayer.player.service.ACTION_NOTIFICATION_DISMISSED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

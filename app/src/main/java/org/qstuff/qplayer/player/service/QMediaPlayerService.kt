@@ -15,9 +15,12 @@ import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.player.PlayerActivity
 
 import java.io.File
@@ -45,17 +48,15 @@ class QMediaPlayerService : Service() {
         const val EXTRA_NOTIFICATION_REQUESTCODE = "EXTRA_NOTIFICATION_REQUESTCODE"
     }
 
-    private var player: QDeqPlayer? = null
+    lateinit var player: QDeqPlayer
     private val binder = MyBinder()
     private var notificationManager: NotificationManager? = null
-    private var currentFile: File? = null
 
-    //
-    // Public Player Controls
-    //
+    private lateinit var currentTrack: Track
+
 
     val isPrepared: Boolean
-        get() = currentFile != null
+        get() = currentTrack.trackStatus == Track.TrackStatus.PREPARED
 
     //
     // Service Lifecycle
@@ -74,8 +75,8 @@ class QMediaPlayerService : Service() {
         }
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        createPlayer()
-
+        player = QDeqPlayerSuperpoweredImpl()
+        player.create(this)
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -94,80 +95,72 @@ class QMediaPlayerService : Service() {
     // common public methods
     //
 
-//    fun setPlayerController(playerController: PlayerController) {
-//        player!!.setPlayerController(playerController)
-//    }
-
     fun playerServicePlay() {
         Timber.d("playerServicePlay():")
 
-        player!!.play()
+        player.play()
 
-        if (currentFile != null) {
-            notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-            val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PAUSE)
-            notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
-        }
+        notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
+        val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PAUSE)
+        notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
     fun playerServicePause() {
         Timber.d("playerServicePause():")
 
-        player!!.pause()
+        player.pause()
 
-        if (currentFile != null) {
-            notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-            val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY)
-            notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
-        }
+        notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
+        val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY)
+        notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
     fun playerServiceIsPlaying(): Boolean {
         Timber.d("playerServiceIsPlaying():")
-        return player!!.isPlaying()
+        return player.isPlaying()
     }
 
     fun playerServiceIsPaused(): Boolean {
         Timber.d("playerServiceIsPaused():")
-        return player!!.isPaused()
+        return player.isPaused()
     }
 
     fun playerServiceSetTrackSpeed(speedFactor: Float, mastertempo: Boolean) {
         Timber.v("playerServiceSetTrackSpeed():")
-        player!!.setSpeed(speedFactor, mastertempo)
+        player.setSpeed(speedFactor, mastertempo)
     }
 
     fun playerServiceSeekTo(position: Double, andStop: Boolean) {
-        player!!.seekTo(position, andStop)
+        player.seekTo(position, andStop)
     }
 
     fun playerServiceGetCurrentPositionMillis(): Double {
         Timber.v("playerServiceGetCurrentPositionMillis():")
-        return player!!.getCurrentPositionMillis()
+        return player.getCurrentPositionMillis()
     }
 
     fun playerServiceGetDurationMillis(): Double {
         Timber.v("playerServiceGetDurationMillis():")
-        return player!!.getDurationMillis()
+        return player.getDurationMillis()
     }
 
-    fun playerServiceLoadTrackSync(file: File) {
+    fun playerServiceLoadTrackSync(track: Track) {
         Timber.d("playerServiceLoadTrackSync():")
 
-        currentFile = file
-        player!!.loadTrackSync(file)
+        currentTrack = track
+        player.loadTrackSync(track)
     }
 
-    fun playerServiceLoadTrackASync(file: File) {
+    fun playerServiceLoadTrackASync(track: Track) {
         Timber.d("playerServiceLoadTrackASync():")
 
-        currentFile = file
-        player!!.loadTrackASync(file)
+        currentTrack = track
+        player.loadTrackASync(track)
     }
 
-    fun getWaveformData(file: File) {
+    fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>) {
         Timber.d("getWaveformData():")
-        player!!.getWaveformData(file)
+        player.getWaveformData(track, onWaveformDataUpdate)
     }
 
     //
@@ -177,18 +170,14 @@ class QMediaPlayerService : Service() {
     private fun createPlayer() {
         Timber.d("createPlayer():")
 
-        player = QDeqPlayerSuperpoweredImpl()
-        player!!.create(this)
+
     }
 
     @SuppressLint("SetTextI18n")
     private fun destroyPlayer() {
         Timber.d("destroyPlayer():")
 
-        if (player != null) {
-            player!!.destroy()
-            player = null
-        }
+        player.destroy()
         notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
     }
 
@@ -267,8 +256,7 @@ class QMediaPlayerService : Service() {
             remoteViews.setImageViewResource(R.id.notificationButtonPlayPause, R.drawable.button_pause)
         }
 
-        remoteViews.setTextViewText(R.id.notificationTitle,
-                if (currentFile != null) currentFile!!.name else "current track")
+        remoteViews.setTextViewText(R.id.notificationTitle, currentTrack.name)
 
         val builder = NotificationCompat.Builder(
                 this)
@@ -283,7 +271,7 @@ class QMediaPlayerService : Service() {
         return builder.build()
     }
 
-    private class NotificationBroadcastReceiver : BroadcastReceiver() {
+    class NotificationBroadcastReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent?) {
             if (intent != null) {
@@ -311,6 +299,5 @@ class QMediaPlayerService : Service() {
                 }
             }
         }
-
     }
 }
