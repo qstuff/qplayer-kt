@@ -7,6 +7,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.core.content.ContextCompat
 
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.TrackData
@@ -68,27 +69,27 @@ class WaveformView : View {
     private fun init() {
 
         background = Paint(Paint.ANTI_ALIAS_FLAG)
-        background!!.color = resources.getColor(R.color.black)
+        background!!.color = ContextCompat.getColor(context, R.color.black)
 
         segment = Paint(Paint.ANTI_ALIAS_FLAG)
-        segment!!.color = resources.getColor(R.color.white)
+        segment!!.color = ContextCompat.getColor(context, R.color.white)
 
         waveFormUpper = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormUpper!!.color = resources.getColor(R.color.white)
+        waveFormUpper!!.color = ContextCompat.getColor(context, R.color.white)
         waveFormLower = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormLower!!.color = resources.getColor(R.color.white)
+        waveFormLower!!.color = ContextCompat.getColor(context, R.color.white)
 
         waveFormUpperDefault = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormUpperDefault!!.color = resources.getColor(R.color.black)
+        waveFormUpperDefault!!.color = ContextCompat.getColor(context, R.color.black)
         waveFormLowerDefault = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormLowerDefault!!.color = resources.getColor(R.color.black)
+        waveFormLowerDefault!!.color = ContextCompat.getColor(context, R.color.black)
 
         centerLine = Paint(Paint.ANTI_ALIAS_FLAG)
-        centerLine!!.color = resources.getColor(R.color.q_orange)
+        centerLine!!.color = ContextCompat.getColor(context, R.color.q_orange)
         centerLine!!.strokeWidth = 1f
 
         zeroDBLine = Paint(Paint.ANTI_ALIAS_FLAG)
-        zeroDBLine!!.color = resources.getColor(R.color.white)
+        zeroDBLine!!.color = ContextCompat.getColor(context, R.color.white)
         zeroDBLine!!.strokeWidth = 1f
 
         sideMargin = resources.getDimension(R.dimen.rounded_shape_radius)
@@ -126,22 +127,22 @@ class WaveformView : View {
     fun updateWaveform(data: TrackData?) {
         Timber.d("updateWaveform():")
 
-        if (data == null || data!!.bytes == null) {
+        if (data == null) {
             this.data = null
             stretchFactor = 1.0f
             invalidate()
             return
         }
 
-        Timber.v("updateWaveform(): num samples:  %d", data!!.bytes.size)
+        Timber.v("updateWaveform(): num samples:  %d", data.bytes.size)
         Timber.v("updateWaveform(): width pixels: %d", waveFormWidth)
 
         this.data = data
 
-        if (waveFormWidth > data!!.bytes.size)
-            stretchFactor = waveFormWidth.toFloat() / data!!.bytes.size
+        if (waveFormWidth > data.bytes.size)
+            stretchFactor = waveFormWidth.toFloat() / data.bytes.size
         else
-            stretchFactor = data!!.bytes.size as Float / waveFormWidth
+            stretchFactor = data.bytes.size as Float / waveFormWidth
 
         Timber.v("updateWaveform(): stretchFactor: %f", stretchFactor)
         invalidate()

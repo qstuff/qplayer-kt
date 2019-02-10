@@ -8,6 +8,7 @@ import android.graphics.Point
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.core.content.ContextCompat
 
 import org.qstuff.qplayer.R
 
@@ -75,7 +76,7 @@ class CuepointView : View {
     private fun init() {
 
         cuepointIndicator = Paint(Paint.ANTI_ALIAS_FLAG)
-        cuepointIndicator!!.color = resources.getColor(R.color.q_orange)
+        cuepointIndicator!!.color = ContextCompat.getColor(context, R.color.q_orange)
         cuepointIndicator!!.style = Paint.Style.FILL
         cuepointIndicator!!.strokeWidth = 1f
 
