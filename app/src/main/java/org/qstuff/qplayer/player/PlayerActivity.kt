@@ -22,6 +22,7 @@ import org.qstuff.qplayer.R
 import org.qstuff.qplayer.contentbrowser.ContentListFragment
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
+import org.qstuff.qplayer.queue.QueueFragment
 
 /**
  *
@@ -151,7 +152,7 @@ class PlayerActivity : AppCompatActivity() {
         override fun getItem(position: Int): Fragment {
             when(position) {
                 0 -> {
-                    return ContentListFragment.newInstance()
+                    return QueueFragment.newInstance()
                 }
                 1 -> {
                     return FileBrowserFragment.newInstance()

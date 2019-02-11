@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_filebrowser.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.queue.QueueViewModel
 import timber.log.Timber
 import java.io.File
 
@@ -33,12 +34,15 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
         }
     }
 
+    private lateinit var queueViewModel: QueueViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
-        fileBrowserViewModel = ViewModelProviders.of(this).get(FileBrowserViewModel::class.java)
+
+        queueViewModel = ViewModelProviders.of(activity!!).get(QueueViewModel::class.java)
+        fileBrowserViewModel = ViewModelProviders.of(activity!!).get(FileBrowserViewModel::class.java)
         return inflater.inflate(R.layout.fragment_filebrowser, container, false)
     }
 

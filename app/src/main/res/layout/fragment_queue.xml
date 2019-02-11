@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+    android:background="@drawable/black_rounded_bottom_shape">
+
+    <ImageView
+        android:id="@+id/queueClearButton"
+        android:layout_width="@dimen/clearbutton_size"
+        android:layout_height="@dimen/clearbutton_size"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="5dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/ic_clear_all_white_24dp"/>
+
+    <ImageView
+        android:id="@+id/queueSaveAsPlaylistButton"
+        android:layout_width="@dimen/clearbutton_size"
+        android:layout_height="@dimen/clearbutton_size"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/queueClearButton"
+        android:src="@drawable/ic_playlist_add_white_24dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/queueRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="10dp"
+        android:layout_below="@+id/queueClearButton"
+        style="@style/ListView.FileList" />
+    
+</RelativeLayout>
+
