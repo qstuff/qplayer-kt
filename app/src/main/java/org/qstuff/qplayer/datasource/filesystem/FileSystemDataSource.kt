@@ -14,17 +14,17 @@ class FileSystemDataSource (val context: Context) : KoinComponent {
 
     companion object {
         const val PREF_LAST_BROWSED_DIR = "PREF_LAST_BROWSED_DIR"
-        const val LAST_BROWSED_DEFAULT_DIR = "/storage/"
+        const val DEFAULT_ROOT_DIR = "/storage/"
     }
 
     private val preferences: SharedPreferences = context.getSharedPreferences("QDEQ", Context.MODE_PRIVATE)
 
-    fun getRootDir() = LAST_BROWSED_DEFAULT_DIR
+    fun getRootDir() = DEFAULT_ROOT_DIR
 
     fun saveLastBrowsedDir(dir: String) =
         preferences.edit {
             putString(PREF_LAST_BROWSED_DIR, dir)
         }
 
-    fun getLastBrowsedDir() = preferences.getString(PREF_LAST_BROWSED_DIR, LAST_BROWSED_DEFAULT_DIR)
+    fun getLastBrowsedDir() = preferences.getString(PREF_LAST_BROWSED_DIR, DEFAULT_ROOT_DIR)
 }
