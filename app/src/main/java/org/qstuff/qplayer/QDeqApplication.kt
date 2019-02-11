@@ -2,7 +2,9 @@ package org.qstuff.qplayer
 
 import android.app.Application
 import android.util.DisplayMetrics
-import org.qstuff.qplayer.util.TimberCrashReportingTree
+import org.koin.android.ext.android.startKoin
+import org.koin.dsl.module.module
+import org.qstuff.qplayer.datasource.filesystem.FileSystemDataSource
 import timber.log.Timber
 
 /*
@@ -17,10 +19,28 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        startKoin(this, listOf(
+                fileSystemDataSource
+        ))
+
         if (BuildConfig.DEBUG) {
-            Timber.plant(TimberCrashReportingTree("QDEQ"))
+            Timber.plant(Timber.DebugTree())
         }
     }
+
+    //
+    // Koin Modules
+    //
+
+    private val fileSystemDataSource = module (definition = {
+        single {
+            FileSystemDataSource(applicationContext)
+        }
+    })
+
+    //
+    // Debug
+    //
 
     fun getDPI(): String {
 

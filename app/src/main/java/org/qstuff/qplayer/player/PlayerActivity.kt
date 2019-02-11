@@ -21,6 +21,7 @@ import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.contentbrowser.ContentListFragment
 import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 
 /**
  *
@@ -148,22 +149,18 @@ class PlayerActivity : AppCompatActivity() {
     private class ContentPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
         override fun getItem(position: Int): Fragment {
-            val fragment: Fragment
             when(position) {
                 0 -> {
-                    fragment = ContentListFragment.newInstance()
+                    return ContentListFragment.newInstance()
                 }
                 1 -> {
-                    fragment = ContentListFragment.newInstance()
+                    return FileBrowserFragment.newInstance()
                 }
                 2 -> {
-                    fragment = ContentListFragment.newInstance()
-                }
-                else -> {
-                    fragment = null!!
+                    return ContentListFragment.newInstance()
                 }
             }
-            return fragment
+            return null!!
         }
 
         override fun getCount() = 3
