@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.DisplayMetrics
 import org.koin.android.ext.android.startKoin
 import org.koin.dsl.module.module
-import org.qstuff.qplayer.datasource.filesystem.FileSystemDataSource
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import timber.log.Timber
 
 /*
@@ -20,7 +20,7 @@ class QDeqApplication : Application() {
         super.onCreate()
 
         startKoin(this, listOf(
-                fileSystemDataSource
+                preferencesDataSource
         ))
 
         if (BuildConfig.DEBUG) {
@@ -32,9 +32,9 @@ class QDeqApplication : Application() {
     // Koin Modules
     //
 
-    private val fileSystemDataSource = module (definition = {
+    private val preferencesDataSource = module (definition = {
         single {
-            FileSystemDataSource(applicationContext)
+            PreferencesDataSource(applicationContext)
         }
     })
 

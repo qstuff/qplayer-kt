@@ -27,7 +27,7 @@ buildscript {
             lifecycle               : "2.0.0",
             espresso                : "3.1.0",
             espressoRunner          : "1.1.0",
-            crashlytics             : "2.9.8",
+            crashlytics             : "2.9.9",
     ]
 
     repositories {

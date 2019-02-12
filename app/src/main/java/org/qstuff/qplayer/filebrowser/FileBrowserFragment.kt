@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_filebrowser.*
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.queue.QueueViewModel
+import org.qstuff.qplayer.util.isM3UList
 import timber.log.Timber
 import java.io.File
 
@@ -66,7 +67,6 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
                     adapter = FileBrowserAdapter(it, this@FileBrowserFragment)
                     layoutManager = LinearLayoutManager(context)
                 }
-                fileBrowserRecycler.adapter?.notifyDataSetChanged()
             }
         })
 
@@ -106,17 +106,25 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
             }
         }
     }
+
     //
     // FileBrowserAdapter.FileBrowserItemInteractionListener
     //
 
     override fun onFileItemClicked(file: File) {
         fileBrowserViewModel.onFileItemClicked(file)
-        // TODO: pass file to queueViewModel
+        if (file.isM3UList()) {
+            // TODO: Dialog open Playlist
+            return
+        }
+        if (file.isFile) {
+            queueViewModel.addFile(file)
+        }
     }
 
     override fun onFileItemLongClicked(file: File) {
         // TODO: if dir: open dialog, then pass list of files to queueViewModel
+
     }
 
     override fun onFilePrelistenClicked(file: File) {

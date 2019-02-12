@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.datasource.filesystem
+package org.qstuff.qplayer.datasource.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -10,7 +10,7 @@ import org.koin.standalone.KoinComponent
  * on 2/11/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class FileSystemDataSource (val context: Context) : KoinComponent {
+class PreferencesDataSource (val context: Context) : KoinComponent {
 
     companion object {
         const val PREF_LAST_BROWSED_DIR = "PREF_LAST_BROWSED_DIR"

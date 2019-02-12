@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
-import org.qstuff.qplayer.datasource.filesystem.FileSystemDataSource
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.isSupported
 import timber.log.Timber
 import java.io.File
@@ -27,12 +27,12 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
 
 
     private var currentDir: File
-    private val fileSystemDataSource by inject<FileSystemDataSource>()
+    private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
     init {
         Timber.d("init()")
-        currentDir = File(fileSystemDataSource.getLastBrowsedDir())
+        currentDir = File(preferencesDataSource.getLastBrowsedDir())
         browseTo(currentDir)
         Timber.d("init(): ${currentDir.path}")
     }
@@ -42,9 +42,9 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
 
         if (currentDir.parentFile.absolutePath == SD_CARD_HACK_PATH) {
             Timber.d("navigateUp(): SD_HACK: ${currentDir.path}")
-            currentDir = File(fileSystemDataSource.getRootDir())
+            currentDir = File(preferencesDataSource.getRootDir())
             browseTo(currentDir)
-        } else if  (currentDir.absolutePath == fileSystemDataSource.getRootDir()
+        } else if  (currentDir.absolutePath == preferencesDataSource.getRootDir()
                 || currentDir.absolutePath == "/"
                 || currentDir.parentFile.absolutePath == "/") {
             return
@@ -58,7 +58,7 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
     }
 
     fun saveLastBrowsedDir() {
-        fileSystemDataSource.saveLastBrowsedDir(currentDir.absolutePath)
+        preferencesDataSource.saveLastBrowsedDir(currentDir.absolutePath)
     }
 
     private fun browseTo(dir: File) {
@@ -113,7 +113,7 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
             if (file1.isDirectory && file2.isFile) {
                 return -1
             }
-            
+
             if (file1.isDirectory && file2.isDirectory) {
                 return String.CASE_INSENSITIVE_ORDER.compare(file1.name, file2.name)
             }

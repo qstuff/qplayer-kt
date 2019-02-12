@@ -31,8 +31,12 @@ class FileBrowserAdapter(val files: List<File>,
     override fun getItemCount() = files.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as FileBrowserItemViewHolder).bind(files.get(position), interactionListener)
+        (holder as FileBrowserItemViewHolder).bind(files[position], interactionListener)
     }
+
+    //
+    // ViewHolder
+    //
 
     class FileBrowserItemViewHolder(view: View): RecyclerView.ViewHolder(view) {
 
