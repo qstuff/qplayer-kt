@@ -32,7 +32,7 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
 
     private lateinit var queueViewModel: QueueViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
-
+    private lateinit var queueAdapter: QueueAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -49,7 +49,7 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
             Timber.d("trackList: $tracks")
             tracks?.also {
 
-                val queueAdapter = QueueAdapter(tracks, this@QueueFragment)
+                queueAdapter = QueueAdapter(tracks, this@QueueFragment)
                 queueRecycler.apply {
                     adapter = queueAdapter
                     layoutManager = LinearLayoutManager(context)
@@ -58,6 +58,10 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
                 val touchHelper = ItemTouchHelper(callback)
                 touchHelper.attachToRecyclerView(queueRecycler)
             }
+        })
+
+        queueViewModel.onTrackSelectedIndex.observe(this, Observer { index ->
+            queueAdapter.onItemSelectedIndex(index)
         })
 
         queueClearButton.setOnClickListener {

@@ -15,6 +15,7 @@ import java.io.File
 class QueueViewModel: ViewModel(), KoinComponent {
 
     var trackList: MutableLiveData<List<Track>> = MutableLiveData()
+    var onTrackSelectedIndex: MutableLiveData<Int> = MutableLiveData()
 
     private var currentTracks = arrayListOf<Track>()
 
@@ -61,5 +62,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun saveTrackList() {
         // TODO: internal for resume
+    }
+
+    fun onTrackSelectedIndex(index: Int) {
+        onTrackSelectedIndex.value = index
     }
 }

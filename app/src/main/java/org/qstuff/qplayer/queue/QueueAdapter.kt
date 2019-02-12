@@ -30,6 +30,7 @@ class QueueAdapter(val tracks: List<Track>,
 
     fun onItemSelectedIndex(index: Int) {
         selectedIndex = index
+        notifyItemChanged(index)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
