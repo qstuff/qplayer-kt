@@ -53,8 +53,8 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
         checkForStoragePermission()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
+    override fun onStop() {
+        super.onStop()
         fileBrowserViewModel.saveLastBrowsedDir()
     }
 

@@ -31,4 +31,5 @@ interface QDeqPlayer {
     fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>)
 
     fun setTrackStatusObserver(onPlayerStatusUpdate: MutableLiveData<Track>)
+    fun getStatusObserver(): MutableLiveData<Track>
 }

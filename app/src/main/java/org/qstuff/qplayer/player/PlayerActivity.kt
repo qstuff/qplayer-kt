@@ -23,6 +23,7 @@ import org.qstuff.qplayer.contentbrowser.ContentListFragment
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
+import timber.log.Timber
 
 /**
  *
@@ -41,7 +42,7 @@ class PlayerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_player)
 
         playerViewModel = ViewModelProviders.of(this).get(PlayerViewModel::class.java)
-
+        playerViewModel.startMediaService()
 
         waveformView.updateWaveform(null)
 
@@ -63,6 +64,11 @@ class PlayerActivity : AppCompatActivity() {
         jogWheelDial.unRegisterCallback()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        playerViewModel.stopMediaService()
+    }
     //
     // private
     //
@@ -70,10 +76,15 @@ class PlayerActivity : AppCompatActivity() {
     private fun setupObservers() {
 
         // TODO: Do we need this here?
-        playerViewModel.onPlayerStatusUpdate.observe(this, Observer { track ->
+        playerViewModel.onPlayerStatusMediator.observe(this, Observer { track ->
+
+            Timber.d("onPlayerStatusUpdate(): $track")
 
             track?.let {
                 when (track.trackStatus) {
+                    Track.TrackStatus.LOADING -> {
+                        trackTitle.text = track.name
+                    }
                     Track.TrackStatus.PREPARED -> {
 
                     }

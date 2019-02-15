@@ -37,6 +37,12 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
         Timber.d("init(): ${currentDir.path}")
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        Timber.d("onCleared(): ${currentDir.path}")
+        preferencesDataSource.saveLastBrowsedDir(currentDir.path)
+    }
+
     fun navigateUp() {
         Timber.d("navigateUp(): ${currentDir.path}")
 
@@ -79,6 +85,7 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
                 currentDir = nextDir
                 filterFileList(fileList.asList())
             } else {
+
                 Timber.w("browseTo(): empty: ${dir.path}")
             }
         } else if (nextDir.isFile) {

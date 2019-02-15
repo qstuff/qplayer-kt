@@ -30,13 +30,13 @@ android {
 
         externalNativeBuild {
             System.out.println("==============")
-            cmake {
 
+            cmake {
                 arguments   '-DANDROID_PLATFORM=android-19',
-                        '-DANDROID_TOOLCHAIN=clang',
-                        '-DANDROID_ARM_NEON=TRUE',
-                        '-DANDROID_STL=c++_shared',
-                        "-DPATH_TO_SUPERPOWERED:STRING=${superpowered_sdk_path}"
+                            '-DANDROID_TOOLCHAIN=clang',
+                            '-DANDROID_ARM_NEON=TRUE',
+                            '-DANDROID_STL=c++_shared',
+                            "-DPATH_TO_SUPERPOWERED:STRING=${superpowered_sdk_path}"
 
                 cFlags '-O3', '-fsigned-char' // full optimization, char data type is signed
                 cppFlags '-fsigned-char', "-I${superpowered_sdk_path}"
@@ -101,17 +101,22 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$libs.appcompat"
     implementation "androidx.constraintlayout:constraintlayout:$libs.constraintLayout"
     implementation "androidx.lifecycle:lifecycle-extensions:$libs.lifecycle"
+
     // Koin module injection
     implementation "org.koin:koin-android:$libs.koin"
     implementation "org.koin:koin-androidx-scope:$libs.koin"
+
     // Logging
     implementation "com.jakewharton.timber:timber:$libs.timber"
+
     // Crash reporting
     implementation "com.crashlytics.sdk.android:crashlytics:$libs.crashlytics"
     debugImplementation "com.amitshekhar.android:debug-db:$libs.debugDatabase"
+
     testImplementation "junit:junit:$libs.jUnit"
     androidTestImplementation "androidx.test:runner:$libs.espressoRunner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$libs.espresso"
+
     implementation project(':HGDialV2-release')
 }
 apply plugin: 'com.google.gms.google-services'

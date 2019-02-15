@@ -273,13 +273,13 @@
 
             <!-- Current Track Title -->
             <TextView
-                android:id="@+id/currentTrackTextView"
+                android:id="@+id/trackTitle"
+                style="@style/PlayerTextStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/textview_height"
                 android:paddingStart="@dimen/textview_padding_start"
                 android:layout_marginStart="4dp"
                 android:layout_marginBottom="4dp"
-                style="@style/PlayerTextStyle"
                 android:textColor="@color/q_orange"
                 android:gravity="start|center_vertical"
                 android:text="@string/player_no_track_loaded"
@@ -297,13 +297,13 @@
                 <!-- Total Track Time -->
                 <TextView
                     android:id="@+id/totalTrackLength"
+                    style="@style/PlayerTextStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="@dimen/textview_height"
                     android:paddingStart="@dimen/textview_padding_start"
                     android:layout_centerVertical="true"
                     android:layout_alignParentStart="true"
                     android:gravity="start|center_vertical"
-                    style="@style/PlayerTextStyle"
                     android:includeFontPadding="false"
                     tools:text="total: 00:00:00"
                     tools:ignore="RtlSymmetry" />
@@ -311,6 +311,7 @@
                 <!-- Dynamic Track Time (Elapsed or Remain)-->
                 <TextView
                     android:id="@+id/dynamicTrackLength"
+                    style="@style/PlayerTextStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="@dimen/textview_height"
                     android:paddingEnd="@dimen/textview_padding_end"
@@ -318,7 +319,6 @@
                     android:gravity="end|center_vertical"
                     android:layout_centerVertical="true"
                     android:textColor="@color/q_orange"
-                    style="@style/PlayerTextStyle"
                     android:includeFontPadding="false"
                     tools:text="remain: 00:00:00"
                     tools:ignore="RtlSymmetry" />

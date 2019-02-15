@@ -13,6 +13,7 @@ fun File.isM3UList() = this.name.endsWith(".m3u")
 fun File.isSupported(): Boolean {
     if (this.isDirectory) {
         return !this.name.startsWith(".")
+                && this.listFiles().isNotEmpty()
     }
     if (this.isFile) {
         return !this.name.startsWith(".")

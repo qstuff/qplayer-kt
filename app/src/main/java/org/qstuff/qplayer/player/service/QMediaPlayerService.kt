@@ -15,15 +15,15 @@ import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.player.PlayerActivity
-
-import java.io.File
 
 import timber.log.Timber
 
@@ -32,7 +32,7 @@ import timber.log.Timber
  * Copyright (C) 2017
  * All rights reserved.
  */
-class QMediaPlayerService : Service() {
+class QMediaPlayerService : LifecycleService() {
 
     companion object {
         const val MEDIA_SERVICE_NOTIFICATION_ID = 1
@@ -63,11 +63,13 @@ class QMediaPlayerService : Service() {
     //
 
     override fun onBind(intent: Intent): IBinder? {
+        super.onBind(intent)
         Timber.d("onBind")
         return binder
     }
 
     override fun onCreate() {
+        super.onCreate()
         Timber.d("onCreate()")
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -162,6 +164,8 @@ class QMediaPlayerService : Service() {
         Timber.d("getWaveformData():")
         player.getWaveformData(track, onWaveformDataUpdate)
     }
+
+    fun getStatusObserver(): MutableLiveData<Track> = player.getStatusObserver()
 
     //
     // Private

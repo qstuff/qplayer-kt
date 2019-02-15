@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.main.fragment_queue.*
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.player.PlayerViewModel
 import timber.log.Timber
 
 /*
@@ -32,12 +33,17 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
 
     private lateinit var queueViewModel: QueueViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
+    private lateinit var playerViewModel: PlayerViewModel
+
     private lateinit var queueAdapter: QueueAdapter
 
+    
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
+
         queueViewModel = ViewModelProviders.of(activity!!).get(QueueViewModel::class.java)
         fileBrowserViewModel = ViewModelProviders.of(activity!!).get(FileBrowserViewModel::class.java)
+        playerViewModel = ViewModelProviders.of(activity!!).get(PlayerViewModel::class.java)
 
         return inflater.inflate(R.layout.fragment_queue, container, false)
     }
@@ -80,7 +86,7 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
     //
 
     override fun onQueueItemClicked(track: Track) {
-        // TODO: PlayerViewModel loadTrack
+        playerViewModel.loadTrack(track)
     }
 
     override fun onQueueItemDismsissed(track: Track) {

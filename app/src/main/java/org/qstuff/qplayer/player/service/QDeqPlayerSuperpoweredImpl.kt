@@ -24,7 +24,7 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     private var samplerate = 44100
     private var buffersize = 512
 
-    private lateinit var onPlayerStatusUpdate: MutableLiveData<Track>
+    private var onPlayerStatusUpdate: MutableLiveData<Track> = MutableLiveData()
     private lateinit var currentTrack: Track
 
     //
@@ -115,6 +115,8 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     override fun setTrackStatusObserver(onPlayerStatusUpdate: MutableLiveData<Track>) {
         this.onPlayerStatusUpdate = onPlayerStatusUpdate
     }
+
+    override  fun getStatusObserver(): MutableLiveData<Track> = onPlayerStatusUpdate
 
     //
     // Callbacks from the native side

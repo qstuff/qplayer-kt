@@ -59,8 +59,11 @@ class Track : Serializable {
 
     enum class TrackStatus(value: Int) {
         UNDEFINED(-1),
-        PREPARED(0),
-        COMPLETED(1),
-        ERROR(2)
+        LOADING(1),
+        PREPARED(2),
+        COMPLETED(3),
+        ERROR(4)
     }
+
+    override fun toString() = "track: $name, status: ${trackStatus.name}"
 }
