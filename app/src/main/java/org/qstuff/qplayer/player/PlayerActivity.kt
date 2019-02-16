@@ -24,6 +24,7 @@ import org.qstuff.qplayer.contentbrowser.ContentListFragment
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
+import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
 /**
@@ -38,6 +39,7 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var playerViewModel: PlayerViewModel
 
     private lateinit var currentTrack: Track
+    private var isTrackPrepared = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,8 +91,11 @@ class PlayerActivity : AppCompatActivity() {
     private fun setupClickListener() {
 
         buttonPlayPause.setOnClickListener {
-            playerViewModel.playPause()
-            updatePlayButtonUI()
+            if (isTrackPrepared) {
+                playerViewModel.playPause()
+            } else {
+                Timber.w("buttonPlayPause(): track not prepared")
+            }
         }
 
         buttonPrevious.setOnClickListener {
@@ -137,17 +142,36 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun setupObservers() {
 
-        playerViewModel.onPlayerStatusMediator.observe(this, Observer { track ->
+        playerViewModel.playerStatus.observe(this, Observer { status ->
+            Timber.d("playerStatus(): $status")
 
-            Timber.d("onPlayerStatusUpdate(): $track")
+            when(status) {
+                PlayerStatus.PLAYING -> {
+                    updatePlayButtonUI(true)
+                    // TODO: VM -> startUpdateTimer()
+                }
+                PlayerStatus.PAUSED -> {
+                    updatePlayButtonUI(false)
+                    // TODO: VM -> stopUpdateTimer()
+                }
+                else -> {}
+            }
+
+        })
+
+        playerViewModel.trackStatusMediator.observe(this, Observer { track ->
+            Timber.d("trackStatus(): $track")
 
             track?.let {
+                isTrackPrepared = false
+
                 when (track.trackStatus) {
                     Track.TrackStatus.LOADING -> {
                         currentTrack = track
                         trackTitle.text = track.name
                     }
                     Track.TrackStatus.PREPARED -> {
+                        isTrackPrepared = true
                         // TODO: Autoplay?
                     }
                     Track.TrackStatus.COMPLETED -> {
@@ -227,10 +251,10 @@ class PlayerActivity : AppCompatActivity() {
     // UI Control
     //
 
-    private fun updatePlayButtonUI() {
-        if (playerViewModel.isTrackPlaying) {
+    private fun updatePlayButtonUI(playing: Boolean) {
+        if (playing) {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
-            // TODO: VM -> startUpdateTimer()
+
         } else {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_play_selected))
             // TODO: VM -> resetUpdateTimer()

@@ -11,14 +11,19 @@ import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.player.service.QMediaPlayerService
+import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
 class  PlayerViewModel (application: Application): AndroidViewModel(application) {
 
     // Observables
     lateinit var onWaveformDataUpdate: LiveData<TrackData>
-    val onPlayerStatusUpdate = MutableLiveData<Track>()
-    val onPlayerStatusMediator = MediatorLiveData<Track>()
+    val trackStatus = MutableLiveData<Track>()
+    val trackStatusMediator = MediatorLiveData<Track>()
+
+    val playerStatus = MutableLiveData<PlayerStatus>()
+    val playerStatusMediator = MediatorLiveData<PlayerStatus>()
+
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
 
     private lateinit var mediaService: QMediaPlayerService
@@ -37,11 +42,11 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
             mediaService = (binder as QMediaPlayerService.MyBinder).service
 
-            onPlayerStatusMediator.addSource(mediaService.getStatusObserver()) { track ->
-                onPlayerStatusMediator.value = track
+            trackStatusMediator.addSource(mediaService.getStatusObserver()) { track ->
+                trackStatusMediator.value = track
             }
-            onPlayerStatusMediator.addSource(onPlayerStatusUpdate) { track ->
-                onPlayerStatusMediator.value = track
+            trackStatusMediator.addSource(trackStatus) { track ->
+                trackStatusMediator.value = track
             }
 
            onWaveformDataUpdate = Transformations.map(
@@ -56,15 +61,15 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
             onMediaServiceConnected.value = false
 
-            onPlayerStatusMediator.removeSource(mediaService.getStatusObserver())
-            onPlayerStatusMediator.removeSource(onPlayerStatusUpdate)
+            trackStatusMediator.removeSource(mediaService.getStatusObserver())
+            trackStatusMediator.removeSource(trackStatus)
 
             // Destroy player
         }
     }
 
     init {
-
+        playerStatus.value = PlayerStatus.PAUSED
     }
 
     //
@@ -72,12 +77,14 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     //
 
     fun playPause() {
-        if (isTrackPlaying) {
-            isTrackPlaying = false
+        if (playerStatus.value == PlayerStatus.PLAYING) {
             mediaService.pause()
-        } else {
-            isTrackPlaying = true
+            playerStatus.value = PlayerStatus.PAUSED
+        } else if (playerStatus.value == PlayerStatus.PAUSED) {
             mediaService.play()
+            playerStatus.value = PlayerStatus.PLAYING
+        } else {
+            Timber.w("playPause(): invalid player status: ${playerStatus.value}")
         }
     }
 
@@ -120,6 +127,6 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         mediaService.playerServiceLoadTrackASync(track)
 
         track.trackStatus = Track.TrackStatus.LOADING
-        onPlayerStatusUpdate.value = track
+        trackStatus.value = track
     }
 }

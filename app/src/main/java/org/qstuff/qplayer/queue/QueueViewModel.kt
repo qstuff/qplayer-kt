@@ -3,8 +3,9 @@ package org.qstuff.qplayer.queue
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.koin.standalone.KoinComponent
+import org.koin.standalone.inject
 import org.qstuff.qplayer.datasource.model.Track
-import timber.log.Timber
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import java.io.File
 
 /*
@@ -17,8 +18,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
     var trackList: MutableLiveData<List<Track>> = MutableLiveData()
     var onTrackSelectedIndex: MutableLiveData<Int> = MutableLiveData()
 
-    private var currentTracks = arrayListOf<Track>()
+    private var currentTracks: ArrayList<Track> = arrayListOf()
 
+    private val preferencesDataSource by inject<PreferencesDataSource>()
+
+    init {
+        loadTrackList()
+    }
 
     fun addTrack(track: Track) {
         currentTracks.add(track)
@@ -50,7 +56,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun replaceTrackList(tracks: List<Track>) {
-        currentTracks = arrayListOf()
+        currentTracks.clear()
         currentTracks.addAll(tracks)
         trackList.value = currentTracks
     }
@@ -60,8 +66,18 @@ class QueueViewModel: ViewModel(), KoinComponent {
         trackList.value = currentTracks
     }
 
+    fun loadTrackList() {
+        val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
+        if (list == null) {
+            currentTracks = arrayListOf()
+        } else {
+            currentTracks = list
+        }
+        trackList.value = currentTracks
+    }
+
     fun saveTrackList() {
-        // TODO: internal for resume
+        preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
     }
 
     fun onTrackSelectedIndex(index: Int) {

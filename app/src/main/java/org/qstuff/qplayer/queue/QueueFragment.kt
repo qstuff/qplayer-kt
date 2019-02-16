@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_queue.*
+import org.koin.standalone.KoinComponent
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
@@ -21,7 +22,9 @@ import timber.log.Timber
  * on 2/3/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
+class QueueFragment: Fragment(),
+        KoinComponent,
+        QueueAdapter.QueueItemInteractionListener {
 
     companion object {
 
@@ -37,7 +40,7 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
 
     private lateinit var queueAdapter: QueueAdapter
 
-    
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
@@ -79,6 +82,16 @@ class QueueFragment: Fragment(), QueueAdapter.QueueItemInteractionListener {
             // TODO: Dialog, then
             // PlayListViewModel
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        queueViewModel.loadTrackList()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        queueViewModel.saveTrackList()
     }
 
     //

@@ -57,12 +57,12 @@ class Track : Serializable {
         this.isAutoplay = autoplay
     }
 
-    enum class TrackStatus(value: Int) {
-        UNDEFINED(-1),
-        LOADING(1),
-        PREPARED(2),
-        COMPLETED(3),
-        ERROR(4)
+    enum class TrackStatus {
+        UNDEFINED,
+        LOADING,
+        PREPARED,
+        COMPLETED,
+        ERROR
     }
 
     override fun toString() = "track: $name, status: ${trackStatus.name}"
