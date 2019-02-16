@@ -82,12 +82,14 @@ class QMediaPlayerService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
         Timber.d("onStartCommand()")
 
         return Service.START_NOT_STICKY
     }
 
     override fun onDestroy() {
+        super.onDestroy()
         Timber.d("onDestroy():")
 
         destroyPlayer()
@@ -97,8 +99,8 @@ class QMediaPlayerService : LifecycleService() {
     // common public methods
     //
 
-    fun playerServicePlay() {
-        Timber.d("playerServicePlay():")
+    fun play() {
+        Timber.d("play():")
 
         player.play()
 
@@ -107,8 +109,8 @@ class QMediaPlayerService : LifecycleService() {
         notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
-    fun playerServicePause() {
-        Timber.d("playerServicePause():")
+    fun pause() {
+        Timber.d("pause():")
 
         player.pause()
 

@@ -21,10 +21,14 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     val onPlayerStatusMediator = MediatorLiveData<Track>()
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
 
-
     private lateinit var mediaService: QMediaPlayerService
+
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
+
+    // Player Control
+    var isTrackPlaying = false
+
 
     private val serviceConnection = object : ServiceConnection {
 
@@ -42,7 +46,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
            onWaveformDataUpdate = Transformations.map(
                    mediaService.getWaveFormDataObserver()
-           ) {it}
+           ) { it }
 
             onMediaServiceConnected.value = true
         }
@@ -60,11 +64,29 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     }
 
     init {
+
     }
+
+    //
+    // Player User Interaction
+    //
+
+    fun playPause() {
+        if (isTrackPlaying) {
+            isTrackPlaying = false
+            mediaService.pause()
+        } else {
+            isTrackPlaying = true
+            mediaService.play()
+        }
+    }
+
+
 
     //
     // MediaService
     //
+
     fun startMediaService() {
 
         if(!isMediaServiceRunning) {

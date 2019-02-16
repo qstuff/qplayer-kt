@@ -10,6 +10,7 @@ import com.WarwickWestonWright.HGDialV2.HGViewContainer
 import android.os.Bundle
 import android.text.Html
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -51,11 +52,10 @@ class PlayerActivity : AppCompatActivity() {
         setupTitle()
         setupJogWheel()
         setupContentSection()
+        setupClickListener()
 
         playerViewModel.onMediaServiceConnected.observe(this, Observer { connected ->
-
             Timber.d("onMediaServiceConnected(): $connected")
-
             if(connected) {
                 setupObservers()
             } else {
@@ -86,6 +86,55 @@ class PlayerActivity : AppCompatActivity() {
     // private
     //
 
+    private fun setupClickListener() {
+
+        buttonPlayPause.setOnClickListener {
+            playerViewModel.playPause()
+            updatePlayButtonUI()
+        }
+
+        buttonPrevious.setOnClickListener {
+
+        }
+
+        buttonNext.setOnClickListener {
+
+        }
+
+        buttonRepeat.setOnClickListener {
+
+        }
+
+        buttonShuffle.setOnClickListener {
+
+        }
+
+        buttonMastertempo.setOnClickListener {
+
+        }
+
+        buttonCue.setOnClickListener {
+
+        }
+
+        buttonCue.setOnLongClickListener {
+
+            true
+        }
+
+        buttonPitchReset.setOnClickListener {
+
+        }
+
+        buttonPitchControlIncrease.setOnClickListener {
+
+        }
+
+        buttonPitchControlDecrease.setOnClickListener {
+
+        }
+    }
+
     private fun setupObservers() {
 
         playerViewModel.onPlayerStatusMediator.observe(this, Observer { track ->
@@ -99,13 +148,13 @@ class PlayerActivity : AppCompatActivity() {
                         trackTitle.text = track.name
                     }
                     Track.TrackStatus.PREPARED -> {
-
+                        // TODO: Autoplay?
                     }
                     Track.TrackStatus.COMPLETED -> {
-
+                        // TODO: Continous Play?
                     }
                     Track.TrackStatus.ERROR -> {
-
+                        // TODO: Error message?
                     }
                     else -> {}
                 }
@@ -125,7 +174,6 @@ class PlayerActivity : AppCompatActivity() {
             }
         })
     }
-
 
     private fun setupTitle() {
 
@@ -175,22 +223,29 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
+    //
+    // UI Control
+    //
+
+    private fun updatePlayButtonUI() {
+        if (playerViewModel.isTrackPlaying) {
+            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
+            // TODO: VM -> startUpdateTimer()
+        } else {
+            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_play_selected))
+            // TODO: VM -> resetUpdateTimer()
+        }
+    }
+
     /**
      *
      */
     private class ContentPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
-
         override fun getItem(position: Int): Fragment {
             when(position) {
-                0 -> {
-                    return QueueFragment.newInstance()
-                }
-                1 -> {
-                    return FileBrowserFragment.newInstance()
-                }
-                2 -> {
-                    return ContentListFragment.newInstance()
-                }
+                0 -> return QueueFragment.newInstance()
+                1 -> return FileBrowserFragment.newInstance()
+                2 -> return ContentListFragment.newInstance()
             }
             return null!!
         }
@@ -199,19 +254,11 @@ class PlayerActivity : AppCompatActivity() {
 
         override fun getPageTitle(position: Int): CharSequence? {
             when (position) {
-                0 -> {
-                    return "queue"
-                }
-                1 -> {
-                    return "filebrowser"
-                }
-                2 -> {
-                    return "playlists"
-                }
+                0 -> return "queue"
+                1 -> return "filebrowser"
+                2 -> return "playlists"
             }
-            return "OBJECT " + (position + 1)
+            return ""
         }
-
-        override fun getItemPosition(`object`: Any) = -2
     }
 }
