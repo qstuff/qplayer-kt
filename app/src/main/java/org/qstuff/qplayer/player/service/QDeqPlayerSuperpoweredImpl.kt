@@ -3,6 +3,10 @@ package org.qstuff.qplayer.player.service
 import android.content.Context
 import android.media.AudioManager
 import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 
@@ -24,7 +28,9 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     private var samplerate = 44100
     private var buffersize = 512
 
-    private var onPlayerStatusUpdate: MutableLiveData<Track> = MutableLiveData()
+    private var onPlayerStatusUpdate = MutableLiveData<Track>()
+    private var onWaveFormDataUpdate = MutableLiveData<TrackData>()
+
     private lateinit var currentTrack: Track
 
     //
@@ -61,13 +67,15 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     }
 
     override fun loadTrackSync(track: Track) {
-        loadTrack(track.uri)
         currentTrack = track
+        loadTrack(track.uri)
+        getWaveFormData(track)
     }
 
     override fun loadTrackASync(track: Track) {
-        loadTrack(track.uri)
         currentTrack = track
+        loadTrack(track.uri)
+        getWaveFormData(track)
     }
 
     override fun play() {
@@ -106,17 +114,19 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
 
     override fun getDurationMillis() = getDurationMs()
 
-    override fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>) {
-        Timber.d("getWaveformData() %s", track.name)
-
-        onWaveformDataUpdate.postValue(TrackData(analyzeData(track.uri)))
-    }
-
-    override fun setTrackStatusObserver(onPlayerStatusUpdate: MutableLiveData<Track>) {
-        this.onPlayerStatusUpdate = onPlayerStatusUpdate
-    }
-
     override  fun getStatusObserver(): MutableLiveData<Track> = onPlayerStatusUpdate
+
+    override  fun getWaveFormDataObserver(): MutableLiveData<TrackData> = onWaveFormDataUpdate
+
+    private fun getWaveFormData(track: Track) {
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val trackData = TrackData(track, null)
+            trackData.bytes = analyzeData(track.uri)
+            Timber.d("onWaveFormDataUpdate(): ${trackData.bytes!!.size}")
+            onWaveFormDataUpdate.postValue(trackData)
+        }
+    }
 
     //
     // Callbacks from the native side

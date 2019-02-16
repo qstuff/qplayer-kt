@@ -36,6 +36,8 @@ class PlayerActivity : AppCompatActivity() {
 
     private lateinit var playerViewModel: PlayerViewModel
 
+    private lateinit var currentTrack: Track
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +51,17 @@ class PlayerActivity : AppCompatActivity() {
         setupTitle()
         setupJogWheel()
         setupContentSection()
-        setupObservers()
+
+        playerViewModel.onMediaServiceConnected.observe(this, Observer { connected ->
+
+            Timber.d("onMediaServiceConnected(): $connected")
+
+            if(connected) {
+                setupObservers()
+            } else {
+                // TODO: remove observers ?
+            }
+        })
     }
 
     override fun onStart() {
@@ -69,13 +81,13 @@ class PlayerActivity : AppCompatActivity() {
 
         playerViewModel.stopMediaService()
     }
+
     //
     // private
     //
 
     private fun setupObservers() {
 
-        // TODO: Do we need this here?
         playerViewModel.onPlayerStatusMediator.observe(this, Observer { track ->
 
             Timber.d("onPlayerStatusUpdate(): $track")
@@ -83,6 +95,7 @@ class PlayerActivity : AppCompatActivity() {
             track?.let {
                 when (track.trackStatus) {
                     Track.TrackStatus.LOADING -> {
+                        currentTrack = track
                         trackTitle.text = track.name
                     }
                     Track.TrackStatus.PREPARED -> {
@@ -100,8 +113,15 @@ class PlayerActivity : AppCompatActivity() {
         })
 
         playerViewModel.onWaveformDataUpdate.observe(this, Observer { trackData ->
+            Timber.d("onWaveformDataUpdate():")
+
             trackData?.let {
-                waveformView.updateWaveform(trackData)
+                if (trackData.track == currentTrack) {
+                    waveformView.updateWaveform(null)
+                    waveformView.updateWaveform(trackData)
+                } else {
+                    Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack.name}")
+                }
             }
         })
     }

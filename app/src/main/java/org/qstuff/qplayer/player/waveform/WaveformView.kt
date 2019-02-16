@@ -134,15 +134,15 @@ class WaveformView : View {
             return
         }
 
-        Timber.v("updateWaveform(): num samples:  %d", data.bytes.size)
+        Timber.v("updateWaveform(): num samples:  %d", data.bytes?.size)
         Timber.v("updateWaveform(): width pixels: %d", waveFormWidth)
 
         this.data = data
 
-        if (waveFormWidth > data.bytes.size)
-            stretchFactor = waveFormWidth.toFloat() / data.bytes.size
+        if (waveFormWidth > data.bytes!!.size)
+            stretchFactor = waveFormWidth.toFloat() / data.bytes!!.size
         else
-            stretchFactor = data.bytes.size as Float / waveFormWidth
+            stretchFactor = data.bytes!!.size as Float / waveFormWidth
 
         Timber.v("updateWaveform(): stretchFactor: %f", stretchFactor)
         invalidate()
@@ -178,9 +178,9 @@ class WaveformView : View {
         if (data != null) {
             var dbValue: Int
 
-            for (i in 0 until data!!.bytes.size) {
+            for (i in 0 until data!!.bytes!!.size) {
 
-                dbValue = data!!.bytes[i] * -5
+                dbValue = data!!.bytes!![i] * -5
 
                 if (dbValue > waveFormCenterY - zeroDBOffset) {
                     dbValue = waveFormCenterY

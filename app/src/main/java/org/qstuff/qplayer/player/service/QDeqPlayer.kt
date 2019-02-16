@@ -28,8 +28,6 @@ interface QDeqPlayer {
     fun getCurrentPositionMillis(): Double
     fun getDurationMillis(): Double
 
-    fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>)
-
-    fun setTrackStatusObserver(onPlayerStatusUpdate: MutableLiveData<Track>)
     fun getStatusObserver(): MutableLiveData<Track>
+    fun getWaveFormDataObserver(): MutableLiveData<TrackData>
 }

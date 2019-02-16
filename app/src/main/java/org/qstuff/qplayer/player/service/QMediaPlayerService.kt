@@ -160,12 +160,8 @@ class QMediaPlayerService : LifecycleService() {
         player.loadTrackASync(track)
     }
 
-    fun getWaveformData(track: Track, onWaveformDataUpdate: MutableLiveData<TrackData>) {
-        Timber.d("getWaveformData():")
-        player.getWaveformData(track, onWaveformDataUpdate)
-    }
-
     fun getStatusObserver(): MutableLiveData<Track> = player.getStatusObserver()
+    fun getWaveFormDataObserver(): MutableLiveData<TrackData> = player.getWaveFormDataObserver()
 
     //
     // Private
