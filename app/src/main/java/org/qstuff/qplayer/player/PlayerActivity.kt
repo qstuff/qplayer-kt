@@ -8,6 +8,7 @@ import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
 
 import android.os.Bundle
+import android.os.Handler
 import android.text.Html
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -17,6 +18,7 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_player.*
+import kotlinx.coroutines.Runnable
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
@@ -26,6 +28,7 @@ import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -39,6 +42,7 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var playerViewModel: PlayerViewModel
 
     private lateinit var currentTrack: Track
+
     private var isTrackPrepared = false
 
 
@@ -148,11 +152,10 @@ class PlayerActivity : AppCompatActivity() {
             when(status) {
                 PlayerStatus.PLAYING -> {
                     updatePlayButtonUI(true)
-                    // TODO: VM -> startUpdateTimer()
                 }
                 PlayerStatus.PAUSED -> {
                     updatePlayButtonUI(false)
-                    // TODO: VM -> stopUpdateTimer()
+
                 }
                 else -> {}
             }
@@ -172,7 +175,8 @@ class PlayerActivity : AppCompatActivity() {
                     }
                     Track.TrackStatus.PREPARED -> {
                         isTrackPrepared = true
-                        totalTrackLength.text = "total: ${track.getDurationHumanReadable()}"
+                        totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
+                        dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
 
                         if (track.isAutoplay) {
                             playerViewModel.playPause()
@@ -187,6 +191,14 @@ class PlayerActivity : AppCompatActivity() {
                     else -> {}
                 }
             }
+        })
+
+        playerViewModel.onTrackPositionUpdate.observe(this, Observer { position ->
+            Timber.v("onTrackPositionUpdate(): $position")
+
+            dynamicTrackLength.text = "remain: ${getDurationHumanReadable(currentTrack.duration - position)}"
+
+            // TODO: update progress bar
         })
 
         playerViewModel.onWaveformDataUpdate.observe(this, Observer { trackData ->
@@ -264,6 +276,12 @@ class PlayerActivity : AppCompatActivity() {
             // TODO: VM -> resetUpdateTimer()
         }
     }
+
+    fun getDurationHumanReadable(time: Long) =
+            String.format("%02d:%02d:%02d",
+                    TimeUnit.MILLISECONDS.toHours(time),
+                    TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)), // The change is in this line
+                    TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)))
 
     /**
      *

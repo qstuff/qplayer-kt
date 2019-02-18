@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Handler
 import android.os.IBinder
 import androidx.lifecycle.*
 import org.qstuff.qplayer.QDeqApplication
@@ -26,14 +27,19 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
 
+    val onTrackPositionUpdate = MutableLiveData<Long>()
+
     private lateinit var mediaService: QMediaPlayerService
 
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
 
-
     // Player Control
     var isTrackPlaying = false
+
+    private var updateHandler = Handler()
+    private var updateRunnable: Runnable? = null
+    private var isUpdatetaskRunning = false
 
 
     private val serviceConnection = object : ServiceConnection {
@@ -83,11 +89,17 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         if (!isMediaServiceBound) return
 
         if (playerStatus.value == PlayerStatus.PLAYING) {
+
             mediaService.pause()
             playerStatus.value = PlayerStatus.PAUSED
+            resetUpdateTimer()
+
         } else if (playerStatus.value == PlayerStatus.PAUSED) {
+
             mediaService.play()
             playerStatus.value = PlayerStatus.PLAYING
+            startUpdateTimer()
+
         } else {
             Timber.w("playPause(): invalid player status: ${playerStatus.value}")
         }
@@ -141,4 +153,26 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     // Private
     //
 
+    private fun startUpdateTimer() {
+        Timber.d("startUpdateTimer()")
+
+        if (isUpdatetaskRunning) return
+
+        updateHandler = Handler()
+        updateRunnable = object : Runnable {
+            override fun run() {
+                Timber.d("startUpdateTimer(): ping")
+                onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
+                updateHandler.postDelayed(this, 500)
+            }
+        }
+        updateHandler.post(updateRunnable)
+        isUpdatetaskRunning = true
+    }
+
+    private fun resetUpdateTimer() {
+
+        updateHandler.removeCallbacks(updateRunnable)
+        isUpdatetaskRunning = false
+    }
 }

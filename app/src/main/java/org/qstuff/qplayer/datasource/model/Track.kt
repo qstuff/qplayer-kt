@@ -72,11 +72,5 @@ class Track : Serializable {
         ERROR
     }
 
-    fun getDurationHumanReadable() =
-        String.format("%02d:%02d:%02d",
-            TimeUnit.MILLISECONDS.toHours(duration),
-            TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)), // The change is in this line
-            TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)))
-
     override fun toString() = "track: $name, status: ${trackStatus.name}"
 }

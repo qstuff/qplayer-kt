@@ -140,8 +140,8 @@ class QMediaPlayerService : LifecycleService() {
         player.seekTo(position, andStop)
     }
 
-    fun playerServiceGetCurrentPositionMillis(): Long {
-        Timber.v("playerServiceGetCurrentPositionMillis():")
+    fun getCurrentPositionMillis(): Long {
+        Timber.v("getCurrentPositionMillis():")
         return player.getCurrentPositionMillis()
     }
 
@@ -293,7 +293,7 @@ class QMediaPlayerService : LifecycleService() {
                     if (action == ACTION_PLAYER_TOGGLED) {
                         Timber.d("onReceive(): ACTION_PLAYER_TOGGLED")
 
-                        val mgr = LocalBroadcastManager.getInstance(context!!)
+                        val mgr = LocalBroadcastManager.getInstance(context)
                         mgr.sendBroadcast(Intent().setAction(NOT_ACTION_PLAYER_TOGGLED))
                     }
 
