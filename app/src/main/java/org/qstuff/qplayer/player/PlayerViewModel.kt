@@ -149,6 +149,12 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         trackStatus.value = track
     }
 
+    fun seekTo(position: Double, andStop: Boolean) {
+        Timber.d("seekTo(): $position")
+
+        mediaService.playerServiceSeekTo(position, andStop)
+    }
+
     //
     // Private
     //
@@ -161,7 +167,6 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         updateHandler = Handler()
         updateRunnable = object : Runnable {
             override fun run() {
-                Timber.d("startUpdateTimer(): ping")
                 onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
                 updateHandler.postDelayed(this, 500)
             }

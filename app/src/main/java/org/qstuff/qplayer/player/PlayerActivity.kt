@@ -8,8 +8,10 @@ import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
 
 import android.os.Bundle
-import android.os.Handler
 import android.text.Html
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -18,7 +20,6 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_player.*
-import kotlinx.coroutines.Runnable
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
@@ -35,13 +36,19 @@ import java.util.concurrent.TimeUnit
  */
 class PlayerActivity : AppCompatActivity() {
 
+    companion object {
+
+    }
+
     private lateinit var jogWheelContainer: HGViewContainer
     private lateinit var jogWheelDial: HGDialV2
     private lateinit var jogWheelInterface: HGDialV2.IHGDial
 
+    private val remainBlinkAnimation = AlphaAnimation(0.0f, 1.0f)
+
     private lateinit var playerViewModel: PlayerViewModel
 
-    private lateinit var currentTrack: Track
+    private var currentTrack: Track? = null
 
     private var isTrackPrepared = false
 
@@ -52,6 +59,9 @@ class PlayerActivity : AppCompatActivity() {
 
         playerViewModel = ViewModelProviders.of(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
+
+        trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
+        trackProgressBar.progress = 0
 
         waveformView.updateWaveform(null)
 
@@ -172,8 +182,11 @@ class PlayerActivity : AppCompatActivity() {
                     Track.TrackStatus.LOADING -> {
                         currentTrack = track
                         trackTitle.text = track.name
+                        stopRemainBlinkAnimation()
+
                     }
                     Track.TrackStatus.PREPARED -> {
+
                         isTrackPrepared = true
                         totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
                         dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
@@ -181,8 +194,12 @@ class PlayerActivity : AppCompatActivity() {
                         if (track.isAutoplay) {
                             playerViewModel.playPause()
                         }
+
                     }
                     Track.TrackStatus.COMPLETED -> {
+
+                        stopRemainBlinkAnimation()
+
                         // TODO: Continous Play?
                     }
                     Track.TrackStatus.ERROR -> {
@@ -196,9 +213,16 @@ class PlayerActivity : AppCompatActivity() {
         playerViewModel.onTrackPositionUpdate.observe(this, Observer { position ->
             Timber.v("onTrackPositionUpdate(): $position")
 
-            dynamicTrackLength.text = "remain: ${getDurationHumanReadable(currentTrack.duration - position)}"
+            currentTrack?.let {
+                dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - position)}"
+                if ((it.duration - position) < 30000) {
+                    startRemainBlinkAnimation()
+                } else {
+                    stopRemainBlinkAnimation()
+                }
 
-            // TODO: update progress bar
+                updateTrackProgressIndicator(position)
+            }
         })
 
         playerViewModel.onWaveformDataUpdate.observe(this, Observer { trackData ->
@@ -209,7 +233,7 @@ class PlayerActivity : AppCompatActivity() {
                     waveformView.updateWaveform(null)
                     waveformView.updateWaveform(trackData)
                 } else {
-                    Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack.name}")
+                    Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack?.name}")
                 }
             }
         })
@@ -267,6 +291,12 @@ class PlayerActivity : AppCompatActivity() {
     // UI Control
     //
 
+    private fun updateTrackProgressIndicator(position: Long) {
+        val dTotal = currentTrack!!.duration.toDouble()
+        val dPosition = position.toDouble()
+        trackProgressBar.progress = ((dPosition / dTotal) * 1000).toInt()
+    }
+
     private fun updatePlayButtonUI(playing: Boolean) {
         if (playing) {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
@@ -277,15 +307,32 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    fun getDurationHumanReadable(time: Long) =
+    private fun startRemainBlinkAnimation() {
+
+        dynamicTrackLength.animation = remainBlinkAnimation
+        remainBlinkAnimation.apply {
+            duration = 700
+            repeatMode = Animation.REVERSE
+            repeatCount = Animation.INFINITE
+            start()
+        }
+    }
+
+    private fun stopRemainBlinkAnimation() {
+
+        dynamicTrackLength.clearAnimation()
+        remainBlinkAnimation.reset()
+    }
+
+    private fun getDurationHumanReadable(time: Long) =
             String.format("%02d:%02d:%02d",
                     TimeUnit.MILLISECONDS.toHours(time),
                     TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)), // The change is in this line
                     TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)))
 
-    /**
-     *
-     */
+    //
+    // Inner classes
+    //
     private class ContentPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
         override fun getItem(position: Int): Fragment {
             when(position) {
@@ -305,6 +352,19 @@ class PlayerActivity : AppCompatActivity() {
                 2 -> return "playlists"
             }
             return ""
+        }
+    }
+
+    private inner class TrackProgressChangedListener : SeekBar.OnSeekBarChangeListener {
+
+        override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {}
+
+        override fun onStartTrackingTouch(seekBar: SeekBar) {}
+
+        override fun onStopTrackingTouch(seekBar: SeekBar) {
+            val dTotal = currentTrack!!.duration.toDouble() / 1000
+            val dProgress = seekBar.progress.toDouble() / 1000
+            playerViewModel.seekTo((dProgress * dTotal * 1000), false)
         }
     }
 }

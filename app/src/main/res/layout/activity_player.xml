@@ -24,19 +24,15 @@
         tools:text="@string/app_name"
         tools:ignore="RtlSymmetry" />
 
-    <!-- Cuepoint View -->
-    <org.qstuff.qplayer.player.waveform.CuepointView
-        android:id="@+id/cuepointView"
+    <!-- Waveform View -->
+    <org.qstuff.qplayer.player.waveform.WaveformView
+        android:id="@+id/waveformView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
-        android:layout_marginStart="4dp"
-        android:background="@color/transparent"
-        android:layout_alignParentBottom="true"
-        android:layout_below="@+id/midContainer"
-        android:layout_marginBottom="4dp"
-        android:visibility="invisible"
-        tools:visibility="gone"
-        tools:background="@color/green_90"/>
+        android:layout_alignTop="@+id/trackProgressBar"
+        android:layout_alignBottom="@+id/trackProgressBar"
+        android:background="@drawable/black_rounded_shape"
+        tools:visibility="visible"/>
 
     <!-- Track Progress View -->
     <SeekBar
@@ -57,15 +53,19 @@
         android:thumb="@drawable/seekbar_progress_orange"
         android:thumbOffset="1dp"/>
 
-    <!-- Waveform View -->
-    <org.qstuff.qplayer.player.waveform.WaveformView
-        android:id="@+id/waveformView"
+    <!-- Cuepoint View -->
+    <org.qstuff.qplayer.player.waveform.CuepointView
+        android:id="@+id/cuepointView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
-        android:layout_alignTop="@+id/trackProgressBar"
-        android:layout_alignBottom="@+id/trackProgressBar"
-        android:background="@drawable/black_rounded_shape"
-        tools:visibility="visible"/>
+        android:layout_marginStart="4dp"
+        android:background="@color/transparent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/midContainer"
+        android:layout_marginBottom="4dp"
+        android:visibility="invisible"
+        tools:visibility="gone"
+        tools:background="@color/green_90"/>
 
     <!-- Vertical Pitch Control -->
     <FrameLayout
