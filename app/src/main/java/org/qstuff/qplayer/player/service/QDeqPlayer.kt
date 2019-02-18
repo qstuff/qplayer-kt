@@ -25,8 +25,8 @@ interface QDeqPlayer {
     fun setSpeed(factor: Float, masterTempo: Boolean)
     fun seekTo(position: Double, andStop: Boolean)
 
-    fun getCurrentPositionMillis(): Double
-    fun getDurationMillis(): Double
+    fun getCurrentPositionMillis(): Long
+    fun getDurationMillis(): Long
 
     fun getStatusObserver(): MutableLiveData<Track>
     fun getWaveFormDataObserver(): MutableLiveData<TrackData>

@@ -43,8 +43,8 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     private external fun onSetTempo(value: Float, masterTempo: Boolean)
     private external fun onSetPosition(positionMs: Double, andStop: Boolean, synchronisedStart: Boolean)
     private external fun loadTrack(path: String)
-    private external fun getPositionMs(): Double
-    private external fun getDurationMs(): Double
+    private external fun getPositionMs(): Long
+    private external fun getDurationMs(): Long
     private external fun analyzeData(path: String): ByteArray
     private external fun destroyNative()
 
@@ -135,12 +135,14 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     fun onPrepared() {
         Timber.d("onPrepared()")
         currentTrack.trackStatus = Track.TrackStatus.PREPARED
+        currentTrack.duration = getDurationMs()
         onPlayerStatusUpdate.postValue(currentTrack)
     }
 
     fun onCompletion() {
         Timber.d("onCompletion()")
         currentTrack.trackStatus = Track.TrackStatus.COMPLETED
+        currentTrack.playPosition = 0
         onPlayerStatusUpdate.postValue(currentTrack)
     }
 

@@ -31,6 +31,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
 
+
     // Player Control
     var isTrackPlaying = false
 
@@ -54,6 +55,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
            ) { it }
 
             onMediaServiceConnected.value = true
+            isMediaServiceRunning = true
+            isMediaServiceBound = true
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -77,6 +80,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     //
 
     fun playPause() {
+        if (!isMediaServiceBound) return
+
         if (playerStatus.value == PlayerStatus.PLAYING) {
             mediaService.pause()
             playerStatus.value = PlayerStatus.PAUSED
@@ -87,8 +92,6 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
             Timber.w("playPause(): invalid player status: ${playerStatus.value}")
         }
     }
-
-
 
     //
     // MediaService
@@ -101,8 +104,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
             val intent = Intent(app, QMediaPlayerService::class.java)
             app.startService(intent)
             app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-            isMediaServiceRunning = true
-            isMediaServiceBound = true
+
         }
     }
 
@@ -124,9 +126,19 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     //
 
     fun loadTrack(track: Track) {
+        if (!isMediaServiceBound) return
+
+        mediaService.pause()
+        playerStatus.value = PlayerStatus.PAUSED
+
         mediaService.playerServiceLoadTrackASync(track)
 
         track.trackStatus = Track.TrackStatus.LOADING
         trackStatus.value = track
     }
+
+    //
+    // Private
+    //
+
 }

@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_filebrowser.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.isM3UList
 import timber.log.Timber
@@ -37,13 +39,15 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
 
     private lateinit var queueViewModel: QueueViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
-
+    private lateinit var playerViewModel: PlayerViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
         queueViewModel = ViewModelProviders.of(activity!!).get(QueueViewModel::class.java)
         fileBrowserViewModel = ViewModelProviders.of(activity!!).get(FileBrowserViewModel::class.java)
+        playerViewModel = ViewModelProviders.of(activity!!).get(PlayerViewModel::class.java)
+
         return inflater.inflate(R.layout.fragment_filebrowser, container, false)
     }
 
@@ -128,6 +132,6 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
     }
 
     override fun onFilePrelistenClicked(file: File) {
-        // TODO: to playerViewModel
+        playerViewModel.loadTrack(Track(file, true))
     }
 }

@@ -52,11 +52,11 @@ class QMediaPlayerService : LifecycleService() {
     private val binder = MyBinder()
     private var notificationManager: NotificationManager? = null
 
-    private lateinit var currentTrack: Track
+    private var currentTrack: Track? = null
 
 
     val isPrepared: Boolean
-        get() = currentTrack.trackStatus == Track.TrackStatus.PREPARED
+        get() = currentTrack?.trackStatus == Track.TrackStatus.PREPARED
 
     //
     // Service Lifecycle
@@ -101,6 +101,7 @@ class QMediaPlayerService : LifecycleService() {
 
     fun play() {
         Timber.d("play():")
+        if (currentTrack == null) return
 
         player.play()
 
@@ -111,6 +112,7 @@ class QMediaPlayerService : LifecycleService() {
 
     fun pause() {
         Timber.d("pause():")
+        if (currentTrack == null) return
 
         player.pause()
 
@@ -138,12 +140,12 @@ class QMediaPlayerService : LifecycleService() {
         player.seekTo(position, andStop)
     }
 
-    fun playerServiceGetCurrentPositionMillis(): Double {
+    fun playerServiceGetCurrentPositionMillis(): Long {
         Timber.v("playerServiceGetCurrentPositionMillis():")
         return player.getCurrentPositionMillis()
     }
 
-    fun playerServiceGetDurationMillis(): Double {
+    fun playerServiceGetDurationMillis(): Long {
         Timber.v("playerServiceGetDurationMillis():")
         return player.getDurationMillis()
     }
@@ -258,7 +260,7 @@ class QMediaPlayerService : LifecycleService() {
             remoteViews.setImageViewResource(R.id.notificationButtonPlayPause, R.drawable.button_pause)
         }
 
-        remoteViews.setTextViewText(R.id.notificationTitle, currentTrack.name)
+        remoteViews.setTextViewText(R.id.notificationTitle, currentTrack?.name)
 
         val builder = NotificationCompat.Builder(
                 this)

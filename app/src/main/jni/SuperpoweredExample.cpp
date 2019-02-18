@@ -165,11 +165,11 @@ void SuperpoweredExample::onSetPosition(double ms, bool andStop, bool synchronis
     playerA->setPosition(ms, andStop, synchronisedStart);
 }
 
-double SuperpoweredExample::getPositionMs() {
+unsigned int SuperpoweredExample::getPositionMs() {
     return playerA->positionMs;
 }
 
-double SuperpoweredExample::getDurationMs() {
+unsigned int SuperpoweredExample::getDurationMs() {
     return playerA->durationMs;
 }
 
@@ -256,7 +256,7 @@ void SuperpoweredExample::onError() {
 }
 
 //
-// JNI Calls from JAVA
+// JNI Calls from JAVAt
 //
 
 extern "C" JNIEXPORT 
@@ -408,24 +408,27 @@ void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onSetTemp
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onSetPosition(JNIEnv *  __unused javaEnvironment,
-                                                                               jobject  __unused obj,
-                                                                               jdouble  position,
-                                                                               jboolean andStop,
-                                                                               jboolean synchStart) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onSetPosition(
+        JNIEnv *  __unused javaEnvironment,
+        jobject  __unused obj,
+        jdouble  position,
+        jboolean andStop,
+        jboolean synchStart) {
     example->onSetPosition(position, andStop, synchStart);
 }
 
 extern "C" JNIEXPORT
-double Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_getPositionMs(JNIEnv * __unused javaEnvironment,
-                                                                                jobject  __unused obj) {
-    return example->getPositionMs();
+jlong Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_getPositionMs(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj) {
+    return (jlong)(unsigned long long)example->getPositionMs();
 }
 
 extern "C" JNIEXPORT
-double Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_getDurationMs(JNIEnv * __unused javaEnvironment,
-                                                                                jobject  __unused obj) {
-    return example->getDurationMs();
+jlong Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_getDurationMs(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj) {
+    return (jlong)(unsigned long long)example->getDurationMs();
 }
 
 extern "C" JNIEXPORT 

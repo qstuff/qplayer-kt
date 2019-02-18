@@ -32,8 +32,8 @@ public:
     void loadTrack(const char *path);
     void destroy();
     
-    double getPositionMs();
-    double getDurationMs();
+    unsigned int getPositionMs();
+    unsigned int getDurationMs();
     
     void onEQBand(unsigned int index, int gain);
     

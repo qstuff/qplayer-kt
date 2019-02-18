@@ -172,7 +172,11 @@ class PlayerActivity : AppCompatActivity() {
                     }
                     Track.TrackStatus.PREPARED -> {
                         isTrackPrepared = true
-                        // TODO: Autoplay?
+                        totalTrackLength.text = "total: ${track.getDurationHumanReadable()}"
+
+                        if (track.isAutoplay) {
+                            playerViewModel.playPause()
+                        }
                     }
                     Track.TrackStatus.COMPLETED -> {
                         // TODO: Continous Play?
