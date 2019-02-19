@@ -107,7 +107,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         current?.let {
             if (currentTracks.contains(current)) {
                 var index = currentTracks.indexOf(current)
-                if (index < currentTracks.size) {
+                if (index < currentTracks.size -1) {
                     index += 1
                     onTrackSelected.value = currentTracks.get(index)
                 }
