@@ -94,7 +94,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                     index -= 1
                     onTrackSelected.value = currentTracks.get(index)
                 }
-                if (index == 0) {
+                else if (index == 0) {
                     index = currentTracks.size -1
                     onTrackSelected.value = currentTracks.get(index )
                 }
@@ -111,7 +111,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                     index += 1
                     onTrackSelected.value = currentTracks.get(index)
                 }
-                if (index == currentTracks.size -1) {
+                else if (index == currentTracks.size -1) {
                     index = 0
                     onTrackSelected.value = currentTracks.get(index)
                 }
