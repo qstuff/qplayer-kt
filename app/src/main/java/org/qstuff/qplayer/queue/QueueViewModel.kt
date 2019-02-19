@@ -1,5 +1,6 @@
 package org.qstuff.qplayer.queue
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.koin.standalone.KoinComponent
@@ -15,8 +16,9 @@ import java.io.File
  */
 class QueueViewModel: ViewModel(), KoinComponent {
 
-    var trackList: MutableLiveData<List<Track>> = MutableLiveData()
-    var onTrackSelectedIndex: MutableLiveData<Int> = MutableLiveData()
+    var trackList= MutableLiveData<List<Track>>()
+    var onTrackSelectedIndex = MutableLiveData<Int>()
+    var onTrackSelected = MutableLiveData<Track>()
 
     private var currentTracks: ArrayList<Track> = arrayListOf()
 
@@ -80,7 +82,41 @@ class QueueViewModel: ViewModel(), KoinComponent {
         preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
     }
 
-    fun onTrackSelectedIndex(index: Int) {
-        onTrackSelectedIndex.value = index
+    fun onTrackSelected(track: Track) {
+        onTrackSelectedIndex.value = currentTracks.indexOf(track)
+    }
+
+    fun previousTrack(current: Track?) {
+        current?.let {
+            if (currentTracks.contains(current)) {
+                var index = currentTracks.indexOf(current)
+                if (index > 0) {
+                    index -= 1
+                    onTrackSelected.value = currentTracks.get(index)
+                }
+                if (index == 0) {
+                    index = currentTracks.size
+                    onTrackSelected.value = currentTracks.get(index )
+                }
+                onTrackSelectedIndex.value = index
+            }
+        }
+    }
+
+    fun nextTrack(current: Track?) {
+        current?.let {
+            if (currentTracks.contains(current)) {
+                var index = currentTracks.indexOf(current)
+                if (index < currentTracks.size) {
+                    index += 1
+                    onTrackSelected.value = currentTracks.get(index)
+                }
+                if (index == currentTracks.size) {
+                    index = 0
+                    onTrackSelected.value = currentTracks.get(index)
+                }
+                onTrackSelectedIndex.value = index
+            }
+        }
     }
 }

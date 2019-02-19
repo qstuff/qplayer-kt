@@ -155,6 +155,12 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         mediaService.playerServiceSeekTo(position, andStop)
     }
 
+    fun trackCompleted() {
+        playPause()
+
+        // TODO: Continous Play?
+    }
+
     //
     // Private
     //

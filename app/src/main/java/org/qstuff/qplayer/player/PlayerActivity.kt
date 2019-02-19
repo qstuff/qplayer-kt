@@ -27,6 +27,7 @@ import org.qstuff.qplayer.contentbrowser.ContentListFragment
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
+import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -47,11 +48,12 @@ class PlayerActivity : AppCompatActivity() {
     private val remainBlinkAnimation = AlphaAnimation(0.0f, 1.0f)
 
     private lateinit var playerViewModel: PlayerViewModel
+    private lateinit var queueViewModel: QueueViewModel
 
     private var currentTrack: Track? = null
 
     private var isTrackPrepared = false
-
+    private var isBlinkAnimationRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +61,9 @@ class PlayerActivity : AppCompatActivity() {
 
         playerViewModel = ViewModelProviders.of(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
+
+        queueViewModel = ViewModelProviders.of(this).get(QueueViewModel::class.java)
+
 
         trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
         trackProgressBar.progress = 0
@@ -113,11 +118,11 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         buttonPrevious.setOnClickListener {
-
+            queueViewModel.previousTrack(currentTrack)
         }
 
         buttonNext.setOnClickListener {
-
+            queueViewModel.nextTrack(currentTrack)
         }
 
         buttonRepeat.setOnClickListener {
@@ -183,6 +188,7 @@ class PlayerActivity : AppCompatActivity() {
                         currentTrack = track
                         trackTitle.text = track.name
                         stopRemainBlinkAnimation()
+                        waveformView.updateWaveform(null)
 
                     }
                     Track.TrackStatus.PREPARED -> {
@@ -199,8 +205,7 @@ class PlayerActivity : AppCompatActivity() {
                     Track.TrackStatus.COMPLETED -> {
 
                         stopRemainBlinkAnimation()
-
-                        // TODO: Continous Play?
+                        playerViewModel.trackCompleted()
                     }
                     Track.TrackStatus.ERROR -> {
                         // TODO: Error message?
@@ -230,7 +235,6 @@ class PlayerActivity : AppCompatActivity() {
 
             trackData?.let {
                 if (trackData.track == currentTrack) {
-                    waveformView.updateWaveform(null)
                     waveformView.updateWaveform(trackData)
                 } else {
                     Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack?.name}")
@@ -308,20 +312,26 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun startRemainBlinkAnimation() {
+        Timber.d("startRemainBlinkAnimation():")
 
-        dynamicTrackLength.animation = remainBlinkAnimation
-        remainBlinkAnimation.apply {
-            duration = 700
-            repeatMode = Animation.REVERSE
-            repeatCount = Animation.INFINITE
-            start()
+        if (!isBlinkAnimationRunning) {
+            remainBlinkAnimation.apply {
+                duration = 700
+                repeatMode = Animation.REVERSE
+                repeatCount = Animation.INFINITE
+                start()
+            }
+            dynamicTrackLength.animation = remainBlinkAnimation
+            isBlinkAnimationRunning = true
         }
     }
 
     private fun stopRemainBlinkAnimation() {
-
-        dynamicTrackLength.clearAnimation()
-        remainBlinkAnimation.reset()
+        if (isBlinkAnimationRunning) {
+            dynamicTrackLength.clearAnimation()
+            remainBlinkAnimation.reset()
+            isBlinkAnimationRunning = false
+        }
     }
 
     private fun getDurationHumanReadable(time: Long) =

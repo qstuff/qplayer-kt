@@ -71,6 +71,11 @@ class QueueFragment: Fragment(),
 
         queueViewModel.onTrackSelectedIndex.observe(this, Observer { index ->
             queueAdapter.onItemSelectedIndex(index)
+            queueRecycler.scrollToPosition(index)
+        })
+
+        queueViewModel.onTrackSelected.observe(this, Observer { track ->
+            playerViewModel.loadTrack(track)
         })
 
         queueClearButton.setOnClickListener {
@@ -100,6 +105,7 @@ class QueueFragment: Fragment(),
 
     override fun onQueueItemClicked(track: Track) {
         playerViewModel.loadTrack(track)
+        queueViewModel.onTrackSelected(track)
     }
 
     override fun onQueueItemDismsissed(track: Track) {
