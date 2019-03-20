@@ -3,7 +3,7 @@
 #include <SuperpoweredDecoder.h>
 #include <SuperpoweredCPU.h>
 #include <jni.h>
-#include <stdio.h>
+#include <cstdio>
 #include <android/log.h>
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
@@ -260,10 +260,12 @@ void SuperpoweredExample::onError() {
 //
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_SuperpoweredNative(JNIEnv * __unused jniEnv,
-                                                                                   jobject  __unused obj, 
-                                                                                   jint     samplerate, 
-                                                                                   jint     buffersize) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_SuperpoweredNative(
+        JNIEnv * __unused jniEnv,
+        jobject  __unused obj,
+        jint     samplerate,
+        jint     buffersize) {
+
     example = new SuperpoweredExample((unsigned int)samplerate, (unsigned int)buffersize);
     
     // for calling back to java we need to cache some references
@@ -275,25 +277,31 @@ void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_Superpowe
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_destroyNative(JNIEnv * __unused javaEnvironment,
-                                                                              jobject  __unused obj) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_destroyNative(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj) {
+
     javaEnvironment->DeleteGlobalRef(jClassRef);
     javaEnvironment->DeleteGlobalRef(javaObjectRef);
 
-    // delete example;
+    // example->destroy();
 }
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onPlayPause(JNIEnv * __unused javaEnvironment,
-                                                                            jobject  __unused obj, 
-                                                                            jboolean play) { 
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onPlayPause(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jboolean play) {
+
     example->onPlayPause(play);
 }
 
 extern "C" JNIEXPORT JNICALL
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_loadTrack(JNIEnv * __unused javaEnvironment,
-                                                                          jobject  __unused obj,
-                                                                          jstring  javapath) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_loadTrack(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jstring  javapath) {
+
     LOGD("loadTrack():");
     
     const char *path = javaEnvironment->GetStringUTFChars(javapath, JNI_FALSE);
@@ -304,9 +312,11 @@ void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_loadTrack
 }
 
 extern "C" JNIEXPORT JNICALL
-jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_analyzeData(JNIEnv * __unused javaEnvironment,
-                                                                                  jobject  __unused obj,
-                                                                                  jstring  javapath) {
+jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_analyzeData(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jstring  javapath) {
+
     LOGD("analyzeData():");
 
     jboolean isCopy;
@@ -314,7 +324,7 @@ jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_ana
     const char *path = javaEnvironment->GetStringUTFChars(javapath, JNI_FALSE);
 
     // Open the input file.
-    SuperpoweredDecoder *decoder = new SuperpoweredDecoder();
+    auto *decoder = new SuperpoweredDecoder();
     const char *openError = decoder->open(path, false, 0, 0);
     if (openError) {
         printf("Open error: %s\n", openError);
@@ -323,12 +333,13 @@ jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_ana
     };
 
     // Create the analyzer.
-    SuperpoweredOfflineAnalyzer *analyzer = new SuperpoweredOfflineAnalyzer(decoder->samplerate, 0, decoder->durationSeconds);
+    auto *analyzer = new SuperpoweredOfflineAnalyzer(decoder->samplerate, 0,
+                                                     static_cast<int>(decoder->durationSeconds));
 
     // Create a buffer for the 16-bit integer samples coming from the decoder.
-    short int *intBuffer = (short int *)malloc(decoder->samplesPerFrame * 2 * sizeof(short int) + 32768);
+    auto *intBuffer = (short int *)malloc(decoder->samplesPerFrame * 2 * sizeof(short int) + 32768);
     // Create a buffer for the 32-bit floating point samples required by the effect.
-    float *floatBuffer = (float *)malloc(decoder->samplesPerFrame * 2 * sizeof(float) + 32768);
+    auto *floatBuffer = (float *)malloc(decoder->samplesPerFrame * 2 * sizeof(float) + 32768);
 
     // Processing.
     int progress = 0;
@@ -355,9 +366,9 @@ jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_ana
     };
 
     // Get the result.
-    unsigned char *averageWaveform = NULL, *lowWaveform = NULL, *midWaveform = NULL, *highWaveform = NULL, *peakWaveform = NULL, *notes = NULL;
+    unsigned char *averageWaveform = nullptr, *lowWaveform = nullptr, *midWaveform = nullptr, *highWaveform = nullptr, *peakWaveform = nullptr, *notes = nullptr;
     int waveformSize, overviewSize, keyIndex;
-    char *overviewWaveform = NULL;
+    char *overviewWaveform = nullptr;
     float loudpartsAverageDecibel, peakDecibel, bpm, averageDecibel, beatgridStartMs = 0;
     analyzer->getresults(&averageWaveform, &peakWaveform, &lowWaveform, &midWaveform, &highWaveform, &notes, &waveformSize, &overviewWaveform, &overviewSize, &averageDecibel, &loudpartsAverageDecibel, &peakDecibel, &bpm, &beatgridStartMs, &keyIndex);
 
@@ -393,17 +404,21 @@ jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_ana
 }
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onFxSelect(JNIEnv * __unused javaEnvironment,
-                                                                               jobject __unused obj, 
-                                                                               jint value) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onFxSelect(
+        JNIEnv * __unused javaEnvironment,
+        jobject __unused obj,
+        jint value) {
+
     example->onFxSelect(value);
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onSetTempo(JNIEnv * __unused javaEnvironment,
-                                                                               jobject __unused obj,
-                                                                               jfloat value,
-                                                                               jboolean masterTempo) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onSetTempo(
+        JNIEnv * __unused javaEnvironment,
+        jobject __unused obj,
+        jfloat value,
+        jboolean masterTempo) {
+
     example->onSetTempo(value, masterTempo);
 }
 
@@ -414,6 +429,7 @@ void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onSetPosi
         jdouble  position,
         jboolean andStop,
         jboolean synchStart) {
+
     example->onSetPosition(position, andStop, synchStart);
 }
 
@@ -421,6 +437,7 @@ extern "C" JNIEXPORT
 jlong Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_getPositionMs(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
+
     return (jlong)(unsigned long long)example->getPositionMs();
 }
 
@@ -428,18 +445,23 @@ extern "C" JNIEXPORT
 jlong Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_getDurationMs(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
+
     return (jlong)(unsigned long long)example->getDurationMs();
 }
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImplon_FxOff(JNIEnv * __unused javaEnvironment,
-                                                                        jobject  __unused obj) { 
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImplon_FxOff(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj) {
+
     example->onFxOff();
 }
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onFxValue(JNIEnv * __unused javaEnvironment,
-                                                                          jobject  __unused obj, 
-                                                                          jint     value) {
+void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_onFxValue(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jint     value) {
+
     example->onFxValue(value);
 }

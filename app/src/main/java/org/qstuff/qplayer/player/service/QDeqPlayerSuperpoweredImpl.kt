@@ -123,7 +123,7 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
         CoroutineScope(Dispatchers.IO).launch {
             val trackData = TrackData(track, null)
             trackData.bytes = analyzeData(track.uri)
-            Timber.d("onWaveFormDataUpdate(): ${trackData.bytes!!.size}")
+            Timber.d("onWaveFormDataUpdate(): ${trackData.bytes?.size}")
             onWaveFormDataUpdate.postValue(trackData)
         }
     }

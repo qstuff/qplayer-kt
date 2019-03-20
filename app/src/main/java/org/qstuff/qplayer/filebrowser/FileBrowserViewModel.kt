@@ -77,7 +77,10 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
             nextDir = File(Environment.getExternalStorageDirectory().path)
         }
 
+        Timber.d("browseTo(): nextDir: ${nextDir}")
+
         if (nextDir.isDirectory) {
+            Timber.d("browseTo(): is Directory")
 
             val fileList =  nextDir.listFiles()
 
@@ -97,6 +100,10 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
 
     private fun filterFileList(files: List<File>) {
         Timber.d("filterFileList(): num: ${files.size}")
+
+        if (files.isNullOrEmpty()) {
+            return
+        }
 
         val supportedFiles = arrayListOf<File>()
 

@@ -1,7 +1,7 @@
 #ifndef Header_SuperpoweredExample
 #define Header_SuperpoweredExample
 
-#include <math.h>
+#include <cmath>
 #include <pthread.h>
 
 #include "SuperpoweredExample.h"

@@ -312,9 +312,10 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun startRemainBlinkAnimation() {
-        Timber.d("startRemainBlinkAnimation():")
 
         if (!isBlinkAnimationRunning) {
+            Timber.d("startRemainBlinkAnimation():")
+
             remainBlinkAnimation.apply {
                 duration = 700
                 repeatMode = Animation.REVERSE
@@ -327,7 +328,10 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun stopRemainBlinkAnimation() {
+
         if (isBlinkAnimationRunning) {
+            Timber.d("stopRemainBlinkAnimation():")
+
             dynamicTrackLength.clearAnimation()
             remainBlinkAnimation.reset()
             isBlinkAnimationRunning = false

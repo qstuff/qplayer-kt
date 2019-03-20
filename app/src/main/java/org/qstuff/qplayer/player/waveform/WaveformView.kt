@@ -49,7 +49,7 @@ class WaveformView : View {
 
     private var stretchFactor = 1.0f
 
-    private var data: TrackData? = null
+    private var waveformData: TrackData? = null
 
     constructor(context: Context) : super(context) {
 
@@ -127,8 +127,8 @@ class WaveformView : View {
     fun updateWaveform(data: TrackData?) {
         Timber.d("updateWaveform():")
 
-        if (data == null) {
-            this.data = null
+        if (data?.bytes == null) {
+            waveformData = null
             stretchFactor = 1.0f
             invalidate()
             return
@@ -137,7 +137,7 @@ class WaveformView : View {
         Timber.v("updateWaveform(): num samples:  %d", data.bytes?.size)
         Timber.v("updateWaveform(): width pixels: %d", waveFormWidth)
 
-        this.data = data
+        waveformData = data
 
         if (waveFormWidth > data.bytes!!.size)
             stretchFactor = waveFormWidth.toFloat() / data.bytes!!.size
@@ -175,12 +175,12 @@ class WaveformView : View {
                         zeroDBLine);
 */
 
-        if (data != null) {
+        if (waveformData != null) {
             var dbValue: Int
 
-            for (i in 0 until data!!.bytes!!.size) {
+            for (i in 0 until waveformData!!.bytes!!.size) {
 
-                dbValue = data!!.bytes!![i] * -5
+                dbValue = waveformData!!.bytes!![i] * -5
 
                 if (dbValue > waveFormCenterY - zeroDBOffset) {
                     dbValue = waveFormCenterY
