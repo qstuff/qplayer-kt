@@ -54,18 +54,20 @@ class QueueFragment: Fragment(),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        queueViewModel.trackList.observe(this, Observer { tracks ->
-            Timber.d("trackList: $tracks")
-            tracks?.also {
+        queueAdapter = QueueAdapter(this@QueueFragment)
+        val callback = ItemTouchHelperCallback(queueAdapter)
+        val touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(queueRecycler)
 
-                queueAdapter = QueueAdapter(tracks, this@QueueFragment)
-                queueRecycler.apply {
-                    adapter = queueAdapter
-                    layoutManager = LinearLayoutManager(context)
-                }
-                val callback = ItemTouchHelperCallback(queueAdapter)
-                val touchHelper = ItemTouchHelper(callback)
-                touchHelper.attachToRecyclerView(queueRecycler)
+        queueRecycler.apply {
+            adapter = queueAdapter
+            layoutManager = LinearLayoutManager(context)
+        }
+
+        queueViewModel.trackList.observe(this, Observer { tracks ->
+            Timber.d("trackList: ${tracks.size}")
+            tracks?.also {
+                queueAdapter.setTrackList(tracks.toMutableList())
             }
         })
 
@@ -110,10 +112,11 @@ class QueueFragment: Fragment(),
 
     override fun onQueueItemDismsissed(track: Track) {
         queueViewModel.removeTrack(track)
-        // TODO: undo snackbar
+        // TODO: UNDO snackbar ?
     }
 
-    override fun onQueueListReordered(tracks: List<Track>) {
-        queueViewModel.replaceTrackList(tracks)
+    override fun onQueueItemMoved(pair: Pair<Int, Int>) {
+        // TODO:
+
     }
 }

@@ -119,6 +119,8 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
     //
 
     override fun onFileItemClicked(file: File) {
+        Timber.d("onFileItemClicked()")
+
         fileBrowserViewModel.onFileItemClicked(file)
         if (file.isM3UList()) {
             // TODO: Dialog open Playlist
@@ -132,7 +134,7 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
     override fun onFileItemLongClicked(file: File) {
 
         if (file.isDirectory && file.directoryContainsFiles()) {
-            showAddDirToQueueDialog(file)
+            showAddTracksToQueueDialog(file)
         }
     }
 
@@ -140,7 +142,11 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
         playerViewModel.loadTrack(Track(file, true))
     }
 
-    private fun showAddDirToQueueDialog(file: File) {
+    //
+    // private
+    //
+
+    private fun showAddTracksToQueueDialog(file: File) {
 
         val titles = StringBuilder()
         file.listFiles().forEach {

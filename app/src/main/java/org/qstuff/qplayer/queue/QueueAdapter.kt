@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.queue_list_item.view.*
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
+import timber.log.Timber
 import java.util.*
 
 /*
@@ -15,18 +16,18 @@ import java.util.*
  * on 2/12/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class QueueAdapter(val tracks: List<Track>,
-                   val interactionListener: QueueItemInteractionListener):
+class QueueAdapter(val interactionListener: QueueItemInteractionListener):
         RecyclerView.Adapter<RecyclerView.ViewHolder>(),
         ItemTouchHelperAdapter {
 
     interface QueueItemInteractionListener {
         fun onQueueItemClicked(track: Track)
         fun onQueueItemDismsissed(track: Track)
-        fun onQueueListReordered(trackList: List<Track>)
+        fun onQueueItemMoved(pair: Pair<Int, Int>)
     }
 
     private var selectedIndex = -1
+    private lateinit var tracks: MutableList<Track>
 
     fun onItemSelectedIndex(index: Int) {
         selectedIndex = index
@@ -39,7 +40,10 @@ class QueueAdapter(val tracks: List<Track>,
     override fun getItemCount() = tracks.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        Timber.d("onBindViewHolder(): pos: $position, tracks: ${tracks}")
+
         val track = tracks[position]
+
         holder.itemView.apply {
             if (selectedIndex == position) {
                 queueListItemIcon.setImageResource(R.drawable.icon_track_selected)
@@ -55,11 +59,19 @@ class QueueAdapter(val tracks: List<Track>,
         }
     }
 
+    fun setTrackList(tracks: MutableList<Track>) {
+        this.tracks = tracks
+        notifyDataSetChanged()
+    }
+
     //
     // ItemTouchHelperAdapter
     //
 
     override fun onItemMove(fromPosition: Int, toPosition: Int) {
+        Timber.d("onItemMove(): from: $fromPosition to: $toPosition")
+
+
         if (fromPosition < toPosition) {
             for (i in fromPosition until toPosition) {
                 Collections.swap(tracks, i, i + 1)
@@ -70,11 +82,15 @@ class QueueAdapter(val tracks: List<Track>,
             }
         }
         notifyItemMoved(fromPosition, toPosition)
-        interactionListener.onQueueListReordered(tracks)
+        interactionListener.onQueueItemMoved(Pair(fromPosition, toPosition))
     }
 
     override fun onItemDismiss(position: Int) {
+        Timber.d("onItemDismiss(): pos: $position, tracks: ${tracks}")
+
         interactionListener.onQueueItemDismsissed(tracks[position])
+//        tracks.removeAt(position)
+//        notifyItemRemoved(position)
     }
 
     //

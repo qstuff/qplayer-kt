@@ -16,7 +16,7 @@ import java.io.File
  */
 class QueueViewModel: ViewModel(), KoinComponent {
 
-    var trackList= MutableLiveData<List<Track>>()
+    var trackList = MutableLiveData<List<Track>>()
     var onTrackSelectedIndex = MutableLiveData<Int>()
     var onTrackSelected = MutableLiveData<Track>()
 
@@ -40,7 +40,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun removeTrack(track: Track) {
-        currentTracks.remove(track)
+
+        val iterator = currentTracks.iterator()
+        iterator.forEach {
+            if (it.uri == track.uri) {
+                iterator.remove()
+            }
+        }
         trackList.value = currentTracks
     }
 
@@ -52,9 +58,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun addFileList(files: List<File>) {
         files.forEach {
             if (it.isFile) {
-                addTrack(Track(it))
+                currentTracks.add(Track(it))
             }
         }
+        trackList.value = currentTracks
     }
 
     fun replaceTrackList(tracks: List<Track>) {
