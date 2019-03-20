@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.filebrowser
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,9 +17,11 @@ import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.queue.QueueViewModel
+import org.qstuff.qplayer.util.directoryContainsFiles
 import org.qstuff.qplayer.util.isM3UList
 import timber.log.Timber
 import java.io.File
+import java.lang.StringBuilder
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -127,11 +130,43 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
     }
 
     override fun onFileItemLongClicked(file: File) {
-        // TODO: if dir: open dialog, then pass list of files to queueViewModel
 
+        if (file.isDirectory && file.directoryContainsFiles()) {
+            showAddDirToQueueDialog(file)
+        }
     }
 
     override fun onFilePrelistenClicked(file: File) {
         playerViewModel.loadTrack(Track(file, true))
+    }
+
+    private fun showAddDirToQueueDialog(file: File) {
+
+        val titles = StringBuilder()
+        file.listFiles().forEach {
+            titles.append(it.name).append("\n")
+        }
+
+        AlertDialog.Builder(activity)
+                .apply {
+                    setTitle(getString(R.string.add_tracks_to_queue_dialog_title))
+                            .setMessage(titles.toString())
+                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+
+                        queueViewModel.addFileList(file.listFiles().asList())
+                        dialog.dismiss()
+                    }
+                    setNeutralButton(getString(R.string.dialog_clear_queue)) { dialog, which ->
+
+                        queueViewModel.clearTrackList()
+                        queueViewModel.addFileList(file.listFiles().asList())
+                        dialog.dismiss()
+                    }
+                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+
+                        dialog.dismiss()
+                    }
+                }
+                .show()
     }
 }

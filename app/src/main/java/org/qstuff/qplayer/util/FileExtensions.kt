@@ -27,3 +27,5 @@ fun File.isSupported(): Boolean {
     }
     return false
 }
+
+fun File.directoryContainsFiles() = this.listFiles().size > 0
