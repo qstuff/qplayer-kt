@@ -1,12 +1,12 @@
 package org.qstuff.qplayer.queue
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import timber.log.Timber
 import java.io.File
 
 /*
@@ -25,7 +25,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
     init {
-        loadTrackList()
+
     }
 
     fun addTrack(track: Track) {
@@ -70,12 +70,40 @@ class QueueViewModel: ViewModel(), KoinComponent {
         trackList.value = currentTracks
     }
 
+    fun trackListReordered(tracks: List<Track>) {
+        currentTracks.clear()
+        currentTracks.addAll(tracks)
+    }
+
     fun clearTrackList() {
         currentTracks.clear()
         trackList.value = currentTracks
     }
 
+    fun loadSelectedTrack() {
+        Timber.d("loadSelectedTrack(): ")
+
+        val track = preferencesDataSource.readSelectedTrack()
+
+        Timber.d("loadSelectedTrack(): track: ${track?.uri} ")
+
+        track?.also {
+
+            var index = 0
+            currentTracks.forEach {
+                Timber.d("loadSelectedTrack(): it: ${it.uri} ")
+                if (it.uri == track.uri) {
+                    onTrackSelectedIndex.value = index
+                    onTrackSelected.value = it
+                }
+                index++
+            }
+        }
+    }
+
     fun loadTrackList() {
+        Timber.d("loadTrackList(): ")
+
         val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
         if (list == null) {
             currentTracks = arrayListOf()
@@ -86,11 +114,24 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun saveTrackList() {
+        Timber.d("saveTrackList():")
         preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
+    }
+
+    fun saveSelectedTrack() {
+        Timber.d("saveSelectedTrack(): ${onTrackSelected.value}")
+
+        if (onTrackSelected.value != null) {
+            Timber.d("saveSelectedTrack(): ${onTrackSelected.value}")
+            val track = onTrackSelected.value
+            track?.trackStatus = Track.TrackStatus.UNDEFINED
+            preferencesDataSource.saveSelectedTrackList(onTrackSelected.value!!)
+        }
     }
 
     fun onTrackSelected(track: Track) {
         onTrackSelectedIndex.value = currentTracks.indexOf(track)
+        onTrackSelected.value = track
     }
 
     fun previousTrack(current: Track?) {

@@ -34,6 +34,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
 
+    private var pendingTrack: Track? = null
+
     // Player Control
     var isTrackPlaying = false
 
@@ -45,7 +47,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     private val serviceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            Timber.d("onServiceConnected(): %s", name.toShortString())
+            Timber.d("onServiceConnected(): ${name.toShortString()}")
 
             mediaService = (binder as QMediaPlayerService.MyBinder).service
 
@@ -63,10 +65,15 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
             onMediaServiceConnected.value = true
             isMediaServiceRunning = true
             isMediaServiceBound = true
+
+            if (pendingTrack != null) {
+                this@PlayerViewModel.loadTrack(pendingTrack)
+                pendingTrack = null
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            Timber.d("onServiceDisconnected(): %s", name.toShortString())
+            Timber.d("onServiceDisconnected(): ${name.toShortString()}")
 
             onMediaServiceConnected.value = false
 
@@ -137,8 +144,18 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     // Trackhandling
     //
 
-    fun loadTrack(track: Track) {
-        if (!isMediaServiceBound) return
+    fun loadTrack(track: Track?) {
+        Timber.d("loadTrack(): $track")
+
+        if (!isMediaServiceBound) {
+            Timber.d("loadTrack(): service not ready")
+            pendingTrack = track
+            return
+        }
+
+        if (track == null) {
+            return
+        }
 
         mediaService.pause()
         playerStatus.value = PlayerStatus.PAUSED

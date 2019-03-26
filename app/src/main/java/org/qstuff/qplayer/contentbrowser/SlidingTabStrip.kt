@@ -7,6 +7,8 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
+import org.qstuff.qplayer.R
 
 class SlidingTabStrip @JvmOverloads internal constructor(context: Context, attrs: AttributeSet? = null) :
         LinearLayout(context, attrs) {
@@ -117,7 +119,7 @@ class SlidingTabStrip @JvmOverloads internal constructor(context: Context, attrs
 
             mSelectedIndicatorPaint.color = color
 
-            mBottomLinePaint.color = Color.parseColor("#FFFFFFFF")
+            mBottomLinePaint.color = ContextCompat.getColor(context, R.color.white)
             canvas.drawRect(0f,
                     (height - mSelectedIndicatorThickness).toFloat(),
                     width.toFloat(),

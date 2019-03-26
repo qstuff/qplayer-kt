@@ -20,6 +20,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val DEFAULT_ROOT_DIR = "/storage/"
 
         const val PREF_QUEUE_LIST = "PREF_QUEUE_LIST"
+        const val PREF_SELECTED_TRACK = "PREF_SELECTED_TRACK"
 
     }
 
@@ -44,5 +45,16 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         val json = preferences.getString(key, "")
         if (json.isNullOrBlank()) return null
         return Gson().fromJson<ArrayList<Track>>(json, object: TypeToken<ArrayList<Track>>() {}.type);
+    }
+
+    fun saveSelectedTrackList(track: Track) =
+        preferences.edit {
+            putString(PREF_SELECTED_TRACK, Gson().toJson(track))
+        }
+
+    fun readSelectedTrack(): Track? {
+        val json = preferences.getString(PREF_SELECTED_TRACK, "")
+        if (json.isNullOrBlank()) return null
+        return Gson().fromJson<Track>(json, object: TypeToken<Track>() {}.type);
     }
 }

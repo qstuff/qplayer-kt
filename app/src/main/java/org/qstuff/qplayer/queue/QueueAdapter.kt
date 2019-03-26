@@ -23,13 +23,15 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
     interface QueueItemInteractionListener {
         fun onQueueItemClicked(track: Track)
         fun onQueueItemDismsissed(track: Track)
-        fun onQueueItemMoved(pair: Pair<Int, Int>)
+        fun onQueueItemMoved(tracks: MutableList<Track>)
     }
 
     private var selectedIndex = -1
     private lateinit var tracks: MutableList<Track>
 
     fun onItemSelectedIndex(index: Int) {
+        Timber.d("onItemSelectedIndex(): $index")
+
         selectedIndex = index
         notifyDataSetChanged()
     }
@@ -40,7 +42,7 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
     override fun getItemCount() = tracks.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        Timber.d("onBindViewHolder(): pos: $position, tracks: ${tracks}")
+        Timber.v("onBindViewHolder(): pos: $position, tracks: ${tracks}")
 
         val track = tracks[position]
 
@@ -82,7 +84,7 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
             }
         }
         notifyItemMoved(fromPosition, toPosition)
-        interactionListener.onQueueItemMoved(Pair(fromPosition, toPosition))
+        interactionListener.onQueueItemMoved(tracks)
     }
 
     override fun onItemDismiss(position: Int) {

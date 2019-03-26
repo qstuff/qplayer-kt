@@ -72,11 +72,15 @@ class QueueFragment: Fragment(),
         })
 
         queueViewModel.onTrackSelectedIndex.observe(this, Observer { index ->
+            Timber.d("onTrackSelectedIndex(): $index")
+
             queueAdapter.onItemSelectedIndex(index)
             queueRecycler.scrollToPosition(index)
         })
 
         queueViewModel.onTrackSelected.observe(this, Observer { track ->
+            Timber.d("onTrackSelected(): $track")
+
             playerViewModel.loadTrack(track)
         })
 
@@ -93,12 +97,18 @@ class QueueFragment: Fragment(),
 
     override fun onResume() {
         super.onResume()
+
+
         queueViewModel.loadTrackList()
+        queueViewModel.loadSelectedTrack()
+
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroyView() {
+        super.onDestroyView()
+
         queueViewModel.saveTrackList()
+        queueViewModel.saveSelectedTrack()
     }
 
     //
@@ -106,7 +116,7 @@ class QueueFragment: Fragment(),
     //
 
     override fun onQueueItemClicked(track: Track) {
-        playerViewModel.loadTrack(track)
+        //playerViewModel.loadTrack(track)
         queueViewModel.onTrackSelected(track)
     }
 
@@ -115,8 +125,7 @@ class QueueFragment: Fragment(),
         // TODO: UNDO snackbar ?
     }
 
-    override fun onQueueItemMoved(pair: Pair<Int, Int>) {
-        // TODO:
-
+    override fun onQueueItemMoved(tracks: MutableList<Track>) {
+        queueViewModel.trackListReordered(tracks)
     }
 }

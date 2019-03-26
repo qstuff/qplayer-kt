@@ -37,10 +37,6 @@ import java.util.concurrent.TimeUnit
  */
 class PlayerActivity : AppCompatActivity() {
 
-    companion object {
-
-    }
-
     private lateinit var jogWheelContainer: HGViewContainer
     private lateinit var jogWheelDial: HGDialV2
     private lateinit var jogWheelInterface: HGDialV2.IHGDial
@@ -376,6 +372,8 @@ class PlayerActivity : AppCompatActivity() {
         override fun onStartTrackingTouch(seekBar: SeekBar) {}
 
         override fun onStopTrackingTouch(seekBar: SeekBar) {
+            if (currentTrack == null) return
+
             val dTotal = currentTrack!!.duration.toDouble() / 1000
             val dProgress = seekBar.progress.toDouble() / 1000
             playerViewModel.seekTo((dProgress * dTotal * 1000), false)
