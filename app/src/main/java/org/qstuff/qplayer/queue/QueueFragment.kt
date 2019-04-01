@@ -181,12 +181,12 @@ class QueueFragment:
                         if (dialogView.textInput.text.isBlank()) {
                             context.shortToast(getString(R.string.queue_toast_save_tracks_as_queue_need_name))
                         } else {
-                            playlistViewModel.saveTracksAsNewPlaylist(tracks!!, dialogView.textInput.text.toString())
+                            playlistViewModel.saveTracksAsNewPlaylist(tracks ?: listOf(),
+                                    dialogView.textInput.text.toString())
                         }
                         dialog.dismiss()
                     }
                     setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
-
                         dialog.dismiss()
                     }
                 }.show()

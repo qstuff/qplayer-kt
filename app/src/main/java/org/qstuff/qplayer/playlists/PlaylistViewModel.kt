@@ -27,21 +27,28 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
 
     private val roomDataSource by inject<RoomDataSource>()
 
-    var currentPlaylistList = emptyList<Playlist>()
+    var currentPlaylistList = arrayListOf<Playlist>()
 
 
     fun loadPlaylists() {
 
         launch {
             async {
-                currentPlaylistList = roomDataSource.getAllPlaylists()
+                currentPlaylistList = roomDataSource.getAllPlaylists() as ArrayList<Playlist>
             }.await()
 
             playlistList.value = currentPlaylistList
         }
     }
 
-    fun saveTracksAsNewPlaylist(tracks: List<Track>, text: String) {
+    fun saveTracksAsNewPlaylist(tracks: List<Track>, name: String) {
+        val playlist = Playlist(0, name, tracks)
+        currentPlaylistList.add(playlist)
 
+        launch {
+            roomDataSource.addPlaylist(playlist)
+        }
+
+        playlistList.value = currentPlaylistList
     }
 }

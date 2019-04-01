@@ -1,8 +1,6 @@
 package org.qstuff.qplayer.datasource.model
 
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import java.util.ArrayList
 
 /**
@@ -13,10 +11,12 @@ import java.util.ArrayList
 @Entity(tableName = "Playlists")
 data class Playlist(
         @PrimaryKey(autoGenerate = true)
-        val playlist_id: Int,
-        val name: String,
-        @Embedded
-        val trackList: ArrayList<Track>) {
+        var playlist_id: Int,
+        var name: String,
+        @Ignore
+        var trackList: List<Track>) {
+
+    constructor() : this(0, "", listOf())
 
     override fun toString(): String {
         val builder = StringBuilder()

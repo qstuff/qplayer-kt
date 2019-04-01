@@ -3,6 +3,7 @@ package org.qstuff.qplayer.datasource.room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.datasource.model.Playlist
@@ -23,6 +24,12 @@ class RoomDataSource: KoinComponent, CoroutineScope {
     suspend fun getAllPlaylists(): List<Playlist> {
         return async {
             database.playlistDao().getAll()
+        }.await()
+    }
+
+    suspend fun addPlaylist(playlist: Playlist) {
+        return async {
+            database.playlistDao().insertAll(playlist)
         }.await()
     }
 }

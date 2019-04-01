@@ -11,7 +11,7 @@ import java.io.File
 @Entity(tableName = "Tracks")
 data class Track(
         @PrimaryKey(autoGenerate = true)
-        val track_id: Int = 0,
+        var track_id: Int = 0,
         var name: String = "",
         var uri: String = "",
         var duration: Long = 0,
@@ -19,6 +19,8 @@ data class Track(
         var cuePosition: Long = 0,
         var isAutoplay: Boolean = false,
         var playlistName: String = "") {
+
+
 
     @Ignore
     constructor(file: File): this() {
