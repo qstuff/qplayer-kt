@@ -29,8 +29,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun addTrack(track: Track) {
+
         currentTracks.add(track)
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun addFile(file: File) {
@@ -48,45 +50,52 @@ class QueueViewModel: ViewModel(), KoinComponent {
             }
         }
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun addTrackList(tracks: List<Track>) {
+
         currentTracks.addAll(tracks)
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun addFileList(files: List<File>) {
+
         files.forEach {
             if (it.isFile) {
                 currentTracks.add(Track(it))
             }
         }
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun replaceTrackList(tracks: List<Track>) {
+
         currentTracks.clear()
         currentTracks.addAll(tracks)
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun trackListReordered(tracks: List<Track>) {
+
         currentTracks.clear()
         currentTracks.addAll(tracks)
+        saveTrackList()
     }
 
     fun clearTrackList() {
+
         currentTracks.clear()
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun loadSelectedTrack() {
-        Timber.d("loadSelectedTrack(): ")
 
         val track = preferencesDataSource.readSelectedTrack()
-
-        Timber.d("loadSelectedTrack(): track: ${track?.uri} ")
-
         track?.also {
 
             var index = 0
@@ -102,7 +111,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun loadTrackList() {
-        Timber.d("loadTrackList(): ")
 
         val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
         if (list == null) {
@@ -111,30 +119,30 @@ class QueueViewModel: ViewModel(), KoinComponent {
             currentTracks = list
         }
         trackList.value = currentTracks
+        saveTrackList()
     }
 
     fun saveTrackList() {
-        Timber.d("saveTrackList():")
         preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
     }
 
     fun saveSelectedTrack() {
-        Timber.d("saveSelectedTrack(): ${onTrackSelected.value}")
 
         if (onTrackSelected.value != null) {
-            Timber.d("saveSelectedTrack(): ${onTrackSelected.value}")
             val track = onTrackSelected.value
             track?.trackStatus = Track.TrackStatus.UNDEFINED
-            preferencesDataSource.saveSelectedTrackList(onTrackSelected.value!!)
+            preferencesDataSource.saveSelectedTrackList(track!!)
         }
     }
 
     fun onTrackSelected(track: Track) {
+
         onTrackSelectedIndex.value = currentTracks.indexOf(track)
         onTrackSelected.value = track
     }
 
     fun previousTrack(current: Track?) {
+
         current?.let {
             if (currentTracks.contains(current)) {
                 var index = currentTracks.indexOf(current)
@@ -152,6 +160,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun nextTrack(current: Track?) {
+
         current?.let {
             if (currentTracks.contains(current)) {
                 var index = currentTracks.indexOf(current)

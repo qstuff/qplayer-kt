@@ -98,7 +98,6 @@ class QueueFragment: Fragment(),
     override fun onResume() {
         super.onResume()
 
-
         queueViewModel.loadTrackList()
         queueViewModel.loadSelectedTrack()
 

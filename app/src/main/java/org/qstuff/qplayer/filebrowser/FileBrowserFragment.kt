@@ -19,6 +19,7 @@ import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.directoryContainsFiles
 import org.qstuff.qplayer.util.isM3UList
+import org.qstuff.qplayer.util.shortToast
 import timber.log.Timber
 import java.io.File
 import java.lang.StringBuilder
@@ -129,12 +130,17 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
         if (file.isFile) {
             queueViewModel.addFile(file)
         }
+        if (file.isDirectory && !file.directoryContainsFiles()) {
+            context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
+        }
     }
 
     override fun onFileItemLongClicked(file: File) {
 
         if (file.isDirectory && file.directoryContainsFiles()) {
             showAddTracksToQueueDialog(file)
+        } else {
+            context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
         }
     }
 

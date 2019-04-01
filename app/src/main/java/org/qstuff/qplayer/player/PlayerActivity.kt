@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.player
 
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
@@ -185,6 +186,7 @@ class PlayerActivity : AppCompatActivity() {
                         trackTitle.text = track.name
                         stopRemainBlinkAnimation()
                         waveformView.updateWaveform(null)
+                        trackProgressBar.progress = 0
 
                     }
                     Track.TrackStatus.PREPARED -> {
@@ -279,7 +281,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun setupContentSection() {
 
         contentPager.apply {
-            adapter = ContentPagerAdapter(supportFragmentManager)
+            adapter = ContentPagerAdapter(context, supportFragmentManager)
             offscreenPageLimit = 2
         }
         contentTabbar.apply {
@@ -343,7 +345,8 @@ class PlayerActivity : AppCompatActivity() {
     //
     // Inner classes
     //
-    private class ContentPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
+    private class ContentPagerAdapter(val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
+
         override fun getItem(position: Int): Fragment {
             when(position) {
                 0 -> return QueueFragment.newInstance()
@@ -357,9 +360,9 @@ class PlayerActivity : AppCompatActivity() {
 
         override fun getPageTitle(position: Int): CharSequence? {
             when (position) {
-                0 -> return "queue"
-                1 -> return "filebrowser"
-                2 -> return "playlists"
+                0 -> return context.getString(R.string.queue_title)
+                1 -> return context.getString(R.string.filebrowser_title)
+                2 -> return context.getString(R.string.playlists_title)
             }
             return ""
         }

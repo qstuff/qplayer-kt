@@ -8,10 +8,16 @@
     <!-- Player -->
     <string name="player_no_track_loaded">… kein track geladen …</string>
 
-    <!-- Browser -->
-    <string name="Queue">queue</string>
-    <string name="Playlists">playlists</string>
-    <string name="Filebrowser">filebrowser</string>
+    <!-- Queue -->
+    <string name="queue_title">queue</string>
+
+    <!-- Playlists -->
+    <string name="playlists_title">playlists</string>
+
+    <!-- Filebrowser -->
+    <string name="filebrowser_title">filebrowser</string>
+
+    <string name="filebrowser_toast_empty_directory">Dieses Verzeichnis enthält keine Tracks</string>
 
     <!-- Dialogs -->
     <string name="dialog_ok">Ok</string>
