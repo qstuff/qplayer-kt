@@ -28,4 +28,27 @@ fun File.isSupported(): Boolean {
     return false
 }
 
-fun File.directoryContainsFiles() = this.listFiles().size > 0
+fun File.directoryContainsFiles(): Boolean {
+    val files = this.listFiles()
+
+    if (files.size > 0) {
+        files.forEach {
+            if (it.isFile && it.isSupported()) {
+                return true
+            }
+        }
+    }
+
+    return false
+}
+
+fun File.listTracks(): List<File> {
+    val ret = arrayListOf<File>()
+    val files = this.listFiles()
+    files.forEach {
+        if (it.isFile && it.isSupported()) {
+            ret.add(it)
+        }
+    }
+    return ret
+}

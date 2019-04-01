@@ -139,10 +139,11 @@ class WaveformView : View {
 
         waveformData = data
 
-        if (waveFormWidth > data.bytes!!.size)
+        if (waveFormWidth > data.bytes!!.size) {
             stretchFactor = waveFormWidth.toFloat() / data.bytes!!.size
-        else
-            stretchFactor = data.bytes!!.size as Float / waveFormWidth
+        } else {
+            stretchFactor = data.bytes!!.size.toFloat() / waveFormWidth
+        }
 
         Timber.v("updateWaveform(): stretchFactor: %f", stretchFactor)
         invalidate()

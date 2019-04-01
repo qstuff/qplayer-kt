@@ -91,8 +91,6 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
         Timber.d("onItemDismiss(): pos: $position, tracks: ${tracks}")
 
         interactionListener.onQueueItemDismsissed(tracks[position])
-//        tracks.removeAt(position)
-//        notifyItemRemoved(position)
     }
 
     //

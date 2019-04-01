@@ -24,9 +24,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
-    init {
-
-    }
 
     fun addTrack(track: Track) {
 

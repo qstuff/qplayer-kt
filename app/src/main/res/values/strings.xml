@@ -34,7 +34,7 @@
     <string name="dialog_play">Sofort abspiele</string>
 
     <string name="add_tracks_to_queue_dialog_tag">add_tracks_to_queue_dialog_tag</string>
-    <string name="add_tracks_to_queue_dialog_need_name">Bitte einen Namen für die Playlist eingeben</string>
+    <string name="queue_toast_save_tracks_as_queue_need_name">Bitte einen Namen für die Playlist eingeben</string>
 
     <string name="add_m3ulist_to_queue_dialog_tag">add_m3ulist_to_queue_dialog_tag</string>
     <string name="add_m3ulist_to_queue_dialog_title">Diese Playlist in die Queue laden?</string>
@@ -42,10 +42,10 @@
     <string name="add_m3ulist_to_queue_empty_dialog_message">Die in der Playlist referenzierten Tracks wurden nicht gefunden.\n\nBitte überprüfe deine Dateien.</string>
 
     <string name="add_tracks_to_playlist_dialog_tag">add_tracks_to_playlist_dialog_tag</string>
-    <string name="add_tracks_to_playlist_dialog_title">Queue als Playlist speichern</string>
+    <string name="queue_dialog_save_tracks_as_playlist_title">Queue als Playlist speichern</string>
     <string name="add_tracks_to_playlist_dialog_list_title">Vorhandene Playlists</string>
     <string name="add_tracks_to_playlist_dialog_edittext_hint">Name für Playlist eingeben</string>
-    <string name="add_tracks_to_playlist_dialog_subtitle">Lege eine neue Playlist an, oder füge die Tracks zu einer vorhandenen hinzu</string>
+    <string name="queue_dialog_save_tracks_as_playlist_message">Lege eine neue Playlist an, oder füge die Tracks zu einer vorhandenen hinzu</string>
 
     <string name="add_tracks_to_existing_playlist_dialog_tag">add_tracks_to_exiating_playlist_dialog_tag</string>
     <string name="add_tracks_to_existing_playlist_dialog_title">In vorhandener Playlist speichern</string>

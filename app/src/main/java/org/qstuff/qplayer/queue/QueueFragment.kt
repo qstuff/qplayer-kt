@@ -1,21 +1,28 @@
 package org.qstuff.qplayer.queue
 
 import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_queue.*
+import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.koin.standalone.KoinComponent
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.player.PlayerViewModel
+import org.qstuff.qplayer.playlists.PlaylistViewModel
+import org.qstuff.qplayer.util.shortToast
 import timber.log.Timber
 
 /*
@@ -23,7 +30,8 @@ import timber.log.Timber
  * on 2/3/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class QueueFragment: Fragment(),
+class QueueFragment:
+        Fragment(),
         KoinComponent,
         QueueAdapter.QueueItemInteractionListener {
 
@@ -35,6 +43,7 @@ class QueueFragment: Fragment(),
         }
     }
 
+    private lateinit var playlistViewModel: PlaylistViewModel
     private lateinit var queueViewModel: QueueViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
     private lateinit var playerViewModel: PlayerViewModel
@@ -45,6 +54,7 @@ class QueueFragment: Fragment(),
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
+        playlistViewModel = ViewModelProviders.of(activity!!).get(PlaylistViewModel::class.java)
         queueViewModel = ViewModelProviders.of(activity!!).get(QueueViewModel::class.java)
         fileBrowserViewModel = ViewModelProviders.of(activity!!).get(FileBrowserViewModel::class.java)
         playerViewModel = ViewModelProviders.of(activity!!).get(PlayerViewModel::class.java)
@@ -86,15 +96,11 @@ class QueueFragment: Fragment(),
         })
 
         queueClearButton.setOnClickListener {
-
             showClearQueueDialog()
-            // TODO: Dialog, then
-            // queueViewModel.clearTrackList()
         }
 
         queueSaveAsPlaylistButton.setOnClickListener {
-            // TODO: Dialog, then
-            // PlayListViewModel
+            showSaveAsPlaylistDialog()
         }
     }
 
@@ -118,7 +124,6 @@ class QueueFragment: Fragment(),
     //
 
     override fun onQueueItemClicked(track: Track) {
-        //playerViewModel.loadTrack(track)
         queueViewModel.onTrackSelected(track)
     }
 
@@ -150,5 +155,58 @@ class QueueFragment: Fragment(),
                         dialog.dismiss()
                     }
                 }.show()
+    }
+
+    private fun showSaveAsPlaylistDialog() {
+
+        val tracks = queueViewModel.trackList.value
+        val playlists = playlistViewModel.playlistList.value
+
+        val dialogView = layoutInflater.inflate(R.layout.queue_dialog_save_tracks_as_playlist, null)
+        dialogView.listview.apply {
+            adapter = DialogListAdapter(context, playlists ?: listOf())
+            setOnItemClickListener { parent, view, position, id ->
+                showAddToExistingPlaylistDialog(position)
+            }
+        }
+
+        AlertDialog.Builder(activity)
+                .apply {
+                    setView(dialogView)
+                    setCancelable(false)
+                    setTitle(getString(R.string.queue_dialog_save_tracks_as_playlist_title))
+                    setMessage(getString(R.string.queue_dialog_save_tracks_as_playlist_message))
+                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+
+                        if (dialogView.textInput.text.isBlank()) {
+                            context.shortToast(getString(R.string.queue_toast_save_tracks_as_queue_need_name))
+                        } else {
+                            playlistViewModel.saveTracksAsNewPlaylist(tracks!!, dialogView.textInput.text.toString())
+                        }
+                        dialog.dismiss()
+                    }
+                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+
+                        dialog.dismiss()
+                    }
+                }.show()
+    }
+
+    private fun showAddToExistingPlaylistDialog(position: Int) {
+
+    }
+
+    private class DialogListAdapter(context: Context, val items: List<Playlist>):
+            ArrayAdapter<Playlist>(context, 0, items) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            var view = convertView
+            if (view == null) {
+                view = LayoutInflater.from(context).inflate(R.layout.dialog_list_item, null)
+            }
+            val text = view!!.findViewById<TextView>(R.id.itemText)
+            text.text = items.get(position).name
+            return view
+        }
     }
 }

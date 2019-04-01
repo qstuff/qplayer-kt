@@ -24,7 +24,7 @@ import kotlinx.android.synthetic.main.activity_player.*
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
-import org.qstuff.qplayer.contentbrowser.ContentListFragment
+import org.qstuff.qplayer.playlists.PlaylistFragment
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
@@ -351,7 +351,7 @@ class PlayerActivity : AppCompatActivity() {
             when(position) {
                 0 -> return QueueFragment.newInstance()
                 1 -> return FileBrowserFragment.newInstance()
-                2 -> return ContentListFragment.newInstance()
+                2 -> return PlaylistFragment.newInstance()
             }
             return null!!
         }

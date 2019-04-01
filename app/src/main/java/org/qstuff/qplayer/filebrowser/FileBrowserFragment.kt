@@ -19,6 +19,7 @@ import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.directoryContainsFiles
 import org.qstuff.qplayer.util.isM3UList
+import org.qstuff.qplayer.util.listTracks
 import org.qstuff.qplayer.util.shortToast
 import timber.log.Timber
 import java.io.File
@@ -29,7 +30,8 @@ import java.lang.StringBuilder
  * on 2/3/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInteractionListener {
+class FileBrowserFragment: Fragment(),
+        FileBrowserAdapter.FileBrowserItemInteractionListener {
 
     companion object {
 
@@ -155,27 +157,27 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
     private fun showAddTracksToQueueDialog(file: File) {
 
         val titles = StringBuilder()
-        file.listFiles().forEach {
+        val files = file.listTracks()
+
+        files.forEach {
             titles.append(it.name).append("\n")
         }
 
         AlertDialog.Builder(activity)
                 .apply {
+                    setCancelable(false)
                     setTitle(getString(R.string.filebrowser_dialog_add_tracks_to_queue_title))
                             .setMessage(titles.toString())
                     setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
-
-                        queueViewModel.addFileList(file.listFiles().asList())
+                        queueViewModel.addFileList(files)
                         dialog.dismiss()
                     }
                     setNeutralButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
-
                         queueViewModel.clearTrackList()
-                        queueViewModel.addFileList(file.listFiles().asList())
+                        queueViewModel.addFileList(files)
                         dialog.dismiss()
                     }
                     setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
-
                         dialog.dismiss()
                     }
                 }

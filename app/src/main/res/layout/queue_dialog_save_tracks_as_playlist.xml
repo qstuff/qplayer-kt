@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp">
+
+    <EditText
+        android:id="@+id/textInput"
+        android:inputType="text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="10dp"
+        android:imeActionLabel="Create"
+        android:imeOptions="actionDone"
+        android:hint="@string/add_tracks_to_playlist_dialog_edittext_hint"
+        android:layout_alignParentTop="true"/>
+
+    <TextView
+        android:id="@+id/subtitle"
+        style="@style/DialogTitleStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@id/textInput"
+        android:gravity="left"
+        android:text="@string/add_tracks_to_playlist_dialog_list_title"
+        android:background="@drawable/selector_tracklist_item"/>
+
+    <ListView
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/subtitle"/>
+
+</RelativeLayout>
+

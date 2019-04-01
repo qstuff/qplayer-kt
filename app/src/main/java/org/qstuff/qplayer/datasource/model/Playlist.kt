@@ -1,12 +1,8 @@
 package org.qstuff.qplayer.datasource.model
 
-
-
-import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import java.io.Serializable
 import java.util.ArrayList
 
 /**
@@ -15,33 +11,24 @@ import java.util.ArrayList
  * Copyright (C) 2015 Claus Chierici, All rights reserved.
  */
 @Entity(tableName = "Playlists")
-class Playlist : Serializable {
-
-    @ColumnInfo(name = "playlist_id")
-    var playlistId: Int = 0
-
-    @Ignore
-    var trackList = ArrayList<Track>()
-        set(trackList) {
-            this.trackList.clear()
-            field = trackList
-        }
-
-    @PrimaryKey
-    @ColumnInfo(name = "name")
-    var name = ""
-
-
-    @Ignore
-    constructor(name: String) {
-        this.name = name
-    }
+data class Playlist(
+        @PrimaryKey(autoGenerate = true)
+        val playlist_id: Int,
+        val name: String,
+        @Embedded
+        val trackList: ArrayList<Track>) {
 
     override fun toString(): String {
         val builder = StringBuilder()
         builder.append("PL Name: ")
         builder.append(name)
         builder.append("\n")
+        builder.append(" Tracks: ")
+
+        trackList.forEach {
+            builder.append(it.toString())
+            builder.append("\n")
+        }
 
         return builder.toString()
     }

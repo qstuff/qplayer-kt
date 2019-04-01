@@ -11,6 +11,7 @@ buildscript {
             targetSdkVersion    : 28,
             versionCode         : 200,
             versionName         : "2.0.0",
+            versionCommitCount  : 200 + "git rev-list HEAD --count".execute([], project.rootDir).text.trim().toInteger()
     ]
 
     ext.libs = [
@@ -19,7 +20,7 @@ buildscript {
             coroutines              : "1.0.1",
             ktx                     : '1.0.1',
             debugDatabase           : "1.0.4",
-            koin                    : "1.0.1",
+            koin                    : "1.0.2",
             timber                  : "4.7.1",
             gson                    : "2.8.5",
             material                : "1.0.0",
@@ -28,6 +29,7 @@ buildscript {
             espresso                : "3.1.0",
             espressoRunner          : "1.1.0",
             crashlytics             : "2.9.9",
+            room                    : "2.1.0-alpha06"
     ]
 
     repositories {
