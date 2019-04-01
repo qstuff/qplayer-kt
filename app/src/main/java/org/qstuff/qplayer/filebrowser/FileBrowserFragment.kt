@@ -149,7 +149,7 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
     }
 
     //
-    // private
+    // Dialogs
     //
 
     private fun showAddTracksToQueueDialog(file: File) {
@@ -161,14 +161,14 @@ class FileBrowserFragment: Fragment(), FileBrowserAdapter.FileBrowserItemInterac
 
         AlertDialog.Builder(activity)
                 .apply {
-                    setTitle(getString(R.string.add_tracks_to_queue_dialog_title))
+                    setTitle(getString(R.string.filebrowser_dialog_add_tracks_to_queue_title))
                             .setMessage(titles.toString())
                     setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
 
                         queueViewModel.addFileList(file.listFiles().asList())
                         dialog.dismiss()
                     }
-                    setNeutralButton(getString(R.string.dialog_clear_queue)) { dialog, which ->
+                    setNeutralButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
 
                         queueViewModel.clearTrackList()
                         queueViewModel.addFileList(file.listFiles().asList())

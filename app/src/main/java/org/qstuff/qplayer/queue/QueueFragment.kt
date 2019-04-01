@@ -1,5 +1,6 @@
 package org.qstuff.qplayer.queue
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -85,6 +86,8 @@ class QueueFragment: Fragment(),
         })
 
         queueClearButton.setOnClickListener {
+
+            showClearQueueDialog()
             // TODO: Dialog, then
             // queueViewModel.clearTrackList()
         }
@@ -126,5 +129,26 @@ class QueueFragment: Fragment(),
 
     override fun onQueueItemMoved(tracks: MutableList<Track>) {
         queueViewModel.trackListReordered(tracks)
+    }
+
+    //
+    // Dialogs
+    //
+
+    private fun showClearQueueDialog() {
+
+        AlertDialog.Builder(activity)
+                .apply {
+                    setCancelable(false)
+                    setTitle(getString(R.string.queue_dialog_confirm_clear_title))
+                    setMessage(getString(R.string.queue_dialog_confirm_clear_message))
+                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                        queueViewModel.clearTrackList()
+                        dialog.dismiss()
+                    }
+                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                        dialog.dismiss()
+                    }
+                }.show()
     }
 }

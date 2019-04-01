@@ -11,11 +11,17 @@
     <!-- Queue -->
     <string name="queue_title">queue</string>
 
+    <string name="queue_dialog_confirm_clear_title">Queue löschen</string>
+    <string name="queue_dialog_confirm_clear_message">Die Queue wirklich löschen?</string>
+
     <!-- Playlists -->
     <string name="playlists_title">playlists</string>
 
     <!-- Filebrowser -->
     <string name="filebrowser_title">filebrowser</string>
+
+    <string name="filebrowser_dialog_add_tracks_to_queue_title">Diese Tracks in die Queue laden?</string>
+    <string name="filebrowser_dialog_queue_overwrite">Queue überschreiben</string>
 
     <string name="filebrowser_toast_empty_directory">Dieses Verzeichnis enthält keine Tracks</string>
 
@@ -24,12 +30,10 @@
     <string name="dialog_cancel">Abbrechen</string>
 
     <string name="dialog_add_to_queue">In die Queue laden</string>
-    <string name="dialog_clear_queue">Queue überschreiben</string>
     <string name="dialog_add_to_playlist">In die Playlist</string>
     <string name="dialog_play">Sofort abspiele</string>
 
     <string name="add_tracks_to_queue_dialog_tag">add_tracks_to_queue_dialog_tag</string>
-    <string name="add_tracks_to_queue_dialog_title">Diese Tracks in die Queue laden?</string>
     <string name="add_tracks_to_queue_dialog_need_name">Bitte einen Namen für die Playlist eingeben</string>
 
     <string name="add_m3ulist_to_queue_dialog_tag">add_m3ulist_to_queue_dialog_tag</string>
@@ -52,10 +56,6 @@
     <string name="add_playlist_to_queue_dialog_tag">add_playlist_to_queue_dialog_tag</string>
 
     <string name="storage_permission_request_message">Um Tracks von der SD Karte abspielen zu können benötigt die App Zugriffsberechtung</string>
-
-    <string name="dialog_confirm_clear_queue_tag">dialog_confirm_clear_queue_tag</string>
-    <string name="dialog_confirm_clear_queue_title">Queue löschen</string>
-    <string name="dialog_confirm_clear_queue_message">Die Queue wirklich löschen?</string>
 
     <string name="dialog_crashlytics_opt_in_tag">dialog_crashlytics_opt_in_tag</string>
     <string name="dialog_crashlytics_opt_in_title">Fehlerberichte aktivieren?</string>

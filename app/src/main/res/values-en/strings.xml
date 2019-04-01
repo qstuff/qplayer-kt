@@ -11,11 +11,17 @@
     <!-- Queue -->
     <string name="queue_title">queue</string>
 
+    <string name="queue_dialog_confirm_clear_title">Clear queue</string>
+    <string name="queue_dialog_confirm_clear_message">Really clear the queue?</string>
+
     <!-- Playlists -->
     <string name="playlists_title">playlists</string>
 
     <!-- Filebrowser -->
     <string name="filebrowser_title">filebrowser</string>
+
+    <string name="filebrowser_dialog_add_tracks_to_queue_title">Load these tracks into the queue ?</string>
+    <string name="filebrowser_dialog_queue_overwrite">Overwrite queue</string>
 
     <string name="filebrowser_toast_empty_directory">This directory contains no tracks</string>
 
@@ -24,12 +30,10 @@
     <string name="dialog_cancel">Cancel</string>
 
     <string name="dialog_add_to_queue">Add tracks to queue</string>
-    <string name="dialog_clear_queue">Overwrite queue</string>
     <string name="dialog_add_to_playlist">To playlist</string>
     <string name="dialog_play">Play now</string>
 
     <string name="add_tracks_to_queue_dialog_tag">add_tracks_to_queue_dialog_tag</string>
-    <string name="add_tracks_to_queue_dialog_title">Load these tracks into the queue ?</string>
     <string name="add_tracks_to_queue_dialog_need_name">Please enter a name for the playlist</string>
 
     <string name="add_m3ulist_to_queue_dialog_tag">add_m3ulist_to_queue_dialog_tag</string>
@@ -51,9 +55,6 @@
 
     <string name="storage_permission_request_message">We need the storage permission to access the sound files on your sdcard</string>
 
-    <string name="dialog_confirm_clear_queue_tag">dialog_confirm_clear_queue_tag</string>
-    <string name="dialog_confirm_clear_queue_title">Clear queue</string>
-    <string name="dialog_confirm_clear_queue_message">Really clear the queue?</string>
 
     <string name="dialog_crashlytics_opt_in_tag">dialog_crashlytics_opt_in_tag</string>
     <string name="dialog_crashlytics_opt_in_title">Enable crashreporting?</string>
