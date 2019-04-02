@@ -116,11 +116,11 @@ class PlaylistFragment:
                         queueViewModel.addTrackList(tracks)
                         dialog.dismiss()
                     }
-                    setNeutralButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
+                    setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
                         queueViewModel.replaceTrackList(tracks)
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
                         dialog.dismiss()
                     }
                 }.show()

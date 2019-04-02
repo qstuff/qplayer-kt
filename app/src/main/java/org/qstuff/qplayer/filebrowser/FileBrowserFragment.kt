@@ -176,12 +176,12 @@ class FileBrowserFragment: Fragment(),
                         queueViewModel.addFileList(files)
                         dialog.dismiss()
                     }
-                    setNeutralButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
+                    setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
                         queueViewModel.clearTrackList()
                         queueViewModel.addFileList(files)
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
                         dialog.dismiss()
                     }
                 }
