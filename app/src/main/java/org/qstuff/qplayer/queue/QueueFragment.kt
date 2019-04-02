@@ -163,14 +163,7 @@ class QueueFragment:
         val playlists = playlistViewModel.playlistList.value
 
         val dialogView = layoutInflater.inflate(R.layout.queue_dialog_save_tracks_as_playlist, null)
-        dialogView.listview.apply {
-            adapter = DialogListAdapter(context, playlists ?: listOf())
-            setOnItemClickListener { parent, view, position, id ->
-                showAddToExistingPlaylistDialog(position)
-            }
-        }
-
-        AlertDialog.Builder(activity)
+        val dialog = AlertDialog.Builder(activity)
                 .apply {
                     setView(dialogView)
                     setCancelable(false)
@@ -190,6 +183,14 @@ class QueueFragment:
                         dialog.dismiss()
                     }
                 }.show()
+
+        dialogView.listview.apply {
+            adapter = DialogListAdapter(context, playlists ?: listOf())
+            setOnItemClickListener { parent, view, position, id ->
+                showAddToExistingPlaylistDialog(position)
+                dialog.dismiss()
+            }
+        }
     }
 
     private fun showAddToExistingPlaylistDialog(position: Int) {
@@ -210,11 +211,11 @@ class QueueFragment:
                         playlistViewModel.saveTracksToExistingPlaylist(tracks, playlist?.name, true)
                         dialog.dismiss()
                     }
-                    setNeutralButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_append)) { dialog, which ->
+                    setNegativeButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_append)) { dialog, which ->
                         playlistViewModel.saveTracksToExistingPlaylist(tracks, playlist?.name, false)
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
                         dialog.dismiss()
                     }
                 }.show()
