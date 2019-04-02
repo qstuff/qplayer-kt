@@ -2,20 +2,25 @@ package org.qstuff.qplayer.filebrowser
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_filebrowser.*
+import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.player.PlayerViewModel
+import org.qstuff.qplayer.playlists.PlaylistFragment
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.directoryContainsFiles
 import org.qstuff.qplayer.util.isM3UList
@@ -156,18 +161,17 @@ class FileBrowserFragment: Fragment(),
 
     private fun showAddTracksToQueueDialog(file: File) {
 
-        val titles = StringBuilder()
         val files = file.listTracks()
-
-        files.forEach {
-            titles.append(it.name).append("\n")
+        val dialogView = layoutInflater.inflate(R.layout.dialog_show_tracks, null)
+        dialogView.listview.apply {
+            adapter = DialogFileListAdapter(context, files ?: listOf())
         }
 
         AlertDialog.Builder(activity)
                 .apply {
                     setCancelable(false)
+                    setView(dialogView)
                     setTitle(getString(R.string.filebrowser_dialog_add_tracks_to_queue_title))
-                            .setMessage(titles.toString())
                     setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
                         queueViewModel.addFileList(files)
                         dialog.dismiss()
@@ -182,5 +186,19 @@ class FileBrowserFragment: Fragment(),
                     }
                 }
                 .show()
+    }
+
+    private class DialogFileListAdapter(context: Context, val items: List<File>):
+            ArrayAdapter<File>(context, 0, items) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            var view = convertView
+            if (view == null) {
+                view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
+            }
+            val text = view!!.findViewById<TextView>(R.id.itemText)
+            text.text = items.get(position).name
+            return view
+        }
     }
 }

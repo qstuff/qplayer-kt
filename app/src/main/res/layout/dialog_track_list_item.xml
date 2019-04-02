@@ -6,14 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
-    android:background="@drawable/selector_tracklist_item"
     card_view:cardPreventCornerOverlap="false">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/textview_height"
-        android:orientation="horizontal"
-        android:background="@color/black">
+        android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/itemIcon"
@@ -22,15 +20,14 @@
             android:layout_marginLeft="10dp"
             android:scaleType="fitStart"
             android:layout_gravity="center"
-            card_view:srcCompat="@drawable/ic_playlist"/>
+            card_view:srcCompat="@drawable/icon_track"/>
 
         <TextView android:id="@+id/itemText"
-            style="@style/PlayerTextStyle"
+            style="@style/DialogTextStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start|center"
-            android:background="@drawable/selector_tracklist_item"
-            tools:text="this is a playlist"/>
+            tools:text="this is a track"/>
 
     </LinearLayout>
 

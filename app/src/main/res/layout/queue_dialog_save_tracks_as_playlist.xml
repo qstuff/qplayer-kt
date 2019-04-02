@@ -18,7 +18,7 @@
         android:layout_marginBottom="10dp"
         android:imeActionLabel="Create"
         android:imeOptions="actionDone"
-        android:hint="@string/add_tracks_to_playlist_dialog_edittext_hint"
+        android:hint="@string/queue_dialog_add_tracks_to_playlist_edittext_hint"
         android:layout_alignParentTop="true"/>
 
     <TextView
@@ -30,7 +30,7 @@
         android:layout_marginRight="20dp"
         android:layout_below="@id/textInput"
         android:gravity="left"
-        android:text="@string/add_tracks_to_playlist_dialog_list_title"/>
+        android:text="@string/queue_dialog_add_tracks_to_playlist_title"/>
 
     <ListView
         android:id="@+id/listview"

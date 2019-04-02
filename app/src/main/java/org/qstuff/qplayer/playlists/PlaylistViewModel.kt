@@ -41,14 +41,63 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
         }
     }
 
-    fun saveTracksAsNewPlaylist(tracks: List<Track>, name: String) {
-        val playlist = Playlist(0, name, tracks)
-        currentPlaylistList.add(playlist)
+    fun saveTracksAsNewPlaylist(tracks: List<Track>, playlistName: String) {
+
+        val playlist = Playlist(0, playlistName, tracks)
 
         launch {
             roomDataSource.addPlaylist(playlist)
         }
 
+        tracks.forEach {
+            it.playlistName = playlistName
+        }
+
+        launch {
+            roomDataSource.addTracks(tracks)
+        }
+
+        currentPlaylistList.add(playlist)
         playlistList.value = currentPlaylistList
+    }
+
+    fun saveTracksToExistingPlaylist(tracks: List<Track>, playlistName: String, overwrite: Boolean) {
+
+        launch {
+
+            var savedTracks = arrayListOf<Track>()
+            if (!overwrite) {
+                savedTracks.addAll(roomDataSource.getTracksForPlaylist(playlistName) ?: listOf())
+            }
+            tracks.forEach {
+                it.playlistName = playlistName
+                savedTracks.add(it)
+            }
+            roomDataSource.addTracks(savedTracks)
+        }
+    }
+
+    fun getTracksForPlaylist(playlist: Playlist): List<Track> {
+
+        var tracks: List<Track>? = null
+        runBlocking {
+            tracks = roomDataSource.getTracksForPlaylist(playlist.name)
+        }
+        return tracks ?: listOf()
+    }
+
+    fun removePlaylist(playlist: Playlist) {
+
+        launch {
+            roomDataSource.removePlaylist(playlist)
+        }
+        currentPlaylistList.remove(playlist)
+        playlistList.value = currentPlaylistList
+    }
+
+    fun playlistListReordered(playlists: List<Playlist>) {
+
+        currentPlaylistList.clear()
+        currentPlaylistList.addAll(playlists)
     }
 }

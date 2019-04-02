@@ -19,7 +19,7 @@ interface TrackDao {
     @Query("SELECT * FROM Tracks " +
             "WHERE playlistName = :playlistName " +
             "AND name IS NOT NULL;")
-    fun getAllForPlaylist(playlistName: String): List<Track>
+    fun getTracksForPlaylist(playlistName: String): List<Track>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(tracklist: List<Track>)

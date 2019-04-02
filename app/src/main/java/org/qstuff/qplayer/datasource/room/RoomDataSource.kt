@@ -3,10 +3,10 @@ package org.qstuff.qplayer.datasource.room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.datasource.model.Playlist
+import org.qstuff.qplayer.datasource.model.Track
 import kotlin.coroutines.CoroutineContext
 
 /*
@@ -30,6 +30,24 @@ class RoomDataSource: KoinComponent, CoroutineScope {
     suspend fun addPlaylist(playlist: Playlist) {
         return async {
             database.playlistDao().insertAll(playlist)
+        }.await()
+    }
+
+    suspend fun removePlaylist(playlist: Playlist) {
+        return async {
+            database.playlistDao().delete(playlist)
+        }.await()
+    }
+
+    suspend fun getTracksForPlaylist(playlistName: String): List<Track>? {
+        return async {
+            database.trackDao().getTracksForPlaylist(playlistName)
+        }.await()
+    }
+
+    suspend fun addTracks(tracklist: List<Track>) {
+        return async {
+            database.trackDao().insertAll(tracklist)
         }.await()
     }
 }

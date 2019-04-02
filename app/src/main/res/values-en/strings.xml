@@ -13,6 +13,12 @@
 
     <string name="queue_dialog_confirm_clear_title">Clear queue</string>
     <string name="queue_dialog_confirm_clear_message">Really clear the queue?</string>
+    <string name="queue_dialog_save_tracks_as_playlist_title">Save the queue as playlist</string>
+    <string name="queue_dialog_add_tracks_to_playlist_title">Existing playlists</string>
+    <string name="queue_dialog_add_tracks_to_playlist_edittext_hint">Playlist name</string>
+    <string name="queue_dialog_save_tracks_as_playlist_message">Create a new playlist or add the tracks to an existing playlist</string>
+
+    <string name="queue_toast_save_tracks_as_queue_need_name">Please enter a name for the playlist</string>
 
     <!-- Playlists -->
     <string name="playlists_title">playlists</string>
@@ -33,21 +39,10 @@
     <string name="dialog_add_to_playlist">To playlist</string>
     <string name="dialog_play">Play now</string>
 
-    <string name="add_tracks_to_queue_dialog_tag">add_tracks_to_queue_dialog_tag</string>
-    <string name="queue_toast_save_tracks_as_queue_need_name">Please enter a name for the playlist</string>
-
-    <string name="add_m3ulist_to_queue_dialog_tag">add_m3ulist_to_queue_dialog_tag</string>
     <string name="add_m3ulist_to_queue_dialog_title">Load this playlist into the queue?</string>
     <string name="add_m3ulist_to_queue_empty_dialog_title">The playlist could not be loaded</string>
     <string name="add_m3ulist_to_queue_empty_dialog_message">Could not find the tracks referenced in the playlist.\n\nPlease check your files.</string>
 
-    <string name="add_tracks_to_playlist_dialog_tag">add_tracks_to_queue_dialog_tag</string>
-    <string name="queue_dialog_save_tracks_as_playlist_title">Save the queue as playlist</string>
-    <string name="add_tracks_to_playlist_dialog_list_title">Existing playlists</string>
-    <string name="add_tracks_to_playlist_dialog_edittext_hint">Playlist name</string>
-    <string name="queue_dialog_save_tracks_as_playlist_message">Create a new playlist or add the tracks to an existing playlist</string>
-
-    <string name="add_tracks_to_existing_playlist_dialog_tag">add_tracks_to_exiating_playlist_dialog_tag</string>
     <string name="add_tracks_to_existing_playlist_dialog_title">Add to existing playlist</string>
     <string name="add_tracks_to_existing_playlist_dialog_message">Append the tracks or overwrite the playlist?</string>
     <string name="add_tracks_to_existing_playlist_dialog_append">Append</string>
@@ -55,8 +50,6 @@
 
     <string name="storage_permission_request_message">We need the storage permission to access the sound files on your sdcard</string>
 
-
-    <string name="dialog_crashlytics_opt_in_tag">dialog_crashlytics_opt_in_tag</string>
     <string name="dialog_crashlytics_opt_in_title">Enable crashreporting?</string>
     <string name="dialog_crashlytics_opt_in_message">Crashreports are essential for improving the app quality. Crashreports are sent anonymized (see Privacy). You can enable crashreports in the settings and disable it again at any time.</string>
     <string name="dialog_crashlytics_opt_in_go_to_settings">Go to settings</string>

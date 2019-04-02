@@ -202,7 +202,7 @@ class QueueFragment:
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             var view = convertView
             if (view == null) {
-                view = LayoutInflater.from(context).inflate(R.layout.dialog_list_item, null)
+                view = LayoutInflater.from(context).inflate(R.layout.dialog_playlist_list_item, null)
             }
             val text = view!!.findViewById<TextView>(R.id.itemText)
             text.text = items.get(position).name
