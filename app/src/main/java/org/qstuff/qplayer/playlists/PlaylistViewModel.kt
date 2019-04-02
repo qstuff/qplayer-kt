@@ -7,10 +7,12 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
+import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
+import org.qstuff.qplayer.util.shortToast
 import kotlin.coroutines.CoroutineContext
 
 /*
@@ -61,11 +63,15 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
         playlistList.value = currentPlaylistList
     }
 
-    fun saveTracksToExistingPlaylist(tracks: List<Track>, playlistName: String, overwrite: Boolean) {
+    fun saveTracksToExistingPlaylist(tracks: List<Track>?, playlistName: String?, overwrite: Boolean) {
+
+        if (tracks.isNullOrEmpty() || playlistName.isNullOrBlank()) {
+            return
+        }
 
         launch {
 
-            var savedTracks = arrayListOf<Track>()
+            val savedTracks = arrayListOf<Track>()
             if (!overwrite) {
                 savedTracks.addAll(roomDataSource.getTracksForPlaylist(playlistName) ?: listOf())
             }

@@ -17,8 +17,13 @@
     <string name="queue_dialog_save_tracks_as_playlist_message">Lege eine neue Playlist an, oder füge die Tracks zu einer vorhandenen hinzu</string>
     <string name="queue_dialog_add_tracks_to_playlist_title">Vorhandene Playlists</string>
     <string name="queue_dialog_add_tracks_to_playlist_edittext_hint">Name für Playlist eingeben</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_title">In vorhandener Playlist speichern</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_message">Tracks ans Ende anhängen oder Playlist überschreiben?</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_append">Anhängen</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_overwrite">Überschreiben</string>
 
     <string name="queue_toast_save_tracks_as_queue_need_name">Bitte einen Namen für die Playlist eingeben</string>
+    <string name="queue_toast_add_to_existing_playlist_problem">Es gab ein problem</string>
 
     <!-- Playlists -->
     <string name="playlists_title">playlists</string>
@@ -42,11 +47,6 @@
     <string name="add_m3ulist_to_queue_dialog_title">Diese Playlist in die Queue laden?</string>
     <string name="add_m3ulist_to_queue_empty_dialog_title">Die Playlist konnte nicht geladen werden</string>
     <string name="add_m3ulist_to_queue_empty_dialog_message">Die in der Playlist referenzierten Tracks wurden nicht gefunden.\n\nBitte überprüfe deine Dateien.</string>
-
-    <string name="add_tracks_to_existing_playlist_dialog_title">In vorhandener Playlist speichern</string>
-    <string name="add_tracks_to_existing_playlist_dialog_message">Tracks ans Ende anhängen oder Playlist überschreiben?</string>
-    <string name="add_tracks_to_existing_playlist_dialog_append">Anhängen</string>
-    <string name="add_tracks_to_existing_playlist_dialog_overwrite">Überschreiben</string>
 
     <string name="storage_permission_request_message">Um Tracks von der SD Karte abspielen zu können benötigt die App Zugriffsberechtung</string>
 

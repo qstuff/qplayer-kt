@@ -193,7 +193,31 @@ class QueueFragment:
     }
 
     private fun showAddToExistingPlaylistDialog(position: Int) {
+        val tracks = queueViewModel.trackList.value
+        val playlist = playlistViewModel.playlistList.value?.get(position)
 
+        if (tracks.isNullOrEmpty() || playlist?.name.isNullOrBlank()) {
+            context?.shortToast(getString(R.string.queue_toast_add_to_existing_playlist_problem))
+            return
+        }
+
+        AlertDialog.Builder(activity)
+                .apply {
+                    setCancelable(false)
+                    setTitle(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_title))
+                    setMessage(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_message))
+                    setPositiveButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_overwrite)) { dialog, which ->
+                        playlistViewModel.saveTracksToExistingPlaylist(tracks, playlist?.name, true)
+                        dialog.dismiss()
+                    }
+                    setNeutralButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_append)) { dialog, which ->
+                        playlistViewModel.saveTracksToExistingPlaylist(tracks, playlist?.name, false)
+                        dialog.dismiss()
+                    }
+                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                        dialog.dismiss()
+                    }
+                }.show()
     }
 
     private class DialogListAdapter(context: Context, val items: List<Playlist>):
