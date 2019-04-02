@@ -96,6 +96,8 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
         } else {
             Timber.w("browseTo(): does not exist: ${dir.path}")
         }
+
+        saveLastBrowsedDir()
     }
 
     private fun filterFileList(files: List<File>) {
