@@ -80,6 +80,16 @@ class PlayerActivity : AppCompatActivity() {
                 // TODO: remove observers ?
             }
         })
+
+        playerViewModel.masterTempo.observe(this, Observer { masterTempo ->
+            masterTempo?.let {
+                if (it) {
+                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
+                } else {
+                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
+                }
+            }
+        })
     }
 
     override fun onStart() {
@@ -130,8 +140,8 @@ class PlayerActivity : AppCompatActivity() {
 
         }
 
-        buttonMastertempo.setOnClickListener {
-
+        buttonMasterTempo.setOnClickListener {
+            playerViewModel.toggleMasterTempo()
         }
 
         buttonCue.setOnClickListener {

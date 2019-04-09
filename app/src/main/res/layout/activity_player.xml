@@ -362,7 +362,7 @@
 
             <!-- MasterTempo Button -->
             <TextView
-                android:id="@+id/buttonMastertempo"
+                android:id="@+id/buttonMasterTempo"
                 style="@style/PlayerTextStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/textview_height"
@@ -370,12 +370,12 @@
                 android:paddingEnd="8dp"
                 android:layout_marginTop="4dp"
                 android:layout_below="@+id/buttonPitchReset"
-                android:gravity="start"
+                android:gravity="start|center_vertical"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:background="@drawable/black_rounded_shape"
                 android:textColor="@color/white"
-                android:text="M"
+                android:text="mt"
                 tools:ignore="HardcodedText" />
 
             <!-- Cue Button -->

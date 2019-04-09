@@ -19,27 +19,27 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     lateinit var onWaveformDataUpdate: LiveData<TrackData>
     val trackStatus = MutableLiveData<Track>()
     val trackStatusMediator = MediatorLiveData<Track>()
-
     val playerStatus = MutableLiveData<PlayerStatus>()
     val playerStatusMediator = MediatorLiveData<PlayerStatus>()
-
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
-
     val onTrackPositionUpdate = MutableLiveData<Long>()
 
-    private lateinit var mediaService: QMediaPlayerService
+    val masterTempo = MutableLiveData<Boolean>()
 
+    // MediaService
+    private lateinit var mediaService: QMediaPlayerService
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
-
     private var pendingTrack: Track? = null
 
     // Player Control
     var isTrackPlaying = false
 
+    // Update Task
     private var updateHandler = Handler()
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
+
 
     private val notificationBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -93,6 +93,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         LocalBroadcastManager.getInstance(application)
                 .registerReceiver(notificationBroadcastReceiver,
                         IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
+
+        masterTempo.value = false  // TODO: read from preferences
     }
 
     //
@@ -148,7 +150,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     }
 
     //
-    // Trackhandling
+    // Track handling
     //
 
     fun loadTrack(track: Track?) {
@@ -183,6 +185,14 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         playPause()
 
         // TODO: Continous Play?
+    }
+
+    //
+    // Player flag handling
+    //
+
+    fun toggleMasterTempo() {
+        masterTempo.value = !(masterTempo.value)!!
     }
 
     //
