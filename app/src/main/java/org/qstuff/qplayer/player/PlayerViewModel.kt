@@ -1,13 +1,11 @@
 package org.qstuff.qplayer.player
 
 import android.app.Application
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.os.Handler
 import android.os.IBinder
 import androidx.lifecycle.*
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
@@ -43,6 +41,12 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
 
+    private val notificationBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Timber.d("onReceive(): ")
+            playPause()
+        }
+    }
 
     private val serviceConnection = object : ServiceConnection {
 
@@ -86,6 +90,9 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
     init {
         playerStatus.value = PlayerStatus.PAUSED
+        LocalBroadcastManager.getInstance(application)
+                .registerReceiver(notificationBroadcastReceiver,
+                        IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
     }
 
     //
