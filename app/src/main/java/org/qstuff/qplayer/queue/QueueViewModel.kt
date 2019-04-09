@@ -6,6 +6,8 @@ import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.util.TrackRepeatStatus
+import org.qstuff.qplayer.util.next
 import timber.log.Timber
 import java.io.File
 
@@ -16,14 +18,25 @@ import java.io.File
  */
 class QueueViewModel: ViewModel(), KoinComponent {
 
+    // Observables
     var trackList = MutableLiveData<List<Track>>()
     var onTrackSelectedIndex = MutableLiveData<Int>()
     var onTrackSelected = MutableLiveData<Track>()
+
+    // Track Control
+    val repeat = MutableLiveData<TrackRepeatStatus>()
+    val shuffle = MutableLiveData<Boolean>()
+
 
     private var currentTracks: ArrayList<Track> = arrayListOf()
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
+    init {
+        // TODO: save & read all those from preferences
+        repeat.value = TrackRepeatStatus.NONE
+        shuffle.value = false
+    }
 
     fun addTrack(track: Track) {
 
@@ -172,5 +185,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 onTrackSelectedIndex.value = index
             }
         }
+    }
+
+    fun toggleRepeat() {
+        repeat.value = (repeat.value as TrackRepeatStatus).next()
+    }
+
+    fun toggleShuffle() {
+        shuffle.value = !(shuffle.value)!!
     }
 }

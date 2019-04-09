@@ -26,6 +26,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
     val masterTempo = MutableLiveData<Boolean>()
 
+
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
     private var isMediaServiceRunning = false
@@ -94,7 +95,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
                 .registerReceiver(notificationBroadcastReceiver,
                         IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
 
-        masterTempo.value = false  // TODO: read from preferences
+        // TODO: save & read all those from preferences
+        masterTempo.value = false
     }
 
     //
@@ -188,7 +190,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     }
 
     //
-    // Player flag handling
+    // Player control handling
     //
 
     fun toggleMasterTempo() {

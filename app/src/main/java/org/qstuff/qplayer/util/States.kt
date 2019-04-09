@@ -13,3 +13,9 @@ enum class PlayerStatus {
     SEEKING,
     ERROR
 }
+
+enum class TrackRepeatStatus {
+    NONE,
+    ONE,
+    ALL
+}

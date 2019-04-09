@@ -30,6 +30,7 @@ import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.PlayerStatus
+import org.qstuff.qplayer.util.TrackRepeatStatus
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -80,16 +81,6 @@ class PlayerActivity : AppCompatActivity() {
                 // TODO: remove observers ?
             }
         })
-
-        playerViewModel.masterTempo.observe(this, Observer { masterTempo ->
-            masterTempo?.let {
-                if (it) {
-                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
-                } else {
-                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
-                }
-            }
-        })
     }
 
     override fun onStart() {
@@ -133,11 +124,11 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         buttonRepeat.setOnClickListener {
-
+            queueViewModel.toggleRepeat()
         }
 
         buttonShuffle.setOnClickListener {
-
+            queueViewModel.toggleShuffle()
         }
 
         buttonMasterTempo.setOnClickListener {
@@ -246,6 +237,42 @@ class PlayerActivity : AppCompatActivity() {
                     waveformView.updateWaveform(trackData)
                 } else {
                     Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack?.name}")
+                }
+            }
+        })
+
+        playerViewModel.masterTempo.observe(this, Observer { masterTempo ->
+            masterTempo?.let {
+                if (it) {
+                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
+                } else {
+                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
+                }
+            }
+        })
+
+        queueViewModel.repeat.observe(this, Observer { repeatStatus ->
+            repeatStatus?.let {
+                when (it) {
+                    TrackRepeatStatus.NONE -> {
+                        buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop))
+                    }
+                    TrackRepeatStatus.ONE -> {
+                        buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop1_selected))
+                    }
+                    TrackRepeatStatus.ALL -> {
+                        buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop_selected))
+                    }
+                }
+            }
+        })
+
+        queueViewModel.shuffle.observe(this, Observer { shuffle ->
+            shuffle?.let {
+                if (it) {
+                    buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle_selected))
+                } else {
+                    buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle))
                 }
             }
         })
