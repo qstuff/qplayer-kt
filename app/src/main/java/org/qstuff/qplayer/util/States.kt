@@ -16,6 +16,6 @@ enum class PlayerStatus {
 
 enum class TrackRepeatStatus {
     NONE,
-    ONE,
-    ALL
+    ALL,
+    ONE
 }
