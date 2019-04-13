@@ -34,6 +34,18 @@
         android:background="@drawable/black_rounded_shape"
         tools:visibility="visible"/>
 
+    <TextView
+        android:id="@+id/waveformViewLoadingText"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/seekbar_height"
+        android:layout_alignTop="@+id/trackProgressBar"
+        android:layout_alignBottom="@+id/trackProgressBar"
+        android:gravity="center"
+        android:textColor="@color/q_orange_AA"
+        android:visibility="gone"
+        android:text="calculating waveform data..."
+    />
+
     <!-- Track Progress View -->
     <SeekBar
         android:id="@+id/trackProgressBar"

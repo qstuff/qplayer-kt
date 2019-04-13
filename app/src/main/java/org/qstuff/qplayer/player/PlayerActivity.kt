@@ -10,6 +10,7 @@ import com.WarwickWestonWright.HGDialV2.HGViewContainer
 
 import android.os.Bundle
 import android.text.Html
+import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.SeekBar
@@ -62,16 +63,16 @@ class PlayerActivity : AppCompatActivity() {
 
         queueViewModel = ViewModelProviders.of(this).get(QueueViewModel::class.java)
 
-
         trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
         trackProgressBar.progress = 0
 
         waveformView.updateWaveform(null)
+        waveformViewLoadingText.visibility = View.GONE
 
         setupTitle()
         setupJogWheel()
         setupContentSection()
-        setupClickListener()
+        setupInteractionListener()
 
         playerViewModel.onMediaServiceConnected.observe(this, Observer { connected ->
             Timber.d("onMediaServiceConnected(): $connected")
@@ -102,10 +103,10 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     //
-    // private
+    // Interaction Listeners
     //
 
-    private fun setupClickListener() {
+    private fun setupInteractionListener() {
 
         buttonPlayPause.setOnClickListener {
             if (isTrackPrepared) {
@@ -145,7 +146,7 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         buttonPitchReset.setOnClickListener {
-
+            pitchControl.reset()
         }
 
         buttonPitchControlIncrease.setOnClickListener {
@@ -155,7 +156,19 @@ class PlayerActivity : AppCompatActivity() {
         buttonPitchControlDecrease.setOnClickListener {
 
         }
+
+        pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                playerViewModel.onPitchChanged(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
     }
+
+    //
+    // Viewmodel Observers
+    //
 
     private fun setupObservers() {
 
@@ -168,11 +181,9 @@ class PlayerActivity : AppCompatActivity() {
                 }
                 PlayerStatus.PAUSED -> {
                     updatePlayButtonUI(false)
-
                 }
                 else -> {}
             }
-
         })
 
         playerViewModel.trackStatusMediator.observe(this, Observer { track ->
@@ -187,6 +198,7 @@ class PlayerActivity : AppCompatActivity() {
                         trackTitle.text = track.name
                         stopRemainBlinkAnimation()
                         waveformView.updateWaveform(null)
+                        waveformViewLoadingText.visibility = View.VISIBLE
                         trackProgressBar.progress = 0
 
                     }
@@ -235,6 +247,7 @@ class PlayerActivity : AppCompatActivity() {
             trackData?.let {
                 if (trackData.track == currentTrack) {
                     waveformView.updateWaveform(trackData)
+                    waveformViewLoadingText.visibility = View.GONE
                 } else {
                     Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack?.name}")
                 }
@@ -249,6 +262,10 @@ class PlayerActivity : AppCompatActivity() {
                     buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
                 }
             }
+        })
+
+        playerViewModel.pitchValueText.observe(this, Observer { pitch ->
+            pitchControlValueIndicator.text = pitch ?: "0,00%"
         })
 
         queueViewModel.repeat.observe(this, Observer { repeatStatus ->

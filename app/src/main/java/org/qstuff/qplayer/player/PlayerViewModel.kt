@@ -17,24 +17,22 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
     // Observables
     lateinit var onWaveformDataUpdate: LiveData<TrackData>
+
     val trackStatus = MutableLiveData<Track>()
     val trackStatusMediator = MediatorLiveData<Track>()
     val playerStatus = MutableLiveData<PlayerStatus>()
     val playerStatusMediator = MediatorLiveData<PlayerStatus>()
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
     val onTrackPositionUpdate = MutableLiveData<Long>()
+    val pitchValueText = MutableLiveData<String>()
 
     val masterTempo = MutableLiveData<Boolean>()
-
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
     private var pendingTrack: Track? = null
-
-    // Player Control
-    var isTrackPlaying = false
 
     // Update Task
     private var updateHandler = Handler()
@@ -63,9 +61,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
                 trackStatusMediator.value = track
             }
 
-           onWaveformDataUpdate = Transformations.map(
-                   mediaService.getWaveFormDataObserver()
-           ) { it }
+           onWaveformDataUpdate = Transformations.map(mediaService.getWaveFormDataObserver()) { it }
 
             onMediaServiceConnected.value = true
             isMediaServiceRunning = true
@@ -97,6 +93,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
         // TODO: save & read all those from preferences
         masterTempo.value = false
+        pitchValueText.value = "0,00%"
     }
 
     //
@@ -120,6 +117,40 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
         } else {
             Timber.w("playPause(): invalid player status: ${playerStatus.value}")
+        }
+    }
+
+    fun toggleMasterTempo() {
+        masterTempo.value = !(masterTempo.value ?: true)
+    }
+
+    fun onPitchChanged(progress: Int) {
+        val diff = (progress - 500).toFloat() / 62.5f //pitchRange
+        var pre = if (diff > 0) "+" else ""
+
+        if (diff == 0f) {
+            pre = "   "
+        }
+        if (diff < 10 && diff > 0) {
+            pre = "  +"
+        }
+        if (diff > -10 && diff < 0) {
+            pre = "  "
+        }
+
+        val pitch = String.format(" $pre%02.01f", diff)
+        if (diff < 10 && diff > -10) {
+            pitchValueText.value = "$pitch %"
+        } else {
+            pitchValueText.value = pitch
+        }
+
+        if (1.0f + diff / 100 < 0) {
+            return
+        }
+
+        if (isMediaServiceRunning) {
+            mediaService.playerServiceSetTrackSpeed(1.0f + diff / 100, masterTempo.value ?: false)
         }
     }
 
@@ -186,15 +217,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     fun trackCompleted() {
         playPause()
 
-        // TODO: Continous Play?
-    }
-
-    //
-    // Player control handling
-    //
-
-    fun toggleMasterTempo() {
-        masterTempo.value = !(masterTempo.value)!!
+        // TODO: Continuous Play?
     }
 
     //

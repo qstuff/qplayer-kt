@@ -29,9 +29,8 @@ fun File.isSupported(): Boolean {
 }
 
 fun File.directoryContainsFiles(): Boolean {
-    val files = this.listFiles()
-
-    if (files.size > 0) {
+    val files = this.listFiles() ?: return false
+    if (files.isNotEmpty()) {
         files.forEach {
             if (it.isFile && it.isSupported()) {
                 return true

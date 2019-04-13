@@ -138,7 +138,7 @@ class FileBrowserFragment: Fragment(),
             queueViewModel.addFile(file)
         }
         if (file.isDirectory && !file.directoryContainsFiles()) {
-            context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
+            // context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
         }
     }
 
