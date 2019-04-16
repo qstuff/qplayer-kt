@@ -174,17 +174,20 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         current?.let {
             if (currentTracks.contains(current)) {
-
                 var index = currentTracks.indexOf(current)
 
-                if (shuffle.value == true) {
-                    index = random.nextInt(currentTracks.size  -1)
-                } else {
-
-                    if (index < currentTracks.size - 1) {
-                        index += 1
-                    } else if (index == currentTracks.size - 1) {
-                        index = 0
+                when (repeat.value) {
+                    TrackRepeatStatus.ALL,
+                    TrackRepeatStatus.NONE -> {
+                        if (shuffle.value == true) {
+                            index = random.nextInt(currentTracks.size - 1)
+                        } else {
+                            if (index < currentTracks.size - 1) {
+                                index += 1
+                            } else if (index == currentTracks.size - 1) {
+                                index = 0
+                            }
+                        }
                     }
                 }
                 onTrackSelected.value = currentTracks.get(index)
