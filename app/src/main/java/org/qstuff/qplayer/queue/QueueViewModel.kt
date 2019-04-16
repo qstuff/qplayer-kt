@@ -10,6 +10,7 @@ import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.util.next
 import timber.log.Timber
 import java.io.File
+import java.util.Random
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -27,10 +28,11 @@ class QueueViewModel: ViewModel(), KoinComponent {
     val repeat = MutableLiveData<TrackRepeatStatus>()
     val shuffle = MutableLiveData<Boolean>()
 
-
     private var currentTracks: ArrayList<Track> = arrayListOf()
+    private val random = Random()
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
+
 
     init {
         // TODO: save & read all those from preferences
@@ -158,12 +160,11 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 var index = currentTracks.indexOf(current)
                 if (index > 0) {
                     index -= 1
-                    onTrackSelected.value = currentTracks.get(index)
                 }
                 else if (index == 0) {
                     index = currentTracks.size -1
-                    onTrackSelected.value = currentTracks.get(index )
                 }
+                onTrackSelected.value = currentTracks.get(index)
                 onTrackSelectedIndex.value = index
             }
         }
@@ -173,18 +174,30 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         current?.let {
             if (currentTracks.contains(current)) {
+
                 var index = currentTracks.indexOf(current)
-                if (index < currentTracks.size -1) {
-                    index += 1
-                    onTrackSelected.value = currentTracks.get(index)
+
+                if (shuffle.value == true) {
+                    index = random.nextInt(currentTracks.size  -1)
+                } else {
+
+                    if (index < currentTracks.size - 1) {
+                        index += 1
+                    } else if (index == currentTracks.size - 1) {
+                        index = 0
+                    }
                 }
-                else if (index == currentTracks.size -1) {
-                    index = 0
-                    onTrackSelected.value = currentTracks.get(index)
-                }
+                onTrackSelected.value = currentTracks.get(index)
                 onTrackSelectedIndex.value = index
             }
         }
+    }
+
+    fun onTrackCompleted(track: Track) {
+        Timber.d("onTrackCompleted(): ${track.name}")
+
+        // TODO: if proceedToNextTrack == true
+        nextTrack(track)
     }
 
     fun toggleRepeat() {
@@ -192,6 +205,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun toggleShuffle() {
-        shuffle.value = !(shuffle.value)!!
+        shuffle.value = !(shuffle.value ?: true)
     }
 }

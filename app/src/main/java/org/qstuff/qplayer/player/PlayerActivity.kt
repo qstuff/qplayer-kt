@@ -216,7 +216,8 @@ class PlayerActivity : AppCompatActivity() {
                     Track.TrackStatus.COMPLETED -> {
 
                         stopRemainBlinkAnimation()
-                        playerViewModel.trackCompleted()
+                        playerViewModel.onTrackCompleted(track)
+                        queueViewModel.onTrackCompleted(track)
                     }
                     Track.TrackStatus.ERROR -> {
                         // TODO: Error message?

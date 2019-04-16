@@ -93,7 +93,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
         // TODO: save & read all those from preferences
         masterTempo.value = false
-        pitchValueText.value = "0,00%"
+        pitchValueText.value = "0,0%"
     }
 
     //
@@ -138,7 +138,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
             pre = "  "
         }
 
-        val pitch = String.format(" $pre%02.01f", diff)
+        val pitch = String.format("$pre%02.01f", diff)
         if (diff < 10 && diff > -10) {
             pitchValueText.value = "$pitch %"
         } else {
@@ -150,7 +150,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         }
 
         if (isMediaServiceRunning) {
-            mediaService.playerServiceSetTrackSpeed(1.0f + diff / 100, masterTempo.value ?: false)
+            mediaService.setTrackSpeed(1.0f + diff / 100, masterTempo.value ?: false)
         }
     }
 
@@ -202,7 +202,7 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         mediaService.pause()
         playerStatus.value = PlayerStatus.PAUSED
 
-        mediaService.playerServiceLoadTrackASync(track)
+        mediaService.loadTrackASync(track)
 
         track.trackStatus = Track.TrackStatus.LOADING
         trackStatus.value = track
@@ -211,10 +211,10 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     fun seekTo(position: Double, andStop: Boolean) {
         Timber.d("seekTo(): $position")
 
-        mediaService.playerServiceSeekTo(position, andStop)
+        mediaService.seekTo(position, andStop)
     }
 
-    fun trackCompleted() {
+    fun onTrackCompleted(track: Track) {
         playPause()
 
         // TODO: Continuous Play?

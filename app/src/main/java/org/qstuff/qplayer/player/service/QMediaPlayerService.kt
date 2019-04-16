@@ -131,12 +131,12 @@ class QMediaPlayerService : LifecycleService() {
         return player.isPaused()
     }
 
-    fun playerServiceSetTrackSpeed(speedFactor: Float, mastertempo: Boolean) {
-        Timber.v("playerServiceSetTrackSpeed():")
+    fun setTrackSpeed(speedFactor: Float, mastertempo: Boolean) {
+        Timber.v("setTrackSpeed():")
         player.setSpeed(speedFactor, mastertempo)
     }
 
-    fun playerServiceSeekTo(position: Double, andStop: Boolean) {
+    fun seekTo(position: Double, andStop: Boolean) {
         player.seekTo(position, andStop)
     }
 
@@ -157,8 +157,8 @@ class QMediaPlayerService : LifecycleService() {
         player.loadTrackSync(track)
     }
 
-    fun playerServiceLoadTrackASync(track: Track) {
-        Timber.d("playerServiceLoadTrackASync():")
+    fun loadTrackASync(track: Track) {
+        Timber.d("loadTrackASync():")
 
         currentTrack = track
         player.loadTrackASync(track)
