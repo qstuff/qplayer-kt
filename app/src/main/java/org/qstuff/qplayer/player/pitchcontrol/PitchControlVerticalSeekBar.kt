@@ -55,7 +55,7 @@ class PitchControlVerticalSeekBar : AppCompatSeekBar {
         this.seekbarListener = mListener
     }
 
-    fun set(progress: Int) {
+    fun setNewProgress(progress: Int) {
 
         setProgress(progress)
         onSizeChanged(width, height, 0, 0)

@@ -153,15 +153,20 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         buttonPitchControlIncrease.setOnClickListener {
-
+            val current = pitchControl.progress
+            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+            pitchControl.setNewProgress(current + delta)
         }
 
         buttonPitchControlDecrease.setOnClickListener {
-
+            val current = pitchControl.progress
+            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+            pitchControl.setNewProgress(current - delta)
         }
 
         pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Timber.d("onProgressChanged(): $progress")
                 playerViewModel.onPitchChanged(progress)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}

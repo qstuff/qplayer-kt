@@ -33,10 +33,13 @@ class  PlayerViewModel (application: Application):
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
     val onTrackPositionUpdate = MutableLiveData<Long>()
     val pitchValueText = MutableLiveData<String>()
+    val pitchValue = MutableLiveData<Int>()
+
 
     val masterTempo = MutableLiveData<Boolean>()
 
-    private var pitchFactor = PITCH_RANGE_FACTORS[0]
+    var currentPitch: Int = 500
+    var pitchFactor = PITCH_RANGE_FACTORS[0]
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -144,6 +147,7 @@ class  PlayerViewModel (application: Application):
     }
 
     fun onPitchChanged(progress: Int) {
+
         val diff = (progress - 500).toFloat() / pitchFactor
         var pre = if (diff > 0) "+" else ""
 
