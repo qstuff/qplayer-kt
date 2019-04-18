@@ -21,8 +21,7 @@
             android:id="@+id/queueListItemIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:scaleType="fitStart"       
+            android:scaleType="fitStart"
             android:gravity="center"
             card_view:srcCompat="@drawable/icon_track" />
     
