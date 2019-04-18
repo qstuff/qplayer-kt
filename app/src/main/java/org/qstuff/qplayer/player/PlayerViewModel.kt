@@ -6,14 +6,22 @@ import android.os.Handler
 import android.os.IBinder
 import androidx.lifecycle.*
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import org.koin.standalone.KoinComponent
+import org.koin.standalone.inject
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.player.service.QMediaPlayerService
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
-class  PlayerViewModel (application: Application): AndroidViewModel(application) {
+class  PlayerViewModel (application: Application):
+        AndroidViewModel(application), KoinComponent {
+
+    companion object {
+        val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
+    }
 
     // Observables
     lateinit var onWaveformDataUpdate: LiveData<TrackData>
@@ -28,6 +36,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
 
     val masterTempo = MutableLiveData<Boolean>()
 
+    private var pitchFactor = PITCH_RANGE_FACTORS[0]
+
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
     private var isMediaServiceRunning = false
@@ -38,6 +48,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     private var updateHandler = Handler()
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
+
+    private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
     private val notificationBroadcastReceiver = object : BroadcastReceiver() {
@@ -94,6 +106,8 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         // TODO: save & read all those from preferences
         masterTempo.value = false
         pitchValueText.value = "0,0%"
+
+        loadStates()
     }
 
     //
@@ -124,8 +138,13 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
         masterTempo.value = !(masterTempo.value ?: true)
     }
 
+    fun onPitchRangeSelected(index: Int) {
+        pitchFactor = PITCH_RANGE_FACTORS[index]
+        saveStates()
+    }
+
     fun onPitchChanged(progress: Int) {
-        val diff = (progress - 500).toFloat() / 62.5f //pitchRange
+        val diff = (progress - 500).toFloat() / pitchFactor
         var pre = if (diff > 0) "+" else ""
 
         if (diff == 0f) {
@@ -223,6 +242,14 @@ class  PlayerViewModel (application: Application): AndroidViewModel(application)
     //
     // Private
     //
+
+    private fun saveStates() {
+        preferencesDataSource.savePitchFactor(pitchFactor)
+    }
+
+    private fun loadStates() {
+        pitchFactor = preferencesDataSource.readPitchFactor()
+    }
 
     private fun startUpdateTimer() {
         Timber.d("startUpdateTimer()")

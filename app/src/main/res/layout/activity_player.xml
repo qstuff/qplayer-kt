@@ -173,7 +173,7 @@
 
             <!-- Pitch Range Setting -->
             <Spinner
-                android:id="@+id/pitchControlRangeSetting"
+                android:id="@+id/pitchRangeSpinner"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/textview_height"
                 android:paddingLeft="10dp"
@@ -192,7 +192,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:layout_below="@+id/pitchControlRangeSetting"
+                android:layout_below="@+id/pitchRangeSpinner"
                 android:orientation="horizontal" >
 
                 <ImageButton

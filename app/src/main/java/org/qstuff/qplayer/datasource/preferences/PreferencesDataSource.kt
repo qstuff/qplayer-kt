@@ -33,6 +33,8 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         // Saved/Loaded in PlayerViewModel
         const val PREF_TRACK_POSITION = "PREF_TRACK_POSITION"
         const val PREF_MASTER_TEMPO_MODE = "PREF_MASTER_TEMPO_MODE"
+        const val PREF_PITCH_FACTOR = "PREF_PITCH_FACTOR"
+
 
     }
 
@@ -88,5 +90,15 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     fun readRepeatMode() = preferences.getInt(PREF_REPEAT_MODE, TrackRepeatStatus.NONE.ordinal)
 
+    //
+    // Saved/Loaded in PlayerModel
+    //
+
+    fun savePitchFactor(pitchFactor: Float) =
+            preferences.edit{
+                putFloat(PREF_PITCH_FACTOR, pitchFactor)
+            }
+
+    fun readPitchFactor() = preferences.getFloat(PREF_PITCH_FACTOR, 0.0f)
 
 }

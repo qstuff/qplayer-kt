@@ -13,6 +13,8 @@ import android.text.Html
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -73,6 +75,7 @@ class PlayerActivity : AppCompatActivity() {
         setupJogWheel()
         setupContentSection()
         setupInteractionListener()
+        setupPitchRangeSpinner()
 
         playerViewModel.onMediaServiceConnected.observe(this, Observer { connected ->
             Timber.d("onMediaServiceConnected(): $connected")
@@ -341,6 +344,20 @@ class PlayerActivity : AppCompatActivity() {
         }
         contentTabbar.apply {
             setViewPager(contentPager)
+        }
+    }
+
+    private fun setupPitchRangeSpinner() {
+
+        val spinnerAdapter = ArrayAdapter<String>(
+                this, R.layout.spinner_pitch_range, resources.getStringArray(R.array.pitchRangeValues))
+        spinnerAdapter.setDropDownViewResource(R.layout.spinner_pitch_range)
+        pitchRangeSpinner.adapter = spinnerAdapter
+        pitchRangeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                playerViewModel.onPitchRangeSelected(position)
+            }
         }
     }
 
