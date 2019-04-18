@@ -117,6 +117,7 @@ class QueueFragment:
 
         queueViewModel.saveTrackList()
         queueViewModel.saveSelectedTrack()
+        queueViewModel.saveStates()
     }
 
     //

@@ -31,13 +31,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private var currentTracks: ArrayList<Track> = arrayListOf()
     private val random = Random()
 
+    private var autoplay = false
+
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
     init {
-        // TODO: save & read all those from preferences
-        repeat.value = TrackRepeatStatus.NONE
-        shuffle.value = false
+        loadStates()
     }
 
     fun addTrack(track: Track) {
@@ -109,10 +109,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         val track = preferencesDataSource.readSelectedTrack()
         track?.also {
-
             var index = 0
             currentTracks.forEach {
-                Timber.d("loadSelectedTrack(): it: ${it.uri} ")
                 if (it.uri == track.uri) {
                     onTrackSelectedIndex.value = index
                     onTrackSelected.value = it
@@ -205,9 +203,21 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun toggleRepeat() {
         repeat.value = (repeat.value as TrackRepeatStatus).next()
+        saveStates()
     }
 
     fun toggleShuffle() {
         shuffle.value = !(shuffle.value ?: true)
+        saveStates()
+    }
+
+    fun saveStates() {
+        preferencesDataSource.saveRepeatMode(repeat.value!!.ordinal)
+        preferencesDataSource.saveShuffleMode(shuffle.value ?: false)
+    }
+
+    private fun loadStates() {
+        repeat.value = TrackRepeatStatus.values()[preferencesDataSource.readRepeatMode()]
+        shuffle.value = preferencesDataSource.readShuffleMode()
     }
 }
