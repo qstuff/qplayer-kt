@@ -330,15 +330,22 @@ class PlayerActivity : AppCompatActivity() {
             override fun onUp(p0: HGDialInfo?) {
                 jogWheelDial.doManualTextureDial(0.0)
 
-                // FIXME: onJogWheelMoved.onNext(0f)
+                onJogWheeMoved(0.0f)
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
                 val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
 
-                // FIXME: onJogWheelMoved.onNext(angle)
+                onJogWheeMoved(angle)
             }
         })
+    }
+
+    private fun onJogWheeMoved(angle: Float) {
+        if ((pitchControl.progress + angle) < 0) return
+
+        val current = pitchControl.progress
+        playerViewModel.onPitchChanged((current + (angle * 10)).toInt())
     }
 
     private fun setupContentSection() {
