@@ -369,6 +369,7 @@ class PlayerActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 playerViewModel.onPitchRangeSelected(position)
+                playerViewModel.onPitchChanged(pitchControl.progress)
             }
         }
     }

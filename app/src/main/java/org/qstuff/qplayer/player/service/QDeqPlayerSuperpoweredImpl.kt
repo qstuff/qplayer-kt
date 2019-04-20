@@ -20,7 +20,7 @@ class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
     companion object {
 
         init {
-            System.loadLibrary("SuperpoweredExample")
+            System.loadLibrary("SuperpoweredInterface")
         }
     }
 

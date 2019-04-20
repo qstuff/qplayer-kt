@@ -1,4 +1,4 @@
-#include "SuperpoweredExample.h"
+#include "SuperpoweredInterface.h"
 #include <SuperpoweredSimple.h>
 #include <SuperpoweredDecoder.h>
 #include <SuperpoweredCPU.h>
@@ -35,29 +35,29 @@ static void playerEventCallbackA(void *clientData, SuperpoweredAdvancedAudioPlay
     
     if (event == SuperpoweredAdvancedAudioPlayerEvent_LoadSuccess) {
 
-        ((SuperpoweredExample *)clientData)->onPrepared();
+        ((SuperpoweredInterface *)clientData)->onPrepared();
     };
     
     if (event == SuperpoweredAdvancedAudioPlayerEvent_EOF) {
 
-        ((SuperpoweredExample *)clientData)->onCompletion();
+        ((SuperpoweredInterface *)clientData)->onCompletion();
     }
 
     if (event == SuperpoweredAdvancedAudioPlayerEvent_LoadError) {
 
-        ((SuperpoweredExample *)clientData)->onError();
+        ((SuperpoweredInterface *)clientData)->onError();
     }
 }
 
 static bool audioProcessing(void *clientdata, short int *audioIO, int numberOfSamples, int __unused samplerate) { 
-    return ((SuperpoweredExample *)clientdata)->process(audioIO, (unsigned int)numberOfSamples);
+    return ((SuperpoweredInterface *)clientdata)->process(audioIO, (unsigned int)numberOfSamples);
 }
 
-SuperpoweredExample::SuperpoweredExample(unsigned int samplerate, 
+SuperpoweredInterface::SuperpoweredInterface(unsigned int samplerate,
                                          unsigned int buffersize) : activeFx(0), 
                                          volA(1.0f * headroom) {
                                                             
-    LOGD("SuperpoweredExample(): INIT");
+    LOGD("SuperpoweredInterface(): INIT");
 
     stereoBuffer = (float *)memalign(16, (buffersize + 16) * sizeof(float) * 2);
 
@@ -80,7 +80,7 @@ SuperpoweredExample::SuperpoweredExample(unsigned int samplerate,
                                                  buffersize * 2);                                                                                        
 }
 
-SuperpoweredExample::~SuperpoweredExample() {
+SuperpoweredInterface::~SuperpoweredInterface() {
 
     delete audioSystem;
     delete playerA;
@@ -92,7 +92,7 @@ SuperpoweredExample::~SuperpoweredExample() {
     free(stereoBuffer);
 }
 
-void SuperpoweredExample::onPlayPause(bool play) {
+void SuperpoweredInterface::onPlayPause(bool play) {
 
     LOGD("onPlayPause()");
     
@@ -104,12 +104,12 @@ void SuperpoweredExample::onPlayPause(bool play) {
     SuperpoweredCPU::setSustainedPerformanceMode(play); // <-- Important to prevent audio dropouts.
 }
 
-void SuperpoweredExample::onFxSelect(int value) { 
-    __android_log_print(ANDROID_LOG_VERBOSE, "SuperpoweredExample", "FXSEL %i", value);
+void SuperpoweredInterface::onFxSelect(int value) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "SuperpoweredInterface", "FXSEL %i", value);
     activeFx = (unsigned char)value;
 }
 
-void SuperpoweredExample::onFxOff() {
+void SuperpoweredInterface::onFxOff() {
     filter->enable(false);
     roll->enable(false);
     flanger->enable(false);
@@ -125,7 +125,7 @@ static inline float floatToFrequency(float value) {
     return value < MAXFREQ ? value : MAXFREQ;
 }
 
-void SuperpoweredExample::onFxValue(int ivalue) {
+void SuperpoweredInterface::onFxValue(int ivalue) {
 
     float value = float(ivalue) * 0.01f;
     switch (activeFx) {
@@ -153,34 +153,34 @@ void SuperpoweredExample::onFxValue(int ivalue) {
     };
 }
 
-void SuperpoweredExample::loadTrack(const char *path) {
-    playerA->open(path, NULL);
+void SuperpoweredInterface::loadTrack(const char *path) {
+    playerA->open(path, nullptr);
 }
 
-void SuperpoweredExample::onSetTempo(float factor, bool mastertempo) {
+void SuperpoweredInterface::onSetTempo(float factor, bool mastertempo) {
     playerA->setTempo(factor, mastertempo);
 }
 
-void SuperpoweredExample::onSetPosition(double ms, bool andStop, bool synchronisedStart) {
+void SuperpoweredInterface::onSetPosition(double ms, bool andStop, bool synchronisedStart) {
     playerA->setPosition(ms, andStop, synchronisedStart);
 }
 
-unsigned int SuperpoweredExample::getPositionMs() {
+double SuperpoweredInterface::getPositionMs() {
     return playerA->positionMs;
 }
 
-unsigned int SuperpoweredExample::getDurationMs() {
+unsigned int SuperpoweredInterface::getDurationMs() {
     return playerA->durationMs;
 }
 
-bool SuperpoweredExample::process(short int *output, unsigned int numberOfSamples) {
+bool SuperpoweredInterface::process(short int *output, unsigned int numberOfSamples) {
     
     double masterBpm = playerA->currentBpm;
     bool silence = !playerA->process(stereoBuffer, false, numberOfSamples, volA, masterBpm, playerA->msElapsedSinceLastBeat);
     
     roll->bpm = flanger->bpm = (float)masterBpm; // Syncing fx is one line.
 
-    if (roll->process(silence ? NULL : stereoBuffer, stereoBuffer, numberOfSamples) && silence) silence = false;
+    if (roll->process(silence ? nullptr : stereoBuffer, stereoBuffer, numberOfSamples) && silence) silence = false;
     if (!silence) {
         filter->process(stereoBuffer, stereoBuffer, numberOfSamples);
         flanger->process(stereoBuffer, stereoBuffer, numberOfSamples);
@@ -195,20 +195,20 @@ bool SuperpoweredExample::process(short int *output, unsigned int numberOfSample
 // Calls back to JAVA
 //
 
-SuperpoweredExample *example = NULL;
+SuperpoweredInterface *example = nullptr;
 JavaVM *jvm;
 
 jclass jClassRef;
 jobject javaObjectRef;
 
-void SuperpoweredExample::onPrepared() {
+void SuperpoweredInterface::onPrepared() {
     LOGD("onPrepared()");
     
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
 
     if (getEnvStat == JNI_EDETACHED) {
-        jvm->AttachCurrentThread(&env, NULL);
+        jvm->AttachCurrentThread(&env, nullptr);
     }
 
     jmethodID jmethodID = env->GetMethodID(jClassRef, "onPrepared",   "()V");
@@ -219,14 +219,14 @@ void SuperpoweredExample::onPrepared() {
     }
 }
 
-void SuperpoweredExample::onCompletion() {
+void SuperpoweredInterface::onCompletion() {
     LOGD("onCompletion()");
 
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
 
     if (getEnvStat == JNI_EDETACHED) {
-        jvm->AttachCurrentThread(&env, NULL);
+        jvm->AttachCurrentThread(&env, nullptr);
     }
 
     jmethodID jmethodID = env->GetMethodID(jClassRef, "onCompletion",   "()V");
@@ -237,14 +237,14 @@ void SuperpoweredExample::onCompletion() {
     }
 }
 
-void SuperpoweredExample::onError() {
+void SuperpoweredInterface::onError() {
     LOGD("onError()");
 
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
 
     if (getEnvStat == JNI_EDETACHED) {
-        jvm->AttachCurrentThread(&env, NULL);
+        jvm->AttachCurrentThread(&env, nullptr);
     }
 
     jmethodID jmethodID = env->GetMethodID(jClassRef, "onError",   "()V");
@@ -266,11 +266,11 @@ void Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_Superpowe
         jint     samplerate,
         jint     buffersize) {
 
-    example = new SuperpoweredExample((unsigned int)samplerate, (unsigned int)buffersize);
+    example = new SuperpoweredInterface((unsigned int)samplerate, (unsigned int)buffersize);
     
     // for calling back to java we need to cache some references
     
-    jint rs = jniEnv->GetJavaVM(&jvm);     
+    jint rs = jniEnv->GetJavaVM(&jvm);
     jclass clazz = jniEnv->GetObjectClass(obj);
     jClassRef = (jclass)jniEnv->NewGlobalRef(clazz);
     javaObjectRef = jniEnv->NewGlobalRef(obj);
@@ -315,13 +315,13 @@ extern "C" JNIEXPORT JNICALL
 jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_analyzeData(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
-        jstring  javapath) {
+        jstring  javaPath) {
 
     LOGD("analyzeData():");
 
     jboolean isCopy;
 
-    const char *path = javaEnvironment->GetStringUTFChars(javapath, JNI_FALSE);
+    const char *path = javaEnvironment->GetStringUTFChars(javaPath, JNI_FALSE);
 
     // Open the input file.
     auto *decoder = new SuperpoweredDecoder();
@@ -384,7 +384,7 @@ jbyteArray Java_org_qstuff_qplayer_player_service_QDeqPlayerSuperpoweredImpl_ana
 
     javaEnvironment->SetByteArrayRegion(ret, 0, overviewSize, (jbyte*) overviewWaveform);
 
-    javaEnvironment->ReleaseStringUTFChars(javapath, path);
+    javaEnvironment->ReleaseStringUTFChars(javaPath, path);
 
     delete decoder;
     delete analyzer;

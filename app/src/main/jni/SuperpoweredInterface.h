@@ -4,7 +4,7 @@
 #include <cmath>
 #include <pthread.h>
 
-#include "SuperpoweredExample.h"
+#include "SuperpoweredInterface.h"
 #include <SuperpoweredAdvancedAudioPlayer.h>
 #include <SuperpoweredFilter.h>
 #include <SuperpoweredRoll.h>
@@ -15,11 +15,11 @@
 #define HEADROOM_DECIBEL 3.0f
 static const float headroom = powf(10.0f, -HEADROOM_DECIBEL * 0.025f);
 
-class SuperpoweredExample {
+class SuperpoweredInterface {
 public:
 
-    SuperpoweredExample(unsigned int samplerate, unsigned int buffersize);  
-    ~SuperpoweredExample();
+    SuperpoweredInterface(unsigned int samplerate, unsigned int buffersize);
+    ~SuperpoweredInterface();
     
     bool process(short int *output, unsigned int numberOfSamples);
     
@@ -32,7 +32,7 @@ public:
     void loadTrack(const char *path);
     void destroy();
     
-    unsigned int getPositionMs();
+    double getPositionMs();
     unsigned int getDurationMs();
     
     void onEQBand(unsigned int index, int gain);
