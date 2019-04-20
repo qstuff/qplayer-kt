@@ -203,11 +203,17 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun toggleRepeat() {
         repeat.value = (repeat.value as TrackRepeatStatus).next()
+        if (shuffle.value == true) {
+            shuffle.value = false
+        }
         saveStates()
     }
 
     fun toggleShuffle() {
         shuffle.value = !(shuffle.value ?: true)
+        if (repeat.value != TrackRepeatStatus.NONE) {
+            repeat.value = TrackRepeatStatus.NONE
+        }
         saveStates()
     }
 
