@@ -25,7 +25,7 @@
         tools:ignore="RtlSymmetry" />
 
     <!-- Waveform View -->
-    <org.qstuff.qplayer.player.waveform.WaveformView
+    <org.qstuff.qplayer.player.trackprogress.WaveformView
         android:id="@+id/waveformView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
@@ -66,7 +66,7 @@
         android:thumbOffset="1dp"/>
 
     <!-- Cuepoint View -->
-    <org.qstuff.qplayer.player.waveform.CuepointView
+    <org.qstuff.qplayer.player.trackprogress.CuepointView
         android:id="@+id/cuepointView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
@@ -76,7 +76,7 @@
         android:layout_below="@+id/midContainer"
         android:layout_marginBottom="4dp"
         android:visibility="invisible"
-        tools:visibility="gone"
+        tools:visibility="visible"
         tools:background="@color/green_90"/>
 
     <!-- Vertical Pitch Control -->
@@ -138,10 +138,10 @@
                     android:id="@+id/buttonPitchControlDecrease"
                     android:layout_width="@dimen/pitch_finetuning_button_width"
                     android:layout_height="@dimen/textview_height"
-                    android:padding="20dp"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:background="@drawable/black_rounded_left_shape"
+                    android:padding="20dp"
                     app:srcCompat="@drawable/ic_keyboard_arrow_left_white_24px" />
 
                 <ImageButton
@@ -157,16 +157,15 @@
                 <!-- Pitch Control Value -->
                 <TextView
                     android:id="@+id/pitchControlValueIndicator"
-                    android:layout_width="wrap_content"
+                    style="@style/PlayerTextStyle"
+                    android:layout_width="match_parent"
                     android:layout_height="@dimen/textview_height"
                     android:layout_toStartOf="@+id/buttonPitchControlIncrease"
                     android:layout_toEndOf="@+id/buttonPitchControlDecrease"
-                    android:gravity="center"
-                    style="@style/PlayerTextStyle"
-                    android:text="  0,0 %"
+                    android:text="0,0%"
                     android:background="@color/black"
                     android:visibility="visible"
-                    tools:text="80,0%"
+                    tools:text="0,0%"
                     tools:ignore="HardcodedText" />
 
             </RelativeLayout>

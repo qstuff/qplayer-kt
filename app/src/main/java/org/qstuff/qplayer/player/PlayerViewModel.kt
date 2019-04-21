@@ -12,7 +12,7 @@ import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.player.service.QMediaPlayerService
+import org.qstuff.qplayer.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
@@ -162,8 +162,8 @@ class  PlayerViewModel (application: Application):
         }
 
         val pitch = String.format("$pre%02.01f", diff)
-        if (diff < 10 && diff > -10) {
-            pitchValueText.value = "$pitch %"
+        if (diff in -99.0..99.0) {
+            pitchValueText.value = "$pitch%"
         } else {
             pitchValueText.value = pitch
         }

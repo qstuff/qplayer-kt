@@ -1,11 +1,9 @@
-package org.qstuff.qplayer.player.service
+package org.qstuff.qplayer.player.mediaservice
 
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
-
-import java.io.File
 
 interface QDeqPlayer {
 

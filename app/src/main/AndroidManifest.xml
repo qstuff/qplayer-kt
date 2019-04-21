@@ -31,13 +31,13 @@
         </activity>
 
         <service
-            android:name=".player.service.QMediaPlayerService"
+            android:name=".player.mediaservice.QMediaPlayerService"
             android:exported="false"
             android:enabled="true">
         </service>
 
         <receiver
-            android:name=".player.service.QMediaPlayerService$NotificationBroadcastReceiver"
+            android:name=".player.mediaservice.QMediaPlayerService$NotificationBroadcastReceiver"
             android:exported="true" >
             <intent-filter>
                 <action android:name="org.qstuff.qplayer.player.service.ACTION_PLAYER_TOGGLED" />

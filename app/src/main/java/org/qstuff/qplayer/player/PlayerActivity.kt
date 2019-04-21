@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -141,9 +142,14 @@ class PlayerActivity : AppCompatActivity() {
 
         buttonCue.setOnClickListener {
 
+            cuepointView.cuepointPosition = trackProgressBar.progress
+            cuepointView.visibility = View.VISIBLE
+
         }
 
         buttonCue.setOnLongClickListener {
+
+            cuepointView.visibility = View.GONE
 
             true
         }
@@ -274,7 +280,7 @@ class PlayerActivity : AppCompatActivity() {
         })
 
         playerViewModel.pitchValueText.observe(this, Observer { pitch ->
-            pitchControlValueIndicator.text = pitch ?: "0,00%"
+            pitchControlValueIndicator.text = pitch ?: "0,0%"
         })
 
         queueViewModel.repeat.observe(this, Observer { repeatStatus ->

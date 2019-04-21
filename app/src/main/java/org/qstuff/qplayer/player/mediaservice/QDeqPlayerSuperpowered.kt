@@ -1,11 +1,10 @@
-package org.qstuff.qplayer.player.service
+package org.qstuff.qplayer.player.mediaservice
 
 import android.content.Context
 import android.media.AudioManager
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
@@ -15,7 +14,7 @@ import timber.log.Timber
 /**
  * The interface to the native (SuperpoweredSDK) side
  */
-class QDeqPlayerSuperpoweredImpl : QDeqPlayer {
+class QDeqPlayerSuperpowered : QDeqPlayer {
 
     companion object {
 

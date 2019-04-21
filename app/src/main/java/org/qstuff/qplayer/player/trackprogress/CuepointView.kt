@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.waveform
+package org.qstuff.qplayer.player.trackprogress
 
 import android.content.Context
 import android.graphics.Canvas
@@ -35,6 +35,7 @@ class CuepointView : View {
     private var viewHeight: Int = 0
     private var markerWidth: Float = 0.toFloat()
     private var markerTopMargin: Float = 0.toFloat()
+
     var cuepointPosition: Int = 0
 
         set(position) {
@@ -42,7 +43,7 @@ class CuepointView : View {
             field = position
             if (position < 0) return
 
-            currentX = sideMargin + position * stretchFactor
+            currentX = field * stretchFactor
 
             Timber.d("setCuepointPosition(): current X: %f", currentX)
 
@@ -50,39 +51,36 @@ class CuepointView : View {
 
             a = Point((currentX - markerWidth / 2).toInt(), -markerTopMargin.toInt())
             b = Point((currentX + markerWidth / 2).toInt(), -markerTopMargin.toInt())
-            c = Point(currentX.toInt(), viewHeight / 3)
+            c = Point(currentX.toInt(), viewHeight / 2)
 
             invalidate()
         }
 
     private var stretchFactor = 1.0f
 
-
     constructor(context: Context) : super(context) {
-
         init()
     }
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-
         init()
     }
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
-
         init()
     }
 
     private fun init() {
 
         cuepointIndicator = Paint(Paint.ANTI_ALIAS_FLAG)
-        cuepointIndicator!!.color = ContextCompat.getColor(context, R.color.q_orange)
+        cuepointIndicator!!.color = ContextCompat.getColor(context, R.color.green)
         cuepointIndicator!!.style = Paint.Style.FILL
         cuepointIndicator!!.strokeWidth = 1f
 
         sideMargin = resources.getDimension(R.dimen.waveform_side_margin)
         markerWidth = resources.getDimension(R.dimen.cue_marker_width)
         markerTopMargin = resources.getDimension(R.dimen.cue_marker_top_margin)
+        viewHeight = resources.getDimension(R.dimen.seekbar_height).toInt()
 
         cuepointIndicatorPath = Path()
         cuepointIndicatorPath!!.fillType = Path.FillType.EVEN_ODD
@@ -99,16 +97,14 @@ class CuepointView : View {
     }
 
     private fun setupDimensions() {
-        Timber.v("setupDimensions(): %d", height)
-
-        viewHeight = height
         waveFormWidth = (width - 2 * sideMargin).toInt()
+        Timber.d("setupDimensions(): w: $markerWidth, h: $viewHeight")
 
-        Timber.v("setupDimensions(): waveFormWidth: %d", waveFormWidth)
+        Timber.v("setupDimensions(): waveFormWidth: $waveFormWidth")
 
         stretchFactor = waveFormWidth.toFloat() / 1000
 
-        Timber.v("setupDimensions(): stretchFactor: %f", stretchFactor)
+        Timber.v("setupDimensions(): stretchFactor: $stretchFactor")
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -120,9 +116,9 @@ class CuepointView : View {
             return
         }
 
-        Timber.v("onDraw(): a: %s", a!!.toString())
-        Timber.v("onDraw(): b: %s", b!!.toString())
-        Timber.v("onDraw(): c: %s", c!!.toString())
+        Timber.d("onDraw(): a: $a")
+        Timber.d("onDraw(): b: $b")
+        Timber.d("onDraw(): c: $c")
 
         cuepointIndicatorPath!!.moveTo(a!!.x.toFloat(), a!!.y.toFloat())
         cuepointIndicatorPath!!.lineTo(b!!.x.toFloat(), b!!.y.toFloat())

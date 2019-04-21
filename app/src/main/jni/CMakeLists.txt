@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.6.0)
 
 set(
 	PATH_TO_SUPERPOWERED "/Users/claus/private/repos/SuperpoweredSDK/Superpowered/"
 	CACHE STRING ""
 )
 
-message(${ANDROID_ABI})
+message(================= ${ANDROID_ABI})
 
 file(GLOB CPP_FILES "*.cpp")
 
@@ -13,11 +13,11 @@ add_library(
 	SuperpoweredInterface
 	SHARED
 	${CPP_FILES}
-	/Users/claus/private/repos/SuperpoweredSDK/Superpowered/AndroidIO/SuperpoweredAndroidAudioIO.cpp
+	${PATH_TO_SUPERPOWERED}/AndroidIO/SuperpoweredAndroidAudioIO.cpp
 )
 
 include_directories(src/main/jni)
-include_directories(/Users/claus/private/repos/SuperpoweredSDK/Superpowered/)
+include_directories(${PATH_TO_SUPERPOWERED})
 
 find_library( 
     # Sets the name of the path variable.
@@ -33,5 +33,5 @@ target_link_libraries(
     log
     android
     OpenSLES
-    /Users/claus/private/repos/SuperpoweredSDK/Superpowered/libSuperpoweredAndroid${ANDROID_ABI}.a
+	${PATH_TO_SUPERPOWERED}/libSuperpoweredAndroid${ANDROID_ABI}.a
 )

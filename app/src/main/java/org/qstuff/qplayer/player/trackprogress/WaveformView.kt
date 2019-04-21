@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.waveform
+package org.qstuff.qplayer.player.trackprogress
 
 import android.content.Context
 import android.graphics.Canvas

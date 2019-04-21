@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.service
+package org.qstuff.qplayer.player.mediaservice
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -17,7 +17,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 import org.qstuff.qplayer.R
@@ -77,7 +76,7 @@ class QMediaPlayerService : LifecycleService() {
         }
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        player = QDeqPlayerSuperpoweredImpl()
+        player = QDeqPlayerSuperpowered()
         player.create(this)
     }
 
