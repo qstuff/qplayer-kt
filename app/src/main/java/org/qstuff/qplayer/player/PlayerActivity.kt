@@ -2,6 +2,7 @@ package org.qstuff.qplayer.player
 
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
@@ -10,11 +11,13 @@ import com.WarwickWestonWright.HGDialV2.HGViewContainer
 
 import android.os.Bundle
 import android.text.Html
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.PopupMenu
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -33,6 +36,7 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
+import org.qstuff.qplayer.settings.WebViewActivity
 import org.qstuff.qplayer.util.PlayerStatus
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import timber.log.Timber
@@ -42,6 +46,14 @@ import java.util.concurrent.TimeUnit
  *
  */
 class PlayerActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_URL = "EXTRA_URL"
+        const val HTMLPAGE_PRIVACY = "privacy.html"
+        const val HTMLPAGE_IMPRINT = "imprint.html"
+        const val HTMLPAGE_CONTACT = "contact.html"
+        const val HTMLPAGE_LICENSES = "licenses.html"
+    }
 
     private lateinit var jogWheelContainer: HGViewContainer
     private lateinit var jogWheelDial: HGDialV2
@@ -174,7 +186,7 @@ class PlayerActivity : AppCompatActivity() {
             pitchControl.setNewProgress(current - delta)
         }
 
-        pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+        pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 Timber.d("onProgressChanged(): $progress")
                 playerViewModel.onPitchChanged(progress)
@@ -182,6 +194,41 @@ class PlayerActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+
+        moreMenu.setOnClickListener {
+            val popup = PopupMenu(this, moreMenu)
+            val inflater = popup.menuInflater
+            inflater.inflate(R.menu.more_menu, popup.menu)
+            popup.setOnMenuItemClickListener {item ->
+
+                when (item.itemId) {
+                    R.id.more_menu_settings -> {
+                        //startSettingsActivity()
+                        true
+                    }
+                    R.id.more_menu_privacy -> {
+                        startWebViewActivity(HTMLPAGE_PRIVACY)
+                        true
+                    }
+                    R.id.more_menu_imprint -> {
+                        startWebViewActivity(HTMLPAGE_IMPRINT)
+                        true
+                    }
+                    R.id.more_menu_contact -> {
+                        //addFeedbackFragment()
+                        true
+                    }
+                    R.id.more_menu_licenses -> {
+                        startWebViewActivity(HTMLPAGE_LICENSES)
+                        true
+                    }
+                    else -> false
+                }
+
+                false
+            }
+            popup.show()
+        }
     }
 
     //
@@ -218,10 +265,8 @@ class PlayerActivity : AppCompatActivity() {
                         waveformView.updateWaveform(null)
                         waveformViewLoadingText.visibility = View.VISIBLE
                         trackProgressBar.progress = 0
-
                     }
                     Track.TrackStatus.PREPARED -> {
-
                         isTrackPrepared = true
                         totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
                         dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
@@ -229,10 +274,8 @@ class PlayerActivity : AppCompatActivity() {
                         if (track.isAutoplay) {
                             playerViewModel.playPause()
                         }
-
                     }
                     Track.TrackStatus.COMPLETED -> {
-
                         stopRemainBlinkAnimation()
                         playerViewModel.onTrackCompleted(track)
                         queueViewModel.onTrackCompleted(track)
@@ -324,6 +367,10 @@ class PlayerActivity : AppCompatActivity() {
         })
     }
 
+    //
+    // Private
+    //
+
     private fun setupTitle() {
 
         var debugTitleSuffix =""
@@ -339,7 +386,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun setupJogWheel() {
-        jogWheelContainer = com.WarwickWestonWright.HGDialV2.HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, jogWheel)
+        jogWheelContainer = HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, jogWheel)
         jogWheelDial = jogWheelContainer.hgDialV2Active
         jogWheelInterface = (object: HGDialV2.IHGDial {
 
@@ -392,6 +439,12 @@ class PlayerActivity : AppCompatActivity() {
                 playerViewModel.onPitchChanged(pitchControl.progress)
             }
         }
+    }
+
+    private fun startWebViewActivity(url: String) {
+        val intent = Intent(this, WebViewActivity::class.java)
+        intent.putExtra(EXTRA_URL, url)
+        startActivity(intent)
     }
 
     //
@@ -450,27 +503,26 @@ class PlayerActivity : AppCompatActivity() {
     //
     // Inner classes
     //
+
     private class ContentPagerAdapter(val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
-        override fun getItem(position: Int): Fragment {
-            when(position) {
-                0 -> return QueueFragment.newInstance()
-                1 -> return FileBrowserFragment.newInstance()
-                2 -> return PlaylistFragment.newInstance()
-            }
-            return null!!
-        }
+        override fun getItem(position: Int) =
+                when (position) {
+                    0 -> QueueFragment.newInstance()
+                    1 -> FileBrowserFragment.newInstance()
+                    2 -> PlaylistFragment.newInstance()
+                    else -> null!!
+                }
 
         override fun getCount() = 3
 
-        override fun getPageTitle(position: Int): CharSequence? {
-            when (position) {
-                0 -> return context.getString(R.string.queue_title)
-                1 -> return context.getString(R.string.filebrowser_title)
-                2 -> return context.getString(R.string.playlists_title)
-            }
-            return ""
-        }
+        override fun getPageTitle(position: Int) =
+                when (position) {
+                    0 -> context.getString(R.string.queue_title)
+                    1 -> context.getString(R.string.filebrowser_title)
+                    2 -> context.getString(R.string.playlists_title)
+                    else -> ""
+                }
     }
 
     private inner class TrackProgressChangedListener : SeekBar.OnSeekBarChangeListener {

@@ -465,4 +465,14 @@
 
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/moreMenu"
+        android:layout_width="@dimen/kebabbutton_size"
+        android:layout_height="@dimen/kebabbutton_size"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="@dimen/more_menu_icon_margin"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/ic_more_vert_white_24dp"/>
+
 </RelativeLayout>

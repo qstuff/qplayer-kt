@@ -30,6 +30,19 @@
 
         </activity>
 
+        <activity
+            android:name=".settings.WebViewActivity"
+            android:theme="@style/Theme.QPlayer"
+            android:screenOrientation="sensorPortrait">
+
+        </activity>
+<!--
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:theme="@style/Theme.QPlayer"
+            android:screenOrientation="sensorPortrait">
+        </activity>
+-->
         <service
             android:name=".player.mediaservice.QMediaPlayerService"
             android:exported="false"
