@@ -57,6 +57,7 @@ class PlayerActivity : AppCompatActivity() {
     private var isTrackPrepared = false
     private var isBlinkAnimationRunning = false
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
@@ -141,16 +142,19 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         buttonCue.setOnClickListener {
-
-            cuepointView.cuepointPosition = trackProgressBar.progress
-            cuepointView.visibility = View.VISIBLE
-
+            currentTrack?.also {
+                cuepointView.cuepointPosition = trackProgressBar.progress
+                cuepointView.visibility = View.VISIBLE
+                playerViewModel.toggleCue(it, true)
+            }
         }
 
         buttonCue.setOnLongClickListener {
-
-            cuepointView.visibility = View.GONE
-
+            currentTrack?.also {
+                cuepointView.cuepointPosition = trackProgressBar.progress
+                cuepointView.visibility = View.GONE
+                playerViewModel.toggleCue(it, false)
+            }
             true
         }
 

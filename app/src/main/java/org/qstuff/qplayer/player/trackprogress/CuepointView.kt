@@ -22,12 +22,16 @@ import timber.log.Timber
 
 class CuepointView : View {
 
-    private var cuepointIndicator: Paint? = null
-    private var cuepointIndicatorPath: Path? = null
+    private lateinit var cuepointIndicator: Paint
+    private lateinit var cuepointIndicatorPath: Path
 
-    private var a: Point? = null
-    private var b: Point? = null
-    private var c: Point? = null
+    private lateinit var a: Point
+    private lateinit var b: Point
+    private lateinit var c: Point
+    private lateinit var d: Point
+    private lateinit var e: Point
+    private lateinit var f: Point
+
 
     private var currentX: Float = 0.toFloat()
     private var sideMargin: Float = 0.toFloat()
@@ -39,24 +43,20 @@ class CuepointView : View {
     var cuepointPosition: Int = 0
 
         set(position) {
-            Timber.d("setCuepointPosition(): %d", position)
             field = position
             if (position < 0) return
+            currentX = (sideMargin + waveFormWidth * (field.toFloat() / 1000) - 2)
+            cuepointIndicatorPath.reset()
 
-            currentX = field * stretchFactor
-
-            Timber.d("setCuepointPosition(): current X: %f", currentX)
-
-            cuepointIndicatorPath!!.reset()
-
-            a = Point((currentX - markerWidth / 2).toInt(), -markerTopMargin.toInt())
-            b = Point((currentX + markerWidth / 2).toInt(), -markerTopMargin.toInt())
-            c = Point(currentX.toInt(), viewHeight / 2)
+            a = Point((currentX - markerWidth / 2).toInt(), - markerTopMargin.toInt())
+            b = Point((currentX + markerWidth / 2).toInt(), - markerTopMargin.toInt())
+            c = Point(currentX.toInt() +2, viewHeight / 5)
+            d = Point(currentX.toInt() +2 , viewHeight + markerTopMargin.toInt())
+            e = Point(currentX.toInt() -2, viewHeight + markerTopMargin.toInt())
+            f = Point(currentX.toInt() -2, viewHeight / 5)
 
             invalidate()
         }
-
-    private var stretchFactor = 1.0f
 
     constructor(context: Context) : super(context) {
         init()
@@ -73,9 +73,9 @@ class CuepointView : View {
     private fun init() {
 
         cuepointIndicator = Paint(Paint.ANTI_ALIAS_FLAG)
-        cuepointIndicator!!.color = ContextCompat.getColor(context, R.color.green)
-        cuepointIndicator!!.style = Paint.Style.FILL
-        cuepointIndicator!!.strokeWidth = 1f
+        cuepointIndicator.color = ContextCompat.getColor(context, R.color.q_orange)
+        cuepointIndicator.style = Paint.Style.FILL
+        cuepointIndicator.strokeWidth = 2f
 
         sideMargin = resources.getDimension(R.dimen.waveform_side_margin)
         markerWidth = resources.getDimension(R.dimen.cue_marker_width)
@@ -83,7 +83,7 @@ class CuepointView : View {
         viewHeight = resources.getDimension(R.dimen.seekbar_height).toInt()
 
         cuepointIndicatorPath = Path()
-        cuepointIndicatorPath!!.fillType = Path.FillType.EVEN_ODD
+        cuepointIndicatorPath.fillType = Path.FillType.WINDING
 
         val viewTreeObserver = viewTreeObserver
         if (viewTreeObserver.isAlive) {
@@ -98,34 +98,26 @@ class CuepointView : View {
 
     private fun setupDimensions() {
         waveFormWidth = (width - 2 * sideMargin).toInt()
-        Timber.d("setupDimensions(): w: $markerWidth, h: $viewHeight")
 
+        Timber.v("setupDimensions(): marker w: $markerWidth, h: $viewHeight")
         Timber.v("setupDimensions(): waveFormWidth: $waveFormWidth")
-
-        stretchFactor = waveFormWidth.toFloat() / 1000
-
-        Timber.v("setupDimensions(): stretchFactor: $stretchFactor")
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         Timber.v("onDraw():")
 
-        if (a == null || b == null || c == null) {
-            Timber.w("onDraw(): something wrong")
-            return
+        cuepointIndicatorPath.run {
+            moveTo(a.x.toFloat(), a.y.toFloat())
+            lineTo(b.x.toFloat(), b.y.toFloat())
+            lineTo(c.x.toFloat(), c.y.toFloat())
+            lineTo(d.x.toFloat(), d.y.toFloat())
+            lineTo(e.x.toFloat(), e.y.toFloat())
+            lineTo(f.x.toFloat(), f.y.toFloat())
+            lineTo(a.x.toFloat(), a.y.toFloat())
+            close()
         }
 
-        Timber.d("onDraw(): a: $a")
-        Timber.d("onDraw(): b: $b")
-        Timber.d("onDraw(): c: $c")
-
-        cuepointIndicatorPath!!.moveTo(a!!.x.toFloat(), a!!.y.toFloat())
-        cuepointIndicatorPath!!.lineTo(b!!.x.toFloat(), b!!.y.toFloat())
-        cuepointIndicatorPath!!.lineTo(c!!.x.toFloat(), c!!.y.toFloat())
-        cuepointIndicatorPath!!.lineTo(a!!.x.toFloat(), a!!.y.toFloat())
-        cuepointIndicatorPath!!.close()
-
-        canvas.drawPath(cuepointIndicatorPath!!, cuepointIndicator!!)
+        canvas.drawPath(cuepointIndicatorPath, cuepointIndicator)
     }
 }

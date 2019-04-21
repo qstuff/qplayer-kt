@@ -29,17 +29,13 @@ class  PlayerViewModel (application: Application):
     val trackStatus = MutableLiveData<Track>()
     val trackStatusMediator = MediatorLiveData<Track>()
     val playerStatus = MutableLiveData<PlayerStatus>()
-    val playerStatusMediator = MediatorLiveData<PlayerStatus>()
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
     val onTrackPositionUpdate = MutableLiveData<Long>()
     val pitchValueText = MutableLiveData<String>()
-    val pitchValue = MutableLiveData<Int>()
-
-
     val masterTempo = MutableLiveData<Boolean>()
 
-    var currentPitch: Int = 500
     var pitchFactor = PITCH_RANGE_FACTORS[0]
+    var cueActive = false
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -128,6 +124,10 @@ class  PlayerViewModel (application: Application):
 
         } else if (playerStatus.value == PlayerStatus.PAUSED) {
 
+            if (cueActive) {
+                mediaService.seekTo(trackStatus.value!!.cuePosition.toDouble(), true)
+            }
+
             mediaService.play()
             playerStatus.value = PlayerStatus.PLAYING
             startUpdateTimer()
@@ -174,6 +174,18 @@ class  PlayerViewModel (application: Application):
 
         if (isMediaServiceRunning) {
             mediaService.setTrackSpeed(1.0f + diff / 100, masterTempo.value ?: false)
+        }
+    }
+
+    fun toggleCue(track: Track, enable: Boolean) {
+        cueActive = enable
+
+        if (isMediaServiceRunning) {
+            if (cueActive) {
+                track.cuePosition = mediaService.getCurrentPositionMillis()
+            } else {
+                track.cuePosition = 0
+            }
         }
     }
 
