@@ -377,7 +377,7 @@ class PlayerActivity : AppCompatActivity() {
         if (BuildConfig.DEBUG) {
             try {
                 val packageInfo = packageManager.getPackageInfo(packageName, 0)
-                debugTitleSuffix = ("-α build: ${packageInfo.versionCode} API-${Build.VERSION.SDK_INT} ${(application as QDeqApplication).getDPI()})")
+                debugTitleSuffix = ("-α ${packageInfo.versionName} (${packageInfo.versionCode}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}")
             } catch(e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
             }
