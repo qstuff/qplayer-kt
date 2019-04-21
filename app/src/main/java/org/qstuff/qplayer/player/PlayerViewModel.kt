@@ -33,9 +33,9 @@ class  PlayerViewModel (application: Application):
     val onTrackPositionUpdate = MutableLiveData<Long>()
     val pitchValueText = MutableLiveData<String>()
     val masterTempo = MutableLiveData<Boolean>()
+    val cueActive = MutableLiveData<Boolean>()
 
     var pitchFactor = PITCH_RANGE_FACTORS[0]
-    var cueActive = false
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -105,6 +105,7 @@ class  PlayerViewModel (application: Application):
         // TODO: save & read all those from preferences
         masterTempo.value = false
         pitchValueText.value = "0,0%"
+        cueActive.value = false
 
         loadStates()
     }
@@ -124,7 +125,7 @@ class  PlayerViewModel (application: Application):
 
         } else if (playerStatus.value == PlayerStatus.PAUSED) {
 
-            if (cueActive) {
+            if (cueActive.value!!) {
                 mediaService.seekTo(trackStatus.value!!.cuePosition.toDouble(), true)
             }
 
@@ -178,10 +179,10 @@ class  PlayerViewModel (application: Application):
     }
 
     fun toggleCue(track: Track, enable: Boolean) {
-        cueActive = enable
+        cueActive.value = enable
 
         if (isMediaServiceRunning) {
-            if (cueActive) {
+            if (cueActive.value!!) {
                 track.cuePosition = mediaService.getCurrentPositionMillis()
             } else {
                 track.cuePosition = 0

@@ -287,6 +287,16 @@ class PlayerActivity : AppCompatActivity() {
             pitchControlValueIndicator.text = pitch ?: "0,0%"
         })
 
+        playerViewModel.cueActive.observe(this, Observer { cueActive ->
+            cueActive?.let {
+                if (it){
+                    buttonCue.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
+                } else {
+                    buttonCue.setTextColor(ContextCompat.getColor(this, R.color.white))
+                }
+            }
+        })
+
         queueViewModel.repeat.observe(this, Observer { repeatStatus ->
             repeatStatus?.let {
                 when (it) {
