@@ -37,7 +37,7 @@
     <string name="filebrowser_toast_empty_directory">Dieses Verzeichnis enthält keine Tracks</string>
 
     <!-- Dialogs -->
-    <string name="dialog_ok">Ok</string>
+    <string name="dialog_ok">OK</string>
     <string name="dialog_cancel">Abbrechen</string>
 
     <string name="dialog_add_to_queue">In die Queue laden</string>
@@ -83,9 +83,6 @@
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">Einstellungen für DJ Features</string>
 
-    <string name="settings_dj_mastertempo_title">Mastertempo</string>
-    <string name="settings_dj_mastertempo_summary">Keine Tonhöhenverschiebung beim Tempoänderungen wenn aktiviert</string>
-
     <string name="settings_dj_enable_cue">Cue-Punkt setzen</string>
     <string name="settings_dj_enable_cue_summary">Aktivieren um einen Cue-Punkt setzen zu können (Tap auf CUE aktiviert, Long-Tap löscht den Cue-Punkt).</string>
 
@@ -97,8 +94,8 @@
 
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Einstellungen für Datenschutz</string>
-    <string name="settings_privacy_crashreport_title">Google Crashlytics Crashreporting</string>
-    <string name="settings_privacy_crashreport__summary">Wenn aktiviert sendet die App Crashreports zu Google Crashlytics.\nWeitere Informationen darüber welche Daten für die Crashreports erhoben werden findest du in der Datenschutzerklärung.\nDie App muss neu gestartet werden wenn diese Einstellung geändert wird um wirksam zu werden.</string>
+    <string name="settings_privacy_crashreport_title">Absturzberichte</string>
+    <string name="settings_privacy_crashreport_summary">Wenn aktiviert sendet die App Absturzberichte.\nDie App muss neu gestartet werden damit diese Einstellung wirksam wird.</string>
 
     <!-- Feedback Activity -->
     <string name="feedback_activity_explanation">Um dein Feedback besser zu verstehen ist es für uns sehr nützlich wenn wir bestimmte Informationen zu deinem Gerät erhalten.\nDiese Daten lesen wir aus und du kannst sie uns zusammen mit deinem Feedback zuschicken.\nUnten kannst du sehen um welche Informationen es sich handelt.\nWenn du auf &quot;Mit Geräteinfos Senden&quot; tappst werden die Geräteinfos automatisch in die Nachricht eingefügt.\nWenn du die Geräteinfos nicht mitschicken möchtest dann tapp auf &quot;Ohne Geräteinfos Senden&quot;.</string>
@@ -112,6 +109,6 @@
     <string name="notification_channel_description" translatable="false">qplayer notification controls</string>
 
     <!-- M3UUtils -->
-    <string name="toast_track_not_found">Track aus playlist wurde nicht gefunden: </string>
+    <string name="toast_track_not_found">Track aus Playlist wurde nicht gefunden: </string>
 
 </resources>

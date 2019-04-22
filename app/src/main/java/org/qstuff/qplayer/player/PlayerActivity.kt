@@ -33,6 +33,7 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
+import org.qstuff.qplayer.settings.SettingsActivity
 import org.qstuff.qplayer.settings.WebViewActivity
 import org.qstuff.qplayer.util.PlayerStatus
 import org.qstuff.qplayer.util.TrackRepeatStatus
@@ -353,7 +354,7 @@ class PlayerActivity : AppCompatActivity() {
 
                 when (item.itemId) {
                     R.id.more_menu_settings -> {
-                        //startSettingsActivity()
+                        startSettingsActivity()
                         true
                     }
                     R.id.more_menu_privacy -> {
@@ -456,6 +457,11 @@ class PlayerActivity : AppCompatActivity() {
     private fun startWebViewActivity(url: String) {
         val intent = Intent(this, WebViewActivity::class.java)
         intent.putExtra(EXTRA_URL, url)
+        startActivity(intent)
+    }
+
+    private fun startSettingsActivity() {
+        val intent = Intent(this, SettingsActivity::class.java)
         startActivity(intent)
     }
 

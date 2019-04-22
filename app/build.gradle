@@ -104,6 +104,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$libs.appcompat"
     implementation "androidx.constraintlayout:constraintlayout:$libs.constraintLayout"
     implementation "androidx.lifecycle:lifecycle-extensions:$libs.lifecycle"
+    implementation "androidx.preference:preference:$libs.preference"
 
     implementation "androidx.room:room-runtime:$libs.room"
     kapt "androidx.room:room-compiler:$libs.room"

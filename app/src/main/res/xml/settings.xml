@@ -63,7 +63,7 @@
         <SwitchPreference
             android:key="PREFS_PRIVACY_FB_CRASHREPORTING"
             android:title="@string/settings_privacy_crashreport_title"
-            android:summary="@string/settings_privacy_crashreport__summary"
+            android:summary="@string/settings_privacy_crashreport_summary"
             android:defaultValue="false" />
 
     </PreferenceCategory>

@@ -80,9 +80,6 @@
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">DJ Settings</string>
 
-    <string name="settings_dj_mastertempo_title">Mastertempo</string>
-    <string name="settings_dj_mastertempo_summary">Enable to keep pitch when changing track speed</string>
-
     <string name="settings_dj_enable_cue">Enable Cue</string>
     <string name="settings_dj_enable_cue_summary">Enables setting and playing from a cuepoint</string>
 
@@ -98,11 +95,11 @@
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Privacy Settings</string>
 
-    <string name="settings_privacy_crashreport_title">Crashlytics Crashreporting by Google</string>
-    <string name="settings_privacy_crashreport__summary">If enabled the app sends crashreports to Google Crashlytics.\nFor further information on what data will be collected for the crashreports, please refer to the privacy page.\nThe app needs to be restartet after changing this option to become effective.</string>
+    <string name="settings_privacy_crashreport_title">Crashreports</string>
+    <string name="settings_privacy_crashreport_summary">If enabled the app sends crashreports.\nThe app needs to be restarted to make the change effective.</string>
 
     <!-- Feedback Activity -->
-    <string name="feedback_activity_explanation">To have a better understanding of your feedback it is very useful for us when we get some information about your device.\nWe can read this data and you can send them aling with your feedback message.\nBelow you can see what information it is.\nWhen you tap \"Send with device infos\" this information will automatically added to your message. If you don\'t want to send this information please tap \"Send without device infos\"</string>
+    <string name="feedback_activity_explanation">To have a better understanding of your feedback it is very useful for us when we get some information about your device.\nWe can read this data and you can send them along with your feedback message.\nBelow you can see what information it is.\nWhen you tap \"Send with device infos\" this information will automatically added to your message. If you don\'t want to send this information please tap \"Send without device infos\"</string>
     <string name="feedback_activity_device_info_title">Your device infos:</string>
     <string name="feedback_activity_send_button_with">Send with device infos</string>
     <string name="feedback_activity_send_button_without">Send without device infos</string>
