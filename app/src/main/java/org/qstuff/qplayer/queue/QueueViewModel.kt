@@ -129,26 +129,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
             currentTracks = list
         }
         trackList.value = currentTracks
-        saveTrackList()
-    }
-
-    fun saveTrackList() {
-        preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
-    }
-
-    fun saveSelectedTrack() {
-
-        if (onTrackSelected.value != null) {
-            val track = onTrackSelected.value
-            track?.trackStatus = Track.TrackStatus.UNDEFINED
-            preferencesDataSource.saveSelectedTrackList(track!!)
-        }
     }
 
     fun onTrackSelected(track: Track) {
 
         onTrackSelectedIndex.value = currentTracks.indexOf(track)
         onTrackSelected.value = track
+        saveSelectedTrack()
     }
 
     fun previousTrack(current: Track?) {
@@ -156,16 +143,21 @@ class QueueViewModel: ViewModel(), KoinComponent {
         current?.let {
             if (currentTracks.contains(current)) {
                 var index = currentTracks.indexOf(current)
-                if (index > 0) {
-                    index -= 1
-                }
-                else if (index == 0) {
-                    index = currentTracks.size -1
+
+                if (shuffle.value == true) {
+                    index = random.nextInt(currentTracks.size - 1)
+                } else {
+                    if (index > 0) {
+                        index -= 1
+                    } else if (index == 0) {
+                        index = currentTracks.size - 1
+                    }
                 }
                 onTrackSelected.value = currentTracks.get(index)
                 onTrackSelectedIndex.value = index
             }
         }
+        saveSelectedTrack()
     }
 
     fun nextTrack(current: Track?) {
@@ -192,6 +184,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 onTrackSelectedIndex.value = index
             }
         }
+        saveSelectedTrack()
     }
 
     fun onTrackCompleted(track: Track) {
@@ -206,7 +199,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         if (shuffle.value == true) {
             shuffle.value = false
         }
-        saveStates()
+        preferencesDataSource.saveRepeatMode(repeat.value!!.ordinal)
     }
 
     fun toggleShuffle() {
@@ -214,16 +207,32 @@ class QueueViewModel: ViewModel(), KoinComponent {
         if (repeat.value != TrackRepeatStatus.NONE) {
             repeat.value = TrackRepeatStatus.NONE
         }
-        saveStates()
+        preferencesDataSource.saveShuffleMode(shuffle.value ?: false)
     }
 
     fun saveStates() {
+
         preferencesDataSource.saveRepeatMode(repeat.value!!.ordinal)
         preferencesDataSource.saveShuffleMode(shuffle.value ?: false)
+        saveTrackList()
+        saveSelectedTrack()
     }
 
     private fun loadStates() {
         repeat.value = TrackRepeatStatus.values()[preferencesDataSource.readRepeatMode()]
         shuffle.value = preferencesDataSource.readShuffleMode()
+    }
+
+    private fun saveTrackList() {
+        preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
+    }
+
+    private fun saveSelectedTrack() {
+
+        if (onTrackSelected.value != null) {
+            val track = onTrackSelected.value
+            track?.trackStatus = Track.TrackStatus.UNDEFINED
+            preferencesDataSource.saveSelectedTrackList(track!!)
+        }
     }
 }

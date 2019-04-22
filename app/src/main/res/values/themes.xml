@@ -9,7 +9,6 @@
         <!--   theme UI controls like checkboxes and text fields -->
         <item name="colorAccent">@color/q_orange</item>
         <item name="android:windowDisablePreview">true</item>
-        <item name="android:windowIsTranslucent">true</item>
     </style>
     
     <style name="SpinnerAppTheme" parent="android:Widget.Spinner">

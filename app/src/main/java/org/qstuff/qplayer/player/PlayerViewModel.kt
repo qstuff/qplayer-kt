@@ -115,6 +115,7 @@ class  PlayerViewModel (application: Application):
     //
 
     fun playPause() {
+
         if (!isMediaServiceBound) return
 
         if (playerStatus.value == PlayerStatus.PLAYING) {

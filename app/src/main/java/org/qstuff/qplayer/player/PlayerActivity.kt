@@ -11,7 +11,6 @@ import com.WarwickWestonWright.HGDialV2.HGViewContainer
 
 import android.os.Bundle
 import android.text.Html
-import android.view.MenuItem
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -21,8 +20,6 @@ import android.widget.PopupMenu
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
@@ -72,6 +69,8 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Timber.d("onCreate()")
+
         setContentView(R.layout.activity_player)
 
         playerViewModel = ViewModelProviders.of(this).get(PlayerViewModel::class.java)
@@ -88,7 +87,7 @@ class PlayerActivity : AppCompatActivity() {
         setupTitle()
         setupJogWheel()
         setupContentSection()
-        setupInteractionListener()
+        setupInteractionListeners()
         setupPitchRangeSpinner()
 
         playerViewModel.onMediaServiceConnected.observe(this, Observer { connected ->
@@ -120,119 +119,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     //
-    // Interaction Listeners
-    //
-
-    private fun setupInteractionListener() {
-
-        buttonPlayPause.setOnClickListener {
-            if (isTrackPrepared) {
-                playerViewModel.playPause()
-            } else {
-                Timber.w("buttonPlayPause(): track not prepared")
-            }
-        }
-
-        buttonPrevious.setOnClickListener {
-            queueViewModel.previousTrack(currentTrack)
-        }
-
-        buttonNext.setOnClickListener {
-            queueViewModel.nextTrack(currentTrack)
-        }
-
-        buttonRepeat.setOnClickListener {
-            queueViewModel.toggleRepeat()
-        }
-
-        buttonShuffle.setOnClickListener {
-            queueViewModel.toggleShuffle()
-        }
-
-        buttonMasterTempo.setOnClickListener {
-            playerViewModel.toggleMasterTempo()
-        }
-
-        buttonCue.setOnClickListener {
-            currentTrack?.also {
-                cuepointView.cuepointPosition = trackProgressBar.progress
-                cuepointView.visibility = View.VISIBLE
-                playerViewModel.toggleCue(it, true)
-            }
-        }
-
-        buttonCue.setOnLongClickListener {
-            currentTrack?.also {
-                cuepointView.cuepointPosition = trackProgressBar.progress
-                cuepointView.visibility = View.GONE
-                playerViewModel.toggleCue(it, false)
-            }
-            true
-        }
-
-        buttonPitchReset.setOnClickListener {
-            pitchControl.reset()
-        }
-
-        buttonPitchControlIncrease.setOnClickListener {
-            val current = pitchControl.progress
-            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-            pitchControl.setNewProgress(current + delta)
-        }
-
-        buttonPitchControlDecrease.setOnClickListener {
-            val current = pitchControl.progress
-            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-            pitchControl.setNewProgress(current - delta)
-        }
-
-        pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                Timber.d("onProgressChanged(): $progress")
-                playerViewModel.onPitchChanged(progress)
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        moreMenu.setOnClickListener {
-            val popup = PopupMenu(this, moreMenu)
-            val inflater = popup.menuInflater
-            inflater.inflate(R.menu.more_menu, popup.menu)
-            popup.setOnMenuItemClickListener {item ->
-
-                when (item.itemId) {
-                    R.id.more_menu_settings -> {
-                        //startSettingsActivity()
-                        true
-                    }
-                    R.id.more_menu_privacy -> {
-                        startWebViewActivity(HTMLPAGE_PRIVACY)
-                        true
-                    }
-                    R.id.more_menu_imprint -> {
-                        startWebViewActivity(HTMLPAGE_IMPRINT)
-                        true
-                    }
-                    R.id.more_menu_contact -> {
-                        //addFeedbackFragment()
-                        true
-                    }
-                    R.id.more_menu_licenses -> {
-                        startWebViewActivity(HTMLPAGE_LICENSES)
-                        true
-                    }
-                    else -> false
-                }
-
-                false
-            }
-            popup.show()
-        }
-    }
-
-    //
-    // Viewmodel Observers
+    // ViewModel Observers
     //
 
     private fun setupObservers() {
@@ -368,6 +255,120 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     //
+    // Interaction Listeners
+    //
+
+    private fun setupInteractionListeners() {
+
+        buttonPlayPause.setOnClickListener {
+            if (isTrackPrepared) {
+                playerViewModel.playPause()
+            } else {
+                Timber.w("buttonPlayPause(): track not prepared")
+            }
+        }
+
+        buttonPrevious.setOnClickListener {
+            queueViewModel.previousTrack(currentTrack)
+        }
+
+        buttonNext.setOnClickListener {
+            queueViewModel.nextTrack(currentTrack)
+        }
+
+        buttonRepeat.setOnClickListener {
+            queueViewModel.toggleRepeat()
+        }
+
+        buttonShuffle.setOnClickListener {
+            queueViewModel.toggleShuffle()
+        }
+
+        buttonMasterTempo.setOnClickListener {
+            playerViewModel.toggleMasterTempo()
+            playerViewModel.onPitchChanged(pitchControl.progress)
+        }
+
+        buttonCue.setOnClickListener {
+            currentTrack?.also {
+                cuepointView.cuepointPosition = trackProgressBar.progress
+                cuepointView.visibility = View.VISIBLE
+                playerViewModel.toggleCue(it, true)
+            }
+        }
+
+        buttonCue.setOnLongClickListener {
+            currentTrack?.also {
+                cuepointView.cuepointPosition = trackProgressBar.progress
+                cuepointView.visibility = View.GONE
+                playerViewModel.toggleCue(it, false)
+            }
+            true
+        }
+
+        buttonPitchReset.setOnClickListener {
+            pitchControl.reset()
+            playerViewModel.onPitchChanged(pitchControl.progress)
+        }
+
+        buttonPitchControlIncrease.setOnClickListener {
+            val current = pitchControl.progress
+            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+            pitchControl.setNewProgress(current + delta)
+        }
+
+        buttonPitchControlDecrease.setOnClickListener {
+            val current = pitchControl.progress
+            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+            pitchControl.setNewProgress(current - delta)
+        }
+
+        pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Timber.d("onProgressChanged(): $progress")
+                playerViewModel.onPitchChanged(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        moreMenu.setOnClickListener {
+            val popup = PopupMenu(this, moreMenu)
+            val inflater = popup.menuInflater
+            inflater.inflate(R.menu.more_menu, popup.menu)
+            popup.setOnMenuItemClickListener {item ->
+
+                when (item.itemId) {
+                    R.id.more_menu_settings -> {
+                        //startSettingsActivity()
+                        true
+                    }
+                    R.id.more_menu_privacy -> {
+                        startWebViewActivity(HTMLPAGE_PRIVACY)
+                        true
+                    }
+                    R.id.more_menu_imprint -> {
+                        startWebViewActivity(HTMLPAGE_IMPRINT)
+                        true
+                    }
+                    R.id.more_menu_contact -> {
+                        //addFeedbackFragment()
+                        true
+                    }
+                    R.id.more_menu_licenses -> {
+                        startWebViewActivity(HTMLPAGE_LICENSES)
+                        true
+                    }
+                    else -> false
+                }
+
+                false
+            }
+            popup.show()
+        }
+    }
+
+    //
     // Private
     //
 
@@ -396,13 +397,11 @@ class PlayerActivity : AppCompatActivity() {
 
             override fun onUp(p0: HGDialInfo?) {
                 jogWheelDial.doManualTextureDial(0.0)
-
                 onJogWheeMoved(0.0f)
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
                 val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
-
                 onJogWheeMoved(angle)
             }
         })

@@ -75,6 +75,26 @@ class QueueFragment:
             layoutManager = LinearLayoutManager(context)
         }
 
+        setupObservers()
+
+        setupInteractionListeners()
+
+        queueViewModel.loadTrackList()
+        queueViewModel.loadSelectedTrack()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        queueViewModel.saveStates()
+    }
+
+    //
+    // ViewModel Observers
+    //
+
+    private fun setupObservers() {
+
         queueViewModel.trackList.observe(this, Observer { tracks ->
             Timber.d("trackList: ${tracks.size}")
             tracks?.also {
@@ -94,6 +114,13 @@ class QueueFragment:
 
             playerViewModel.loadTrack(track)
         })
+    }
+
+    //
+    // Interaction Listeners
+    //
+
+    private fun setupInteractionListeners() {
 
         queueClearButton.setOnClickListener {
             showClearQueueDialog()
@@ -102,22 +129,6 @@ class QueueFragment:
         queueSaveAsPlaylistButton.setOnClickListener {
             showSaveAsPlaylistDialog()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        queueViewModel.loadTrackList()
-        queueViewModel.loadSelectedTrack()
-
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-
-        queueViewModel.saveTrackList()
-        queueViewModel.saveSelectedTrack()
-        queueViewModel.saveStates()
     }
 
     //
