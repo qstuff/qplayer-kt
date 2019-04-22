@@ -50,10 +50,10 @@ class CuepointView : View {
 
             a = Point((currentX - markerWidth / 2).toInt(), - markerTopMargin.toInt())
             b = Point((currentX + markerWidth / 2).toInt(), - markerTopMargin.toInt())
-            c = Point(currentX.toInt() +2, viewHeight / 5)
-            d = Point(currentX.toInt() +2 , viewHeight + markerTopMargin.toInt())
-            e = Point(currentX.toInt() -2, viewHeight + markerTopMargin.toInt())
-            f = Point(currentX.toInt() -2, viewHeight / 5)
+            c = Point(currentX.toInt() +1, viewHeight / 5)
+            d = Point(currentX.toInt() +1 , viewHeight + markerTopMargin.toInt())
+            e = Point(currentX.toInt() -1, viewHeight + markerTopMargin.toInt())
+            f = Point(currentX.toInt() -1, viewHeight / 5)
 
             invalidate()
         }
