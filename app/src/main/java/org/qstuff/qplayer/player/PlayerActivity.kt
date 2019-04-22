@@ -65,6 +65,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private var isTrackPrepared = false
     private var isBlinkAnimationRunning = false
+    private var isCueActive = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -143,11 +144,11 @@ class PlayerActivity : AppCompatActivity() {
 
             track?.let {
                 isTrackPrepared = false
+                currentTrack = track
 
                 when (track.trackStatus) {
                     Track.TrackStatus.LOADING -> {
-                        currentTrack = track
-                        trackTitle.text = track.name
+                        trackTitle.text = "loading..."
                         stopRemainBlinkAnimation()
                         waveformView.updateWaveform(null)
                         waveformViewLoadingText.visibility = View.VISIBLE
@@ -155,11 +156,15 @@ class PlayerActivity : AppCompatActivity() {
                     }
                     Track.TrackStatus.PREPARED -> {
                         isTrackPrepared = true
+                        trackTitle.text = track.name
                         totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
                         dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
 
                         if (track.isAutoplay) {
                             playerViewModel.playPause()
+                        }
+                        if (track.cuePosition > 0L) {
+                            // TODO restore cue
                         }
                     }
                     Track.TrackStatus.COMPLETED -> {
@@ -219,6 +224,8 @@ class PlayerActivity : AppCompatActivity() {
 
         playerViewModel.cueActive.observe(this, Observer { cueActive ->
             cueActive?.let {
+                isCueActive = cueActive
+
                 if (it){
                     buttonCue.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
                 } else {
@@ -290,18 +297,24 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         buttonCue.setOnClickListener {
-            currentTrack?.also {
-                cuepointView.cuepointPosition = trackProgressBar.progress
-                cuepointView.visibility = View.VISIBLE
-                playerViewModel.toggleCue(it, true)
+            if (isCueActive) {
+                playerViewModel.playFromCue(currentTrack)
+            } else {
+                currentTrack?.also {
+                    cuepointView.cuepointPosition = trackProgressBar.progress
+                    cuepointView.visibility = View.VISIBLE
+                    playerViewModel.toggleCue(it, true)
+                }
             }
         }
 
         buttonCue.setOnLongClickListener {
-            currentTrack?.also {
-                cuepointView.cuepointPosition = trackProgressBar.progress
-                cuepointView.visibility = View.GONE
-                playerViewModel.toggleCue(it, false)
+            if (isCueActive) {
+                currentTrack?.also {
+                    cuepointView.cuepointPosition = trackProgressBar.progress
+                    cuepointView.visibility = View.GONE
+                    playerViewModel.toggleCue(it, false)
+                }
             }
             true
         }

@@ -126,10 +126,6 @@ class  PlayerViewModel (application: Application):
 
         } else if (playerStatus.value == PlayerStatus.PAUSED) {
 
-            if (cueActive.value!!) {
-                mediaService.seekTo(trackStatus.value!!.cuePosition.toDouble(), true)
-            }
-
             mediaService.play()
             playerStatus.value = PlayerStatus.PLAYING
             startUpdateTimer()
@@ -137,6 +133,18 @@ class  PlayerViewModel (application: Application):
         } else {
             Timber.w("playPause(): invalid player status: ${playerStatus.value}")
         }
+    }
+
+    fun playFromCue(track: Track?) {
+
+        if (!isMediaServiceBound) return
+        if (track == null) return
+
+        mediaService.seekTo(track.cuePosition.toDouble(), true)
+        mediaService.play()
+        playerStatus.value = PlayerStatus.PLAYING
+        resetUpdateTimer()
+        startUpdateTimer()
     }
 
     fun toggleMasterTempo() {
