@@ -12,13 +12,13 @@
             android:defaultValue="false" />
 
         <SwitchPreference
-            android:key="PREFS_TRACK_NEXT_AUTO"
+            android:key="PREFS_AUTOSTART_NEXT_TRACK"
             android:title="@string/settings_track_next_auto_title"
             android:summary="@string/settings_track_next_auto_summary"
             android:defaultValue="true" />
 
         <SwitchPreference
-            android:key="PREFS_SKIP_BACK"
+            android:key="PREFS_SKIP_BACK_TO_START"
             android:title="@string/settings_skip_back_behaviour_title"
             android:summary="@string/settings_skip_back_behaviour_summary"
             android:defaultValue="true" />
@@ -34,18 +34,17 @@
     <PreferenceCategory
         android:title="@string/settings_cat_dj_specific_options_title"
         android:key="dj_options_settings">
-        
+<!--
         <SwitchPreference
             android:key="PREFS_ENABLE_CUE"
             android:title="@string/settings_dj_enable_cue"
             android:summary="@string/settings_dj_enable_cue_summary"
             android:defaultValue="true" />
-
+-->
         <SwitchPreference
             android:key="PREFS_STOP_PLAYBACK_ON_CUE"
             android:title="@string/settings_dj_stop_playback_on_cue_title"
             android:summary="@string/settings_dj_stop_playback_on_cue_summary"
-            android:dependency="PREFS_ENABLE_CUE"
             android:defaultValue="false" />
 
         <SwitchPreference

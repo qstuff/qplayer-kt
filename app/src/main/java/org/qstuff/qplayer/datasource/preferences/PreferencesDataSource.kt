@@ -35,8 +35,17 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREF_MASTER_TEMPO_MODE = "PREF_MASTER_TEMPO_MODE"
         const val PREF_PITCH_FACTOR = "PREF_PITCH_FACTOR"
 
-
+        // From SettingsFragment
+        const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
+        const val PREFS_AUTOSTART_NEXT_TRACK = "PREFS_AUTOSTART_NEXT_TRACK"
+        const val PREFS_SKIP_BACK_TO_START = "PREFS_SKIP_BACK_TO_START"
+        const val PREFS_STOP_PLAYBACK_ON_CUE = "PREFS_STOP_PLAYBACK_ON_CUE"
+        //const val PREFS_ENABLE_CUE = "PREFS_ENABLE_CUE"
+        const val PREFS_PRIVACY_FB_CRASHREPORTING = "PREFS_PRIVACY_FB_CRASHREPORTING"
+        const val PREFS_ENABLE_REMAIN_BLINK = "PREFS_ENABLE_REMAIN_BLINK"
+        const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
     }
+
 
     private val preferences: SharedPreferences = context.getSharedPreferences("QDEQ", Context.MODE_PRIVATE)
 
@@ -101,4 +110,15 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     fun readPitchFactor() = preferences.getFloat(PREF_PITCH_FACTOR, 0.0f)
 
+    //
+    // SettingsFragment
+    //
+
+    fun isAutostartEnabled() = preferences.getBoolean(PREFS_TRACK_AUTOSTART, true)
+    fun isAutoPlayNextTrackEnabled() = preferences.getBoolean(PREFS_AUTOSTART_NEXT_TRACK, false)
+    fun isSkipBackToStartEnabled() = preferences.getBoolean(PREFS_SKIP_BACK_TO_START, true)
+    fun isShowClearQueueWarningEnabled() = preferences.getBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, true)
+    fun isStopPlaybackOnSettingCuepointENabled() = preferences.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)
+    fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_PRIVACY_FB_CRASHREPORTING, false)
+    fun isBlinkingRemainEnabled() = preferences.getBoolean(PREFS_ENABLE_REMAIN_BLINK, true)
 }
