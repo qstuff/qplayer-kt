@@ -48,6 +48,10 @@ class  PlayerViewModel (application: Application):
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
 
+    // Settings
+    private var autoPlay = false
+    private var autoStartNextTrack = false
+
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
@@ -108,6 +112,7 @@ class  PlayerViewModel (application: Application):
         cueActive.value = false
 
         loadStates()
+        loadSettings()
     }
 
     //
@@ -260,8 +265,10 @@ class  PlayerViewModel (application: Application):
     }
 
     fun onTrackCompleted(track: Track) {
-        playPause()
+        Timber.d("onTrackCompleted(): ${track.name}, ${track.isAutoplay}")
+        resetUpdateTimer()
 
+        // playPause()
         // TODO: Continuous Play?
     }
 
@@ -297,5 +304,10 @@ class  PlayerViewModel (application: Application):
 
         updateHandler.removeCallbacks(updateRunnable)
         isUpdatetaskRunning = false
+    }
+
+    private fun loadSettings() {
+        autoPlay = preferencesDataSource.isAutostartEnabled()
+        autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
     }
 }

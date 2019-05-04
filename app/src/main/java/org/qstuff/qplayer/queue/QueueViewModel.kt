@@ -31,8 +31,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private var currentTracks: ArrayList<Track> = arrayListOf()
     private val random = Random()
 
-    private var autoplay = false
-
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
@@ -105,34 +103,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
         saveTrackList()
     }
 
-    fun loadSelectedTrack() {
-
-        val track = preferencesDataSource.readSelectedTrack()
-        track?.also {
-            var index = 0
-            currentTracks.forEach {
-                if (it.uri == track.uri) {
-                    onTrackSelectedIndex.value = index
-                    onTrackSelected.value = it
-                }
-                index++
-            }
-        }
-    }
-
-    fun loadTrackList() {
-
-        val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
-        if (list == null) {
-            currentTracks = arrayListOf()
-        } else {
-            currentTracks = list
-        }
-        trackList.value = currentTracks
-    }
-
     fun onTrackSelected(track: Track) {
 
+        track.isAutoplay = preferencesDataSource.isAutostartEnabled()
         onTrackSelectedIndex.value = currentTracks.indexOf(track)
         onTrackSelected.value = track
         saveSelectedTrack()
@@ -153,7 +126,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
                         index = currentTracks.size - 1
                     }
                 }
-                onTrackSelected.value = currentTracks.get(index)
+
+                val next = currentTracks.get(index)
+                next.isAutoplay = preferencesDataSource.isAutostartEnabled()
+                onTrackSelected.value = next
                 onTrackSelectedIndex.value = index
             }
         }
@@ -180,7 +156,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
                         }
                     }
                 }
-                onTrackSelected.value = currentTracks.get(index)
+                val next = currentTracks.get(index)
+                next.isAutoplay = preferencesDataSource.isAutostartEnabled()
+                onTrackSelected.value = next
                 onTrackSelectedIndex.value = index
             }
         }
@@ -188,10 +166,11 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun onTrackCompleted(track: Track) {
-        Timber.d("onTrackCompleted(): ${track.name}")
+        Timber.d("onTrackCompleted(): ${track.name}, ${preferencesDataSource.isAutoPlayNextTrackEnabled()}")
 
-        // TODO: if proceedToNextTrack == true
-        nextTrack(track)
+        if (preferencesDataSource.isAutoPlayNextTrackEnabled()) {
+            nextTrack(track)
+        }
     }
 
     fun toggleRepeat() {
@@ -234,5 +213,31 @@ class QueueViewModel: ViewModel(), KoinComponent {
             track?.trackStatus = Track.TrackStatus.UNDEFINED
             preferencesDataSource.saveSelectedTrackList(track!!)
         }
+    }
+
+    fun readSelectedTrack() {
+
+        val track = preferencesDataSource.readSelectedTrack()
+        track?.also {
+            var index = 0
+            currentTracks.forEach {
+                if (it.uri == track.uri) {
+                    onTrackSelectedIndex.value = index
+                    onTrackSelected.value = it
+                }
+                index++
+            }
+        }
+    }
+
+    fun readTrackList() {
+
+        val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
+        if (list == null) {
+            currentTracks = arrayListOf()
+        } else {
+            currentTracks = list
+        }
+        trackList.value = currentTracks
     }
 }

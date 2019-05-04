@@ -160,6 +160,7 @@ class PlayerActivity : AppCompatActivity() {
                         trackTitle.text = track.name
                         totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
                         dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
+                        trackProgressBar.progress = 0
 
                         if (track.isAutoplay) {
                             playerViewModel.playPause()

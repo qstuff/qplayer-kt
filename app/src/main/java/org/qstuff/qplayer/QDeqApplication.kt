@@ -22,10 +22,10 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        startKoin(this, listOf(
-                preferencesDataSource,
-                roomDatabaseModule,
-                roomDataSource
+        startKoin(this,
+                listOf(preferencesDataSource,
+                        roomDatabaseModule,
+                        roomDataSource
         ))
 
         if (BuildConfig.DEBUG) {
@@ -39,13 +39,13 @@ class QDeqApplication : Application() {
 
     private val preferencesDataSource = module (definition = {
         single {
-            PreferencesDataSource(applicationContext)
+            PreferencesDataSource(this@QDeqApplication)
         }
     })
 
     private val roomDatabaseModule = module ( definition = {
         single {
-            Room.databaseBuilder(applicationContext, QDeqDatabase::class.java, "qplayer")
+            Room.databaseBuilder(this@QDeqApplication, QDeqDatabase::class.java, "qplayer")
                     .build()
         }
     })

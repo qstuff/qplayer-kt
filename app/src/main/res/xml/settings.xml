@@ -9,25 +9,29 @@
             android:key="PREFS_TRACK_AUTOSTART"
             android:title="@string/settings_track_autostart_title"
             android:summary="@string/settings_track_autostart_summary"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            android:persistent="false" />
 
         <SwitchPreference
             android:key="PREFS_AUTOSTART_NEXT_TRACK"
             android:title="@string/settings_track_next_auto_title"
             android:summary="@string/settings_track_next_auto_summary"
-            android:defaultValue="true" />
+            android:defaultValue="true"
+            android:persistent="false"/>
 
         <SwitchPreference
             android:key="PREFS_SKIP_BACK_TO_START"
             android:title="@string/settings_skip_back_behaviour_title"
             android:summary="@string/settings_skip_back_behaviour_summary"
-            android:defaultValue="true" />
+            android:defaultValue="true"
+            android:persistent="false" />
 
         <SwitchPreference
             android:key="PREFS_SHOW_CLEAR_QUEUE_DIALOG"
             android:title="@string/settings_show_clear_queue_title"
             android:summary="@string/settings_show_clear_queue_summary"
-            android:defaultValue="true" />
+            android:defaultValue="true"
+            android:persistent="false" />
 
     </PreferenceCategory>
 
@@ -45,13 +49,15 @@
             android:key="PREFS_STOP_PLAYBACK_ON_CUE"
             android:title="@string/settings_dj_stop_playback_on_cue_title"
             android:summary="@string/settings_dj_stop_playback_on_cue_summary"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            android:persistent="false" />
 
         <SwitchPreference
             android:key="PREFS_ENABLE_REMAIN_BLINK"
             android:title="@string/settings_dj_enable_remain_blink_title"
             android:summary="@string/settings_dj_remain_blink_summary"
-            android:defaultValue="true" />
+            android:defaultValue="true"
+            android:persistent="false" />
 
     </PreferenceCategory>
 
@@ -63,7 +69,8 @@
             android:key="PREFS_PRIVACY_FB_CRASHREPORTING"
             android:title="@string/settings_privacy_crashreport_title"
             android:summary="@string/settings_privacy_crashreport_summary"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            android:persistent="false" />
 
     </PreferenceCategory>
     

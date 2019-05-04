@@ -18,79 +18,61 @@ import timber.log.Timber
  * Created by Claus Chierici (chierici@karlmax-berlin.com) on 5/12/17
  * for Karlmax Berlin GmbH & Co. KG
  *
- *
  * Copyright (C) 2013, 2014, 2015 Karlmax Berlin GmbH & Co. KG,
  * All rights reserved.
  */
-
 class WaveformView : View {
 
-    private var background: Paint? = null
-    private var bgRect: RectF? = null
+    private lateinit var background: Paint
+    private lateinit var bgRect: RectF
+    private lateinit var segment: Paint
+    private lateinit var waveFormUpper: Paint
+    private lateinit var waveFormLower: Paint
+    private lateinit var waveFormUpperDefault: Paint
+    private lateinit var waveFormLowerDefault: Paint
+    private lateinit var centerLine: Paint
+    private lateinit var zeroDBLine: Paint
 
-    private var segment: Paint? = null
-    private var waveFormUpper: Paint? = null
-    private var waveFormLower: Paint? = null
-    private var waveFormUpperDefault: Paint? = null
-    private var waveFormLowerDefault: Paint? = null
-    private var centerLine: Paint? = null
-    private var zeroDBLine: Paint? = null
-
-    private var sideMargin: Float = 0.toFloat()
-    private var topMargin: Float = 0.toFloat()
-    private var zeroDBOffset: Float = 0.toFloat()
-
-    private var waveFormWidth: Int = 0
-    private var waveFormHeight: Int = 0
-
-    private var viewHeight: Int = 0
-
-    private var waveFormCenterY: Int = 0
-
+    private var sideMargin = 0.0f
+    private var topMargin = 0.0f
+    private var zeroDBOffset = 0.0f
+    private var waveFormWidth = 0.0f
+    private var waveFormHeight = 0.0f
+    private var viewHeight = 0.0f
+    private var waveFormCenterY = 0.0f
     private var stretchFactor = 1.0f
 
     private var waveformData: TrackData? = null
 
-    constructor(context: Context) : super(context) {
-
-        init()
-    }
-
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-
-        init()
-    }
-
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
-
-        init()
-    }
+    constructor(context: Context) : super(context) { init() }
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) { init() }
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) { init() }
 
     private fun init() {
 
         background = Paint(Paint.ANTI_ALIAS_FLAG)
-        background!!.color = ContextCompat.getColor(context, R.color.black)
+        background.color = ContextCompat.getColor(context, R.color.black)
 
         segment = Paint(Paint.ANTI_ALIAS_FLAG)
-        segment!!.color = ContextCompat.getColor(context, R.color.white)
+        segment.color = ContextCompat.getColor(context, R.color.white)
 
         waveFormUpper = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormUpper!!.color = ContextCompat.getColor(context, R.color.white)
+        waveFormUpper.color = ContextCompat.getColor(context, R.color.white)
         waveFormLower = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormLower!!.color = ContextCompat.getColor(context, R.color.white)
+        waveFormLower.color = ContextCompat.getColor(context, R.color.white)
 
         waveFormUpperDefault = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormUpperDefault!!.color = ContextCompat.getColor(context, R.color.black)
+        waveFormUpperDefault.color = ContextCompat.getColor(context, R.color.black)
         waveFormLowerDefault = Paint(Paint.ANTI_ALIAS_FLAG)
-        waveFormLowerDefault!!.color = ContextCompat.getColor(context, R.color.black)
+        waveFormLowerDefault.color = ContextCompat.getColor(context, R.color.black)
 
         centerLine = Paint(Paint.ANTI_ALIAS_FLAG)
-        centerLine!!.color = ContextCompat.getColor(context, R.color.q_orange)
-        centerLine!!.strokeWidth = 1f
+        centerLine.color = ContextCompat.getColor(context, R.color.q_orange)
+        centerLine.strokeWidth = 1f
 
         zeroDBLine = Paint(Paint.ANTI_ALIAS_FLAG)
-        zeroDBLine!!.color = ContextCompat.getColor(context, R.color.white)
-        zeroDBLine!!.strokeWidth = 1f
+        zeroDBLine.color = ContextCompat.getColor(context, R.color.white)
+        zeroDBLine.strokeWidth = 1f
 
         sideMargin = resources.getDimension(R.dimen.rounded_shape_radius)
         topMargin = resources.getDimension(R.dimen.waveform_top_margin)
@@ -110,18 +92,18 @@ class WaveformView : View {
     private fun setupDimensions() {
         Timber.v("setupDimensions(): %d", height)
 
-        viewHeight = height
+        viewHeight = height.toFloat()
 
         bgRect = RectF(sideMargin, 0f, width - sideMargin, viewHeight.toFloat())
 
-        waveFormWidth = (width - 2 * sideMargin).toInt()
-        waveFormHeight = (viewHeight - 2 * topMargin).toInt()
+        waveFormWidth = width - 2 * sideMargin
+        waveFormHeight = viewHeight - 2 * topMargin
         waveFormCenterY = viewHeight / 2
 
-        Timber.v("setupDimensions(): view width:           %d", width)
-        Timber.v("setupDimensions(): waveFormWidth width:  %d", waveFormWidth)
-        Timber.v("setupDimensions(): view height:          %d", viewHeight)
-        Timber.v("setupDimensions(): waveFormHeight width: %d", waveFormHeight)
+        Timber.v("setupDimensions(): view width:           $width")
+        Timber.v("setupDimensions(): waveFormWidth width:  $waveFormWidth")
+        Timber.v("setupDimensions(): view height:          $viewHeight")
+        Timber.v("setupDimensions(): waveFormHeight width: $waveFormHeight")
     }
 
     fun updateWaveform(data: TrackData?) {
@@ -134,13 +116,13 @@ class WaveformView : View {
             return
         }
 
-        Timber.v("updateWaveform(): num samples:  %d", data.bytes?.size)
-        Timber.v("updateWaveform(): width pixels: %d", waveFormWidth)
+        Timber.d("updateWaveform(): num samples:  ${data.bytes?.size}")
+        Timber.d("updateWaveform(): width pixels: $waveFormWidth")
 
         waveformData = data
 
         if (waveFormWidth > data.bytes!!.size) {
-            stretchFactor = waveFormWidth.toFloat() / data.bytes!!.size
+            stretchFactor = waveFormWidth / data.bytes!!.size
         } else {
             stretchFactor = data.bytes!!.size.toFloat() / waveFormWidth
         }
@@ -152,12 +134,12 @@ class WaveformView : View {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        canvas.drawRect(bgRect!!, background!!)
+        canvas.drawRect(bgRect, background)
         canvas.drawLine(sideMargin,
-                waveFormCenterY.toFloat(),
+                waveFormCenterY,
                 sideMargin + waveFormWidth,
-                waveFormCenterY.toFloat(),
-                centerLine!!)
+                waveFormCenterY,
+                centerLine)
 
 
         // DEBUG or maybe feature: the 0db lines
@@ -177,11 +159,11 @@ class WaveformView : View {
 */
 
         if (waveformData != null) {
-            var dbValue: Int
+            var dbValue: Float
 
             for (i in 0 until waveformData!!.bytes!!.size) {
 
-                dbValue = waveformData!!.bytes!![i] * -5
+                dbValue = waveformData!!.bytes!![i].toFloat() *-3.5f
 
                 if (dbValue > waveFormCenterY - zeroDBOffset) {
                     dbValue = waveFormCenterY
@@ -192,14 +174,14 @@ class WaveformView : View {
                     canvas.drawLine(sideMargin + i * stretchFactor,
                             zeroDBOffset + dbValue,
                             sideMargin + i * stretchFactor,
-                            waveFormCenterY.toFloat(),
-                            waveFormUpper!!)
+                            waveFormCenterY,
+                            waveFormUpper)
 
                     canvas.drawLine(sideMargin + i * stretchFactor,
-                            waveFormCenterY.toFloat(),
+                            waveFormCenterY,
                             sideMargin + i * stretchFactor,
-                            viewHeight.toFloat() - zeroDBOffset - dbValue.toFloat(),
-                            waveFormLower!!)
+                            viewHeight - zeroDBOffset - dbValue,
+                            waveFormLower)
                 }
             }
 
@@ -208,17 +190,19 @@ class WaveformView : View {
             var i = 0
             while (i < waveFormWidth / stretchFactor) {
 
-                canvas.drawLine(sideMargin + i * stretchFactor,
+                canvas.drawLine(
+                        sideMargin + i * stretchFactor,
                         zeroDBOffset,
                         sideMargin + i * stretchFactor,
-                        waveFormCenterY.toFloat(),
-                        waveFormUpperDefault!!)
+                        waveFormCenterY,
+                        waveFormUpperDefault)
 
-                canvas.drawLine(sideMargin + i * stretchFactor,
-                        waveFormCenterY.toFloat(),
+                canvas.drawLine(
+                        sideMargin + i * stretchFactor,
+                        waveFormCenterY,
                         sideMargin + i * stretchFactor,
                         viewHeight - zeroDBOffset,
-                        waveFormLowerDefault!!)
+                        waveFormLowerDefault)
                 i++
             }
         }

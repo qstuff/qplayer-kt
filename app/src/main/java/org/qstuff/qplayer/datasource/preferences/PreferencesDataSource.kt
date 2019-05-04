@@ -47,7 +47,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     }
 
 
-    private val preferences: SharedPreferences = context.getSharedPreferences("QDEQ", Context.MODE_PRIVATE)
+    private val preferences: SharedPreferences = context.applicationContext.getSharedPreferences("QDEQ", Context.MODE_PRIVATE)
 
     fun getRootDir() = DEFAULT_ROOT_DIR
 
