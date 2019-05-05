@@ -2,16 +2,13 @@ package org.qstuff.qplayer.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
 import androidx.preference.SwitchPreference
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.queue.QueueViewModel
 import timber.log.Timber
 
 class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
@@ -33,6 +30,21 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
         (findPreference(getString(R.string.prefs_key_autostart_next)) as SwitchPreference).isChecked =
                 preferencesDataSource.isAutoPlayNextTrackEnabled()
+
+        (findPreference(getString(R.string.prefs_key_skip_back_to_start)) as SwitchPreference).isChecked =
+                preferencesDataSource.isSkipBackToStartEnabled()
+
+        (findPreference(getString(R.string.prefs_key_show_clear_queue_dialog)) as SwitchPreference).isChecked =
+                preferencesDataSource.isShowClearQueueWarningEnabled()
+
+        (findPreference(getString(R.string.prefs_key_stop_playback_on_cue)) as SwitchPreference).isChecked =
+                preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
+
+        (findPreference(getString(R.string.prefs_key_enable_remain_blink)) as SwitchPreference).isChecked =
+                preferencesDataSource.isBlinkingRemainEnabled()
+
+        (findPreference(getString(R.string.prefs_key_enable_crashreporting)) as SwitchPreference).isChecked =
+                preferencesDataSource.isCrashreportingEnabled()
     }
 
     override fun onResume() {
