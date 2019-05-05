@@ -110,6 +110,14 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     fun readPitchFactor() = preferences.getFloat(PREF_PITCH_FACTOR, 0.0f)
 
+    fun saveMasterTempoMode(enabled: Boolean) =
+            preferences.edit{
+                putBoolean(PREF_MASTER_TEMPO_MODE, enabled)
+            }
+
+    fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
+
+
     //
     // SettingsFragment
     //

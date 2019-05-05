@@ -154,6 +154,7 @@ class  PlayerViewModel (application: Application):
 
     fun toggleMasterTempo() {
         masterTempo.value = !(masterTempo.value ?: true)
+        preferencesDataSource.saveMasterTempoMode(masterTempo.value ?: false)
     }
 
     fun onPitchRangeSelected(index: Int) {
@@ -307,12 +308,8 @@ class  PlayerViewModel (application: Application):
     }
 
     fun loadSettings() {
-        Timber.d("loadSettings():")
-
         autoStart = preferencesDataSource.isAutostartEnabled()
         autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
-        Timber.d("loadSettings(): autoStart: $autoStart")
-        Timber.d("loadSettings(): autoStartNextTrack: $autoStartNextTrack")
-
+        masterTempo.value = preferencesDataSource.readMasterTempoMode()
     }
 }
