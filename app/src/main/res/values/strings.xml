@@ -62,6 +62,15 @@
     <string name="more_menu_contact">Feedback</string>
     <string name="more_menu_licenses">Lizenzen</string>
 
+    <!-- Prefs Keys -->
+    <string name="prefs_key_track_autostart" translatable="false">PREFS_TRACK_AUTOSTART</string>
+    <string name="prefs_key_autostart_next" translatable="false">PREFS_AUTOSTART_NEXT_TRACK</string>
+    <string name="prefs_key_skip_back_to_start" translatable="false">PREFS_SKIP_BACK_TO_START</string>
+    <string name="prefs_key_show_clear_queue_dialog" translatable="false">PREFS_SHOW_CLEAR_QUEUE_DIALOG</string>
+    <string name="prefs_key_stop_playback_on_cue" translatable="false">PREFS_STOP_PLAYBACK_ON_CUE</string>
+    <string name="prefs_key_enable_remain_blink" translatable="false">PREFS_ENABLE_REMAIN_BLINK</string>
+    <string name="prefs_key_enable_crashreporting" translatable="false">PREFS_ENABLE_CRASHREPORTING</string>
+
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
 

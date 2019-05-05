@@ -114,8 +114,8 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     // SettingsFragment
     //
 
-    fun isAutostartEnabled() = preferences.getBoolean(PREFS_TRACK_AUTOSTART, true)
-    fun isAutoPlayNextTrackEnabled() = preferences.getBoolean(PREFS_AUTOSTART_NEXT_TRACK, false)
+    fun isAutostartEnabled() = preferences.getBoolean(PREFS_TRACK_AUTOSTART, false)
+    fun isAutoPlayNextTrackEnabled() = preferences.getBoolean(PREFS_AUTOSTART_NEXT_TRACK, true)
     fun isSkipBackToStartEnabled() = preferences.getBoolean(PREFS_SKIP_BACK_TO_START, true)
     fun isShowClearQueueWarningEnabled() = preferences.getBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, true)
     fun isStopPlaybackOnSettingCuepointENabled() = preferences.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)

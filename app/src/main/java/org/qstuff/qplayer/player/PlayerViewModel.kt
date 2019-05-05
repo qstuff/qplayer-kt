@@ -49,7 +49,7 @@ class  PlayerViewModel (application: Application):
     private var isUpdatetaskRunning = false
 
     // Settings
-    private var autoPlay = false
+    private var autoStart = false
     private var autoStartNextTrack = false
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
@@ -112,7 +112,7 @@ class  PlayerViewModel (application: Application):
         cueActive.value = false
 
         loadStates()
-        loadSettings()
+        //loadSettings()
     }
 
     //
@@ -306,8 +306,13 @@ class  PlayerViewModel (application: Application):
         isUpdatetaskRunning = false
     }
 
-    private fun loadSettings() {
-        autoPlay = preferencesDataSource.isAutostartEnabled()
+    fun loadSettings() {
+        Timber.d("loadSettings():")
+
+        autoStart = preferencesDataSource.isAutostartEnabled()
         autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
+        Timber.d("loadSettings(): autoStart: $autoStart")
+        Timber.d("loadSettings(): autoStartNextTrack: $autoStartNextTrack")
+
     }
 }

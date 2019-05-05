@@ -102,6 +102,12 @@ class PlayerActivity : AppCompatActivity() {
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        playerViewModel.loadSettings()
+    }
+
     override fun onStart() {
         super.onStart()
 

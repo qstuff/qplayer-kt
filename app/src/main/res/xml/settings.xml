@@ -6,32 +6,28 @@
         android:key="player_basic_settings">
         
         <SwitchPreference
-            android:key="PREFS_TRACK_AUTOSTART"
+            android:key="@string/prefs_key_track_autostart"
             android:title="@string/settings_track_autostart_title"
             android:summary="@string/settings_track_autostart_summary"
-            android:defaultValue="false"
-            android:persistent="false" />
+            android:defaultValue="false"/>
 
         <SwitchPreference
-            android:key="PREFS_AUTOSTART_NEXT_TRACK"
+            android:key="@string/prefs_key_autostart_next"
             android:title="@string/settings_track_next_auto_title"
             android:summary="@string/settings_track_next_auto_summary"
-            android:defaultValue="true"
-            android:persistent="false"/>
+            android:defaultValue="true"/>
 
         <SwitchPreference
-            android:key="PREFS_SKIP_BACK_TO_START"
+            android:key="@string/prefs_key_skip_back_to_start"
             android:title="@string/settings_skip_back_behaviour_title"
             android:summary="@string/settings_skip_back_behaviour_summary"
-            android:defaultValue="true"
-            android:persistent="false" />
+            android:defaultValue="true" />
 
         <SwitchPreference
-            android:key="PREFS_SHOW_CLEAR_QUEUE_DIALOG"
+            android:key="@string/prefs_key_show_clear_queue_dialog"
             android:title="@string/settings_show_clear_queue_title"
             android:summary="@string/settings_show_clear_queue_summary"
-            android:defaultValue="true"
-            android:persistent="false" />
+            android:defaultValue="true" />
 
     </PreferenceCategory>
 
@@ -46,18 +42,16 @@
             android:defaultValue="true" />
 -->
         <SwitchPreference
-            android:key="PREFS_STOP_PLAYBACK_ON_CUE"
+            android:key="@string/prefs_key_stop_playback_on_cue"
             android:title="@string/settings_dj_stop_playback_on_cue_title"
             android:summary="@string/settings_dj_stop_playback_on_cue_summary"
-            android:defaultValue="false"
-            android:persistent="false" />
+            android:defaultValue="false"/>
 
         <SwitchPreference
-            android:key="PREFS_ENABLE_REMAIN_BLINK"
+            android:key="@string/prefs_key_enable_remain_blink"
             android:title="@string/settings_dj_enable_remain_blink_title"
             android:summary="@string/settings_dj_remain_blink_summary"
-            android:defaultValue="true"
-            android:persistent="false" />
+            android:defaultValue="true"/>
 
     </PreferenceCategory>
 
@@ -66,11 +60,10 @@
         android:key="player_privacy_settings">
 
         <SwitchPreference
-            android:key="PREFS_PRIVACY_FB_CRASHREPORTING"
+            android:key="@string/prefs_key_enable_crashreporting"
             android:title="@string/settings_privacy_crashreport_title"
             android:summary="@string/settings_privacy_crashreport_summary"
-            android:defaultValue="false"
-            android:persistent="false" />
+            android:defaultValue="false"/>
 
     </PreferenceCategory>
     
