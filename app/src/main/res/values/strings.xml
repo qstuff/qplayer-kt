@@ -70,6 +70,7 @@
     <string name="prefs_key_stop_playback_on_cue" translatable="false">PREFS_STOP_PLAYBACK_ON_CUE</string>
     <string name="prefs_key_enable_remain_blink" translatable="false">PREFS_ENABLE_REMAIN_BLINK</string>
     <string name="prefs_key_enable_crashreporting" translatable="false">PREFS_ENABLE_CRASHREPORTING</string>
+    <string name="prefs_key_app_version" translatable="false">PREFS_APP_VERSION</string>
 
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
@@ -105,6 +106,8 @@
     <string name="settings_cat_privacy_title">Einstellungen für Datenschutz</string>
     <string name="settings_privacy_crashreport_title">Absturzberichte</string>
     <string name="settings_privacy_crashreport_summary">Wenn aktiviert sendet die App Absturzberichte.\nDie App muss neu gestartet werden damit diese Einstellung wirksam wird.</string>
+
+    <string name="settings_app_version_title">App Version</string>
 
     <!-- Feedback Activity -->
     <string name="feedback_activity_explanation">Um dein Feedback besser zu verstehen ist es für uns sehr nützlich wenn wir bestimmte Informationen zu deinem Gerät erhalten.\nDiese Daten lesen wir aus und du kannst sie uns zusammen mit deinem Feedback zuschicken.\nUnten kannst du sehen um welche Informationen es sich handelt.\nWenn du auf &quot;Mit Geräteinfos Senden&quot; tappst werden die Geräteinfos automatisch in die Nachricht eingefügt.\nWenn du die Geräteinfos nicht mitschicken möchtest dann tapp auf &quot;Ohne Geräteinfos Senden&quot;.</string>

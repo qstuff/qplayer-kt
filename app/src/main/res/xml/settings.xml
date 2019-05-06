@@ -65,6 +65,10 @@
             android:summary="@string/settings_privacy_crashreport_summary"
             android:defaultValue="false"/>
 
+        <Preference
+            android:key="@string/prefs_key_app_version"
+            android:title="@string/settings_app_version_title"/>
+
     </PreferenceCategory>
     
 </PreferenceScreen>

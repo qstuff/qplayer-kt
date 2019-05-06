@@ -1,12 +1,19 @@
 package org.qstuff.qplayer.settings
 
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.text.Html
+import android.text.Spanned
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import kotlinx.android.synthetic.main.activity_player.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
+import org.qstuff.qplayer.BuildConfig
+import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import timber.log.Timber
@@ -45,6 +52,8 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
         (findPreference(getString(R.string.prefs_key_enable_crashreporting)) as SwitchPreference).isChecked =
                 preferencesDataSource.isCrashreportingEnabled()
+
+        findPreference(getString(R.string.prefs_key_app_version)).summary = getVersionString()
     }
 
     override fun onResume() {
@@ -70,5 +79,18 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
         Timber.d("onSharedPreferenceChanged(): val: $value")
 
+    }
+
+    private fun getVersionString(): String {
+
+        var debugTitleSuffix =""
+        val packageInfo = activity?.packageManager?.getPackageInfo(activity?.packageName, 0)
+
+        if (BuildConfig.DEBUG) {
+            debugTitleSuffix = ("qdeq-α ${packageInfo?.versionName} (${packageInfo?.versionCode})")
+        } else {
+            debugTitleSuffix = ("qdeq ${packageInfo?.versionName} (${packageInfo?.versionCode})")
+        }
+        return debugTitleSuffix
     }
 }

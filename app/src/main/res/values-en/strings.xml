@@ -94,9 +94,10 @@
 
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Privacy Settings</string>
-
     <string name="settings_privacy_crashreport_title">Crashreports</string>
     <string name="settings_privacy_crashreport_summary">If enabled the app sends crashreports.\nThe app needs to be restarted to make the change effective.</string>
+
+    <string name="settings_app_version_title">App Version</string>
 
     <!-- Feedback Activity -->
     <string name="feedback_activity_explanation">To have a better understanding of your feedback it is very useful for us when we get some information about your device.\nWe can read this data and you can send them along with your feedback message.\nBelow you can see what information it is.\nWhen you tap \"Send with device infos\" this information will automatically added to your message. If you don\'t want to send this information please tap \"Send without device infos\"</string>
