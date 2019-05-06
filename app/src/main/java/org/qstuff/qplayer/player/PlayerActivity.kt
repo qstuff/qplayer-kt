@@ -515,6 +515,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private fun setupCrashlytics() {
 
         if (!preferencesDataSource.isCrashreportingEnabledDialogShown()) {
+            preferencesDataSource.setCrashreportingEnabledDialogShown(true)
             showEnableCrashReportDialog()
             return
         }
