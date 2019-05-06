@@ -28,7 +28,6 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
         const val PREF_SHUFFLE_MODE = "PREF_SHUFFLE_MODE"
         const val PREF_REPEAT_MODE = "PREF_REPEAT_MODE"
-        const val PREF_AUTOPLAY_MODE = "PREF_AUTOPLAY_MODE"
 
         // Saved/Loaded in PlayerViewModel
         const val PREF_TRACK_POSITION = "PREF_TRACK_POSITION"

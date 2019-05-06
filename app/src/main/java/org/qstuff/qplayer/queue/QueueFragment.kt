@@ -49,6 +49,7 @@ class QueueFragment:
     private lateinit var playerViewModel: PlayerViewModel
 
     private lateinit var queueAdapter: QueueAdapter
+    private var currentTrack: Track? = null
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -85,7 +86,7 @@ class QueueFragment:
 
     override fun onDestroyView() {
         super.onDestroyView()
-
+        currentTrack?.playPosition = playerViewModel.getTrackPosition()
         queueViewModel.saveStates()
     }
 
@@ -111,7 +112,7 @@ class QueueFragment:
 
         queueViewModel.onTrackSelected.observe(this, Observer { track ->
             Timber.d("onTrackSelected(): $track")
-
+            currentTrack = track
             playerViewModel.loadTrack(track)
         })
     }

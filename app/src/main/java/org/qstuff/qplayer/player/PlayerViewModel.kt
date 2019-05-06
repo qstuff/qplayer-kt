@@ -260,7 +260,7 @@ class  PlayerViewModel (application: Application):
     }
 
     fun seekTo(position: Double, andStop: Boolean) {
-        Timber.d("seekTo(): $position")
+        if (!isMediaServiceBound) return
 
         mediaService.seekTo(position, andStop)
     }
@@ -273,12 +273,19 @@ class  PlayerViewModel (application: Application):
         // TODO: Continuous Play?
     }
 
+    fun getTrackPosition(): Long {
+        if (!isMediaServiceBound) return 0
+
+        return mediaService.getCurrentPositionMillis()
+    }
+
     //
     // Private
     //
 
     private fun saveStates() {
         preferencesDataSource.savePitchFactor(pitchFactor)
+        // TODO: savePitchPosition
     }
 
     private fun loadStates() {

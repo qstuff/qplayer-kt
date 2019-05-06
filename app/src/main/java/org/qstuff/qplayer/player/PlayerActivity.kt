@@ -168,17 +168,22 @@ class PlayerActivity : AppCompatActivity() {
                         dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
                         trackProgressBar.progress = 0
 
+                        if (track.playPosition > 0) {
+                            playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
+                        }
                         if (track.isAutoplay) {
                             playerViewModel.playPause()
                         }
                         if (track.cuePosition > 0L) {
                             // TODO restore cue
                         }
+
                     }
                     Track.TrackStatus.COMPLETED -> {
                         stopRemainBlinkAnimation()
                         playerViewModel.onTrackCompleted(track)
                         queueViewModel.onTrackCompleted(track)
+                        track.playPosition = 0
                     }
                     Track.TrackStatus.ERROR -> {
                         // TODO: Error message?
