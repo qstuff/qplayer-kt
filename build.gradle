@@ -30,7 +30,7 @@ buildscript {
             espresso                : "3.1.0",
             espressoRunner          : "1.1.0",
             crashlytics             : "2.9.9",
-            room                    : "2.1.0-alpha06"
+            room                    : "2.1.0-alpha07"
     ]
 
     repositories {

@@ -56,7 +56,7 @@ captures/
 src/main/jni/CMakeLists.txt
 
 # Google Services (e.g. APIs or Firebase)
-src/debug/google-services.json
+google-services.json
 
 # Freeline
 freeline.py

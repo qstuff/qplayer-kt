@@ -117,6 +117,9 @@ dependencies {
     // Logging
     implementation "com.jakewharton.timber:timber:$libs.timber"
 
+    // Gson
+    implementation "com.google.code.gson:gson:${libs.gson}"
+
     // Crash reporting
     implementation "com.crashlytics.sdk.android:crashlytics:$libs.crashlytics"
     debugImplementation "com.amitshekhar.android:debug-db:$libs.debugDatabase"

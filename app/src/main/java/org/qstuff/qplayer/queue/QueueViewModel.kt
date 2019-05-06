@@ -107,6 +107,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         currentTracks.clear()
         trackList.value = currentTracks
+        onTrackSelectedIndex.value = -1
+        onTrackSelected.value = null
         saveTrackList()
     }
 
