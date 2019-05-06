@@ -146,7 +146,7 @@ class QueueFragment:
     override fun onQueueItemDismsissed(track: Track, position: Int) {
         queueViewModel.removeTrack(track)
 
-        Snackbar.make(view!!, getString(R.string.snackbar_title_removed, track), Snackbar.LENGTH_LONG)
+        Snackbar.make(view!!, getString(R.string.snackbar_title_removed, track.name), Snackbar.LENGTH_LONG)
                 .setAction(getString(R.string.snackbar_undo)) {
                     queueViewModel.addTrackAt(track, position)
                 }
