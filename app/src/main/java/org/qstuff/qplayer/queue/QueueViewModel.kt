@@ -23,10 +23,11 @@ class QueueViewModel: ViewModel(), KoinComponent {
     var trackList = MutableLiveData<List<Track>>()
     var onTrackSelectedIndex = MutableLiveData<Int>()
     var onTrackSelected = MutableLiveData<Track>()
-
-    // Track Control
     val repeat = MutableLiveData<TrackRepeatStatus>()
     val shuffle = MutableLiveData<Boolean>()
+
+    // Settings
+    private var isSkipBackToStartEnabled = true
 
     private var currentTracks: ArrayList<Track> = arrayListOf()
     private val random = Random()
@@ -36,6 +37,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     init {
         loadStates()
+        loadSettings()
     }
 
     fun addTrack(track: Track) {
@@ -126,16 +128,17 @@ class QueueViewModel: ViewModel(), KoinComponent {
             if (currentTracks.contains(current)) {
                 var index = currentTracks.indexOf(current)
 
-                if (shuffle.value == true) {
-                    index = random.nextInt(currentTracks.size - 1)
-                } else {
-                    if (index > 0) {
-                        index -= 1
-                    } else if (index == 0) {
-                        index = currentTracks.size - 1
+                if (!isSkipBackToStartEnabled) {
+                    if (shuffle.value == true) {
+                        index = random.nextInt(currentTracks.size - 1)
+                    } else {
+                        if (index > 0) {
+                            index -= 1
+                        } else if (index == 0) {
+                            index = currentTracks.size - 1
+                        }
                     }
                 }
-
                 val next = currentTracks.get(index)
                 next.isAutoplay = preferencesDataSource.isAutostartEnabled()
                 onTrackSelected.value = next
@@ -164,6 +167,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                             }
                         }
                     }
+                    else -> {}
                 }
                 val next = currentTracks.get(index)
                 next.isAutoplay = preferencesDataSource.isAutostartEnabled()
@@ -209,6 +213,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private fun loadStates() {
         repeat.value = TrackRepeatStatus.values()[preferencesDataSource.readRepeatMode()]
         shuffle.value = preferencesDataSource.readShuffleMode()
+    }
+
+    private fun loadSettings() {
+        isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
     }
 
     private fun saveTrackList() {

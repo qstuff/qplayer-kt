@@ -38,11 +38,15 @@ class  PlayerViewModel (application: Application):
     val cueActive = MutableLiveData<Boolean>()
     val showRemainingTime = MutableLiveData<Boolean>()
 
-
-    // State
+    // States
     var pitchFactor = PITCH_RANGE_FACTORS[0]
     private var currentPitchProgress = 0
     private var showRemainingTrackTime = true
+
+    // Settings
+    private var autoStart = false
+    private var autoStartNextTrack = false
+    private var isSkipBackToStartEnabled = true
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -54,11 +58,6 @@ class  PlayerViewModel (application: Application):
     private var updateHandler = Handler()
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
-
-    // Settings
-    private var autoStart = false
-    private var autoStartNextTrack = false
-
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
@@ -108,6 +107,7 @@ class  PlayerViewModel (application: Application):
         }
     }
 
+
     init {
         playerStatus.value = PlayerStatus.PAUSED
         LocalBroadcastManager.getInstance(application)
@@ -120,7 +120,7 @@ class  PlayerViewModel (application: Application):
         cueActive.value = false
 
         loadStates()
-        //loadSettings()
+        loadSettings()
     }
 
     //
@@ -261,7 +261,6 @@ class  PlayerViewModel (application: Application):
         Timber.d("loadTrack(): $track")
 
         if (!isMediaServiceBound) {
-            Timber.d("loadTrack(): service not ready")
             pendingTrack = track
             return
         }
@@ -270,12 +269,18 @@ class  PlayerViewModel (application: Application):
             return
         }
 
+        val currentTrack = trackStatus.value
+
         mediaService.pause()
         playerStatus.value = PlayerStatus.PAUSED
 
-        mediaService.loadTrackASync(track)
-
-        track.trackStatus = Track.TrackStatus.LOADING
+        if (currentTrack?.uri == track.uri && isSkipBackToStartEnabled) {
+            track.trackStatus = Track.TrackStatus.PREPARED
+            track.playPosition = 0
+        } else {
+            mediaService.loadTrackASync(track)
+            track.trackStatus = Track.TrackStatus.LOADING
+        }
         trackStatus.value = track
     }
 
@@ -289,9 +294,6 @@ class  PlayerViewModel (application: Application):
     fun onTrackCompleted(track: Track) {
         Timber.d("onTrackCompleted(): ${track.name}, ${track.isAutoplay}")
         resetUpdateTimer()
-
-        // playPause()
-        // TODO: Continuous Play?
     }
 
     fun getTrackPosition(): Long {
@@ -321,6 +323,7 @@ class  PlayerViewModel (application: Application):
         autoStart = preferencesDataSource.isAutostartEnabled()
         autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
         masterTempo.value = preferencesDataSource.readMasterTempoMode()
+        isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
     }
 
     private fun startUpdateTimer() {

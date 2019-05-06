@@ -170,14 +170,14 @@ class PlayerActivity : AppCompatActivity() {
                     }
                     Track.TrackStatus.PREPARED -> {
                         isTrackPrepared = true
+                        stopRemainBlinkAnimation()
+                        trackProgressBar.progress = 0
                         trackTitle.text = track.name
                         totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
                         dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
-                        trackProgressBar.progress = 0
 
-                        if (track.playPosition > 0) {
-                            playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
-                        }
+                        playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
+
                         if (track.isAutoplay) {
                             playerViewModel.playPause()
                         }
@@ -406,10 +406,6 @@ class PlayerActivity : AppCompatActivity() {
                         startWebViewActivity(HTMLPAGE_IMPRINT)
                         true
                     }
-                    R.id.more_menu_contact -> {
-                        //addFeedbackFragment()
-                        true
-                    }
                     R.id.more_menu_licenses -> {
                         startWebViewActivity(HTMLPAGE_LICENSES)
                         true
@@ -519,10 +515,8 @@ class PlayerActivity : AppCompatActivity() {
     private fun updatePlayButtonUI(playing: Boolean) {
         if (playing) {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
-
         } else {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_play_selected))
-            // TODO: VM -> resetUpdateTimer()
         }
     }
 

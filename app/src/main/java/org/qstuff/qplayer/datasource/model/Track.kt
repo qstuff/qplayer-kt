@@ -46,5 +46,5 @@ data class Track(
         ERROR
     }
 
-    override fun toString() = "track: $name, status: ${trackStatus.name}"
+    override fun toString() = "track: $name, status: ${trackStatus.name}, playPosition: $playPosition"
 }

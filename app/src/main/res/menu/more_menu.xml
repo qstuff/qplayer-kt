@@ -15,10 +15,6 @@
           android:title="@string/more_menu_imprint"
           app:showAsAction="always"/>
 
-    <item android:id="@+id/more_menu_contact"
-          android:title="@string/more_menu_contact"
-          app:showAsAction="always"/>
-
     <item android:id="@+id/more_menu_licenses"
           android:title="@string/more_menu_licenses"
           app:showAsAction="always"/>
