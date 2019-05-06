@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.player
 
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -24,12 +25,18 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.crashlytics.android.Crashlytics
+import com.crashlytics.android.core.CrashlyticsCore
+import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_player.*
+import org.koin.standalone.KoinComponent
+import org.koin.standalone.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.playlists.PlaylistFragment
 import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
 import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
@@ -43,7 +50,7 @@ import java.util.concurrent.TimeUnit
 /**
  *
  */
-class PlayerActivity : AppCompatActivity() {
+class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     companion object {
         const val EXTRA_URL = "EXTRA_URL"
@@ -61,6 +68,8 @@ class PlayerActivity : AppCompatActivity() {
 
     private lateinit var playerViewModel: PlayerViewModel
     private lateinit var queueViewModel: QueueViewModel
+
+    private val preferencesDataSource by inject<PreferencesDataSource>()
 
     private var currentTrack: Track? = null
 
@@ -106,6 +115,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        setupCrashlytics()
         playerViewModel.loadSettings()
     }
 
@@ -502,6 +512,18 @@ class PlayerActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun setupCrashlytics() {
+
+        if (!preferencesDataSource.isCrashreportingEnabledDialogShown()) {
+            showEnableCrashReportDialog()
+            return
+        }
+
+        val isCrashreportingEnabled = preferencesDataSource.isCrashreportingEnabled()
+        val core = CrashlyticsCore.Builder().disabled(!isCrashreportingEnabled).build()
+        Fabric.with(this, Crashlytics.Builder().core(core).build())
+    }
+
     //
     // UI Control
     //
@@ -552,6 +574,27 @@ class PlayerActivity : AppCompatActivity() {
                     TimeUnit.MILLISECONDS.toHours(time),
                     TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)), // The change is in this line
                     TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)))
+
+    //
+    // Dialogs
+    //
+
+    private fun showEnableCrashReportDialog() {
+
+        AlertDialog.Builder(this)
+                .apply {
+                    setCancelable(false)
+                    setTitle(getString(R.string.dialog_crashlytics_opt_in_title))
+                    setMessage(getString(R.string.dialog_crashlytics_opt_in_message))
+                    setPositiveButton(getString(R.string.dialog_crashlytics_opt_in_go_to_settings)) { dialog, which ->
+                        startSettingsActivity()
+                        dialog.dismiss()
+                    }
+                    setNegativeButton(getString(R.string.dialog_crashlytics_opt_in_no_thanks)) { dialog, which ->
+                        dialog.dismiss()
+                    }
+                }.show()
+    }
 
     //
     // Inner classes

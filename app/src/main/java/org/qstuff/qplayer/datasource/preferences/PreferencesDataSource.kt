@@ -44,6 +44,9 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREFS_ENABLE_CRASHREPORTING = "PREFS_ENABLE_CRASHREPORTING"
         const val PREFS_ENABLE_REMAIN_BLINK = "PREFS_ENABLE_REMAIN_BLINK"
         const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
+
+        // Others
+        const val PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN = "PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN"
     }
 
 
@@ -133,6 +136,15 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
 
+    //
+    // Others
+    //
+
+    fun isCrashreportingEnabledDialogShown() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, false)
+    fun setCrashreportingEnabledDialogShown(shown: Boolean) =
+            preferences.edit {
+                putBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, shown)
+            }
     //
     // SettingsFragment
     //

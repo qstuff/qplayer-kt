@@ -28,6 +28,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     // Settings
     private var isSkipBackToStartEnabled = true
+    var isShowClearQueueWarningEnabled = true
 
     private var currentTracks: ArrayList<Track> = arrayListOf()
     private val random = Random()
@@ -217,6 +218,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     private fun loadSettings() {
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
+        isShowClearQueueWarningEnabled = preferencesDataSource.isShowClearQueueWarningEnabled()
     }
 
     private fun saveTrackList() {

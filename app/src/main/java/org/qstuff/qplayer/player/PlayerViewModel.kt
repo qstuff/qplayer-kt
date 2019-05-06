@@ -47,6 +47,7 @@ class  PlayerViewModel (application: Application):
     private var autoStart = false
     private var autoStartNextTrack = false
     private var isSkipBackToStartEnabled = true
+    private var isStopPlaybackOnSettingCuepointEnabled = false
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -206,7 +207,10 @@ class  PlayerViewModel (application: Application):
         cueActive.value = enable
 
         if (isMediaServiceRunning) {
-            if (cueActive.value!!) {
+            if (enable) {
+                if (isStopPlaybackOnSettingCuepointEnabled && mediaService.isPlaying()) {
+                    playPause()
+                }
                 track.cuePosition = mediaService.getCurrentPositionMillis()
             } else {
                 track.cuePosition = 0
@@ -277,6 +281,7 @@ class  PlayerViewModel (application: Application):
         if (currentTrack?.uri == track.uri && isSkipBackToStartEnabled) {
             track.trackStatus = Track.TrackStatus.PREPARED
             track.playPosition = 0
+            track.isAutoplay = false
         } else {
             mediaService.loadTrackASync(track)
             track.trackStatus = Track.TrackStatus.LOADING
@@ -324,6 +329,7 @@ class  PlayerViewModel (application: Application):
         autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
         masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
+        isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
     }
 
     private fun startUpdateTimer() {

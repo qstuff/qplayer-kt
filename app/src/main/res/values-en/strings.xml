@@ -51,8 +51,8 @@
     <string name="storage_permission_request_message">We need the storage permission to access the sound files on your sdcard</string>
 
     <string name="dialog_crashlytics_opt_in_title">Enable crashreporting?</string>
-    <string name="dialog_crashlytics_opt_in_message">Crashreports are essential for improving the app quality. Crashreports are sent anonymized (see Privacy). You can enable crashreports in the settings and disable it again at any time.</string>
-    <string name="dialog_crashlytics_opt_in_go_to_settings">Go to settings</string>
+    <string name="dialog_crashlytics_opt_in_message">Crashreports are essential for improving the app quality. Crashreports are sent anonymized (see Privacy).\nYou can disable the sending of crashreports in the settings at any time.</string>
+    <string name="dialog_crashlytics_opt_in_go_to_settings">Proceed to settings</string>
     <string name="dialog_crashlytics_opt_in_no_thanks">No thanks</string>
 
     <!-- Snackbar -->

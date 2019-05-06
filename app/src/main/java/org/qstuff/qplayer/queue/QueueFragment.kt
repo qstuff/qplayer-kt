@@ -127,7 +127,11 @@ class QueueFragment:
     private fun setupInteractionListeners() {
 
         queueClearButton.setOnClickListener {
-            showClearQueueDialog()
+            if (queueViewModel.isShowClearQueueWarningEnabled) {
+                showClearQueueDialog()
+            } else {
+                queueViewModel.clearTrackList()
+            }
         }
 
         queueSaveAsPlaylistButton.setOnClickListener {

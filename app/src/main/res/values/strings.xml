@@ -51,7 +51,7 @@
     <string name="storage_permission_request_message">Um Tracks von der SD Karte abspielen zu können benötigt die App Zugriffsberechtung</string>
 
     <string name="dialog_crashlytics_opt_in_title">Fehlerberichte aktivieren?</string>
-    <string name="dialog_crashlytics_opt_in_message">Zur ständigen Verbesserung der App sind Fehlerberichte von Abstürzen sehr hilfreich. Die Fehlerberichte werden anonymisiert verschickt (siehe Datenschutz). Du kannst die Fehlerberichte in den Einstellungen aktivieren und jederzeit wieder ausschalten.</string>
+    <string name="dialog_crashlytics_opt_in_message">Zur ständigen Verbesserung der App sind Fehlerberichte von Abstürzen sehr hilfreich. Die Fehlerberichte werden anonymisiert verschickt (siehe Datenschutz).\nDu kannst das Versenden der Fehlerberichte in den Einstellungen jederzeit ausschalten.</string>
     <string name="dialog_crashlytics_opt_in_go_to_settings">Direkt zu Einstellungen</string>
     <string name="dialog_crashlytics_opt_in_no_thanks">Nein Danke</string>
 

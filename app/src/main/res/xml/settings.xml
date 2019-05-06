@@ -46,13 +46,13 @@
             android:title="@string/settings_dj_stop_playback_on_cue_title"
             android:summary="@string/settings_dj_stop_playback_on_cue_summary"
             android:defaultValue="false"/>
-
+<!--
         <SwitchPreference
             android:key="@string/prefs_key_enable_remain_blink"
             android:title="@string/settings_dj_enable_remain_blink_title"
             android:summary="@string/settings_dj_remain_blink_summary"
             android:defaultValue="true"/>
-
+-->
     </PreferenceCategory>
 
     <PreferenceCategory

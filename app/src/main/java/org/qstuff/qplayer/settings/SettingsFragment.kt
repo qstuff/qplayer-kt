@@ -9,6 +9,7 @@ import android.text.Spanned
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import com.crashlytics.android.Crashlytics
 import kotlinx.android.synthetic.main.activity_player.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -47,8 +48,8 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference(getString(R.string.prefs_key_stop_playback_on_cue)) as SwitchPreference).isChecked =
                 preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
 
-        (findPreference(getString(R.string.prefs_key_enable_remain_blink)) as SwitchPreference).isChecked =
-                preferencesDataSource.isBlinkingRemainEnabled()
+//        (findPreference(getString(R.string.prefs_key_enable_remain_blink)) as SwitchPreference).isChecked =
+//                preferencesDataSource.isBlinkingRemainEnabled()
 
         (findPreference(getString(R.string.prefs_key_enable_crashreporting)) as SwitchPreference).isChecked =
                 preferencesDataSource.isCrashreportingEnabled()
@@ -68,7 +69,6 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         Timber.d("onPreferenceTreeClick(): ${preference?.key}")
-
         return true
     }
 
