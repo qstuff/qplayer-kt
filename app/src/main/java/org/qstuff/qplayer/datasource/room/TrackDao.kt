@@ -27,6 +27,9 @@ interface TrackDao {
     @Delete
     fun delete(tracks: List<Track>)
 
+    @Query("DELETE FROM Tracks WHERE playlistName = :playlistName;")
+    fun deleteTracksForPlaylist(playlistName: String)
+
     @Query("DELETE FROM Tracks;")
     fun deleteAll()
 }

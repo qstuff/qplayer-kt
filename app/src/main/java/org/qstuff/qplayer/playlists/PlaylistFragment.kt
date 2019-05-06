@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_playlist.*
 import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.koin.standalone.KoinComponent
@@ -87,8 +88,15 @@ class PlaylistFragment:
         showOpenPlaylistDialog(playlist)
     }
 
-    override fun onPlaylistItemDismsissed(playlist: Playlist) {
+    override fun onPlaylistItemDismsissed(playlist: Playlist, position: Int) {
         playlistViewModel.removePlaylist(playlist)
+
+        Snackbar.make(view!!, getString(R.string.snackbar_title_removed, playlist.name), Snackbar.LENGTH_LONG)
+                .setAction(getString(R.string.snackbar_undo)) { _ ->
+                    playlistViewModel.restorePlaylistAt(playlist, position)
+                }
+                .show()
+
     }
 
     override fun onPlaylistItemMoved(playlists: MutableList<Playlist>) {

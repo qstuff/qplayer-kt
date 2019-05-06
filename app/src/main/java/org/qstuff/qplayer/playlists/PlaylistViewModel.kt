@@ -1,18 +1,14 @@
 package org.qstuff.qplayer.playlists
 
-import android.provider.Contacts
-import android.text.Editable
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
-import org.qstuff.qplayer.util.shortToast
+import timber.log.Timber
 import kotlin.coroutines.CoroutineContext
 
 /*
@@ -30,6 +26,7 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
     private val roomDataSource by inject<RoomDataSource>()
 
     var currentPlaylistList = arrayListOf<Playlist>()
+    var lastRemovedPlaylistTracks = arrayListOf<Track>()
 
 
     fun loadPlaylists() {
@@ -95,10 +92,30 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
     fun removePlaylist(playlist: Playlist) {
 
         launch {
+            lastRemovedPlaylistTracks.addAll(roomDataSource.getTracksForPlaylist(playlist.name) ?: listOf())
+            roomDataSource.removeTracksForPlaylist(playlist.name)
             roomDataSource.removePlaylist(playlist)
         }
         currentPlaylistList.remove(playlist)
         playlistList.value = currentPlaylistList
+    }
+
+    fun restorePlaylistAt(playlist: Playlist, position: Int) {
+
+        Timber.d("restorePlaylistAt(): ${playlist.trackList}")
+        launch {
+            roomDataSource.addPlaylist(playlist)
+        }
+
+        launch {
+            if (lastRemovedPlaylistTracks.first().playlistName == playlist.name) {
+                roomDataSource.addTracks(lastRemovedPlaylistTracks)
+            }
+        }
+
+        currentPlaylistList.add(position, playlist)
+        playlistList.value = currentPlaylistList
+
     }
 
     fun playlistListReordered(playlists: List<Playlist>) {

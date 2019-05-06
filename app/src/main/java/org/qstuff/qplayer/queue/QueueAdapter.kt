@@ -22,7 +22,7 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
 
     interface QueueItemInteractionListener {
         fun onQueueItemClicked(track: Track)
-        fun onQueueItemDismsissed(track: Track)
+        fun onQueueItemDismsissed(track: Track, position: Int)
         fun onQueueItemMoved(tracks: MutableList<Track>)
     }
 
@@ -73,7 +73,6 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
     override fun onItemMove(fromPosition: Int, toPosition: Int) {
         Timber.d("onItemMove(): from: $fromPosition to: $toPosition")
 
-
         if (fromPosition < toPosition) {
             for (i in fromPosition until toPosition) {
                 Collections.swap(tracks, i, i + 1)
@@ -90,7 +89,7 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
     override fun onItemDismiss(position: Int) {
         Timber.d("onItemDismiss(): pos: $position, tracks: ${tracks}")
 
-        interactionListener.onQueueItemDismsissed(tracks[position])
+        interactionListener.onQueueItemDismsissed(tracks[position], position)
     }
 
     //

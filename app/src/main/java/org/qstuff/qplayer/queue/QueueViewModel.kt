@@ -45,6 +45,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
         saveTrackList()
     }
 
+    fun addTrackAt(track: Track, position: Int) {
+
+        currentTracks.add(position, track)
+        trackList.value = currentTracks
+        saveTrackList()
+    }
+
     fun addFile(file: File) {
         if (file.isFile) {
             addTrack(Track(file))

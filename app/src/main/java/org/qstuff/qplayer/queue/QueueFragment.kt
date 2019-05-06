@@ -7,12 +7,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_queue.*
 import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.koin.standalone.KoinComponent
@@ -140,9 +143,14 @@ class QueueFragment:
         queueViewModel.onTrackSelected(track)
     }
 
-    override fun onQueueItemDismsissed(track: Track) {
+    override fun onQueueItemDismsissed(track: Track, position: Int) {
         queueViewModel.removeTrack(track)
-        // TODO: UNDO snackbar ?
+
+        Snackbar.make(view!!, getString(R.string.snackbar_title_removed, track), Snackbar.LENGTH_LONG)
+                .setAction(getString(R.string.snackbar_undo)) {
+                    queueViewModel.addTrackAt(track, position)
+                }
+                .show()
     }
 
     override fun onQueueItemMoved(tracks: MutableList<Track>) {

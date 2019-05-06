@@ -22,7 +22,7 @@ class PlaylistAdapter(val interactionListener: PlaylistItemInteractionListener):
 
     interface PlaylistItemInteractionListener {
         fun onPlaylistItemClicked(playlist: Playlist)
-        fun onPlaylistItemDismsissed(playlist: Playlist)
+        fun onPlaylistItemDismsissed(playlist: Playlist, position: Int)
         fun onPlaylistItemMoved(playlists: MutableList<Playlist>)
     }
 
@@ -75,7 +75,7 @@ class PlaylistAdapter(val interactionListener: PlaylistItemInteractionListener):
     override fun onItemDismiss(position: Int) {
         Timber.d("onItemDismiss(): pos: $position, playlists: ${playlists}")
 
-        interactionListener.onPlaylistItemDismsissed(playlists[position])
+        interactionListener.onPlaylistItemDismsissed(playlists[position], position)
     }
 
     //

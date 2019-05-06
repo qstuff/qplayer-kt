@@ -35,7 +35,7 @@ class RoomDataSource: KoinComponent, CoroutineScope {
 
     suspend fun removePlaylist(playlist: Playlist) {
         return async {
-            database.playlistDao().delete(playlist)
+            database.playlistDao().delete(playlist.name)
         }.await()
     }
 
@@ -48,6 +48,12 @@ class RoomDataSource: KoinComponent, CoroutineScope {
     suspend fun addTracks(tracklist: List<Track>) {
         return async {
             database.trackDao().insertAll(tracklist)
+        }.await()
+    }
+
+    suspend fun removeTracksForPlaylist(playlistName: String) {
+        return async {
+            database.trackDao().deleteTracksForPlaylist(playlistName)
         }.await()
     }
 }

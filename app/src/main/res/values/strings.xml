@@ -55,6 +55,10 @@
     <string name="dialog_crashlytics_opt_in_go_to_settings">Direkt zu Einstellungen</string>
     <string name="dialog_crashlytics_opt_in_no_thanks">Nein Danke</string>
 
+    <!-- Snackbar -->
+    <string name="snackbar_title_removed">%1$s wurde gelöscht</string>
+    <string name="snackbar_undo">Rückgänging</string>
+
     <!-- More Menu and Settings -->
     <string name="more_menu_settings">Einstellungen</string>
     <string name="more_menu_imprint">Impressum</string>

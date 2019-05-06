@@ -26,6 +26,9 @@ interface PlaylistDao {
     @Delete
     fun delete(playlist: Playlist)
 
+    @Query("DELETE FROM Playlists WHERE  name = :name;")
+    fun delete(name: String)
+
     @Query("DELETE FROM Playlists;")
     fun deleteAll()
 }
