@@ -32,7 +32,8 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         // Saved/Loaded in PlayerViewModel
         const val PREF_TRACK_POSITION = "PREF_TRACK_POSITION"
         const val PREF_MASTER_TEMPO_MODE = "PREF_MASTER_TEMPO_MODE"
-        const val PREF_PITCH_FACTOR = "PREF_PITCH_FACTOR"
+        const val PREF_PITCH_FACTOR_INDEX = "PREF_PITCH_FACTOR_INDEX"
+        const val PREF_PITCH_VALUE = "PREF_PITCH_VALUE"
 
         // From SettingsFragment
         const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
@@ -102,17 +103,25 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     // Saved/Loaded in PlayerModel
     //
 
-    fun savePitchFactor(pitchFactor: Float) =
+    fun savePitchFactorIndex(pitchFactorIndex: Int) =
             preferences.edit{
-                putFloat(PREF_PITCH_FACTOR, pitchFactor)
+                putInt(PREF_PITCH_FACTOR_INDEX, pitchFactorIndex)
             }
 
-    fun readPitchFactor() = preferences.getFloat(PREF_PITCH_FACTOR, 0.0f)
+    fun readPitchFactorIndex() = preferences.getInt(PREF_PITCH_FACTOR_INDEX, 0)
+
+    fun savePitchValue(pitchValue: Int) =
+            preferences.edit{
+                putInt(PREF_PITCH_VALUE, pitchValue)
+            }
+
+    fun readPitchValue() = preferences.getInt(PREF_PITCH_VALUE, 500)
 
     fun saveMasterTempoMode(enabled: Boolean) =
             preferences.edit{
                 putBoolean(PREF_MASTER_TEMPO_MODE, enabled)
             }
+
 
     fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
 

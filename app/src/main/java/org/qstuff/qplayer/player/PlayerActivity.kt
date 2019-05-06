@@ -114,6 +114,12 @@ class PlayerActivity : AppCompatActivity() {
         jogWheelDial.registerCallback(jogWheelInterface)
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        playerViewModel.saveState()
+    }
+
     override fun onStop() {
         super.onStop()
 
@@ -231,8 +237,16 @@ class PlayerActivity : AppCompatActivity() {
             }
         })
 
-        playerViewModel.pitchValueText.observe(this, Observer { pitch ->
-            pitchControlValueIndicator.text = pitch ?: "0,0%"
+        playerViewModel.pitchValueText.observe(this, Observer { pitchValueText ->
+            pitchControlValueIndicator.text = pitchValueText ?: "0,0%"
+        })
+
+        playerViewModel.pitchValue.observe(this, Observer { pitchValue ->
+            pitchControl.setNewProgress(pitchValue)
+        })
+
+        playerViewModel.pitchFactorIndex.observe(this, Observer { pitchFactorIndex ->
+            pitchRangeSpinner.setSelection(pitchFactorIndex)
         })
 
         playerViewModel.cueActive.observe(this, Observer { cueActive ->

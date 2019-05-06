@@ -32,10 +32,13 @@ class  PlayerViewModel (application: Application):
     val onMediaServiceConnected = MediatorLiveData<Boolean>()
     val onTrackPositionUpdate = MutableLiveData<Long>()
     val pitchValueText = MutableLiveData<String>()
+    val pitchValue = MutableLiveData<Int>()
+    val pitchFactorIndex = MutableLiveData<Int>()
     val masterTempo = MutableLiveData<Boolean>()
     val cueActive = MutableLiveData<Boolean>()
 
     var pitchFactor = PITCH_RANGE_FACTORS[0]
+    var currentPitchProgress = 0
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -159,10 +162,11 @@ class  PlayerViewModel (application: Application):
 
     fun onPitchRangeSelected(index: Int) {
         pitchFactor = PITCH_RANGE_FACTORS[index]
-        saveStates()
+        preferencesDataSource.savePitchFactorIndex(index)
     }
 
     fun onPitchChanged(progress: Int) {
+        currentPitchProgress = progress
 
         val diff = (progress - 500).toFloat() / pitchFactor
         var pre = if (diff > 0) "+" else ""
@@ -284,13 +288,21 @@ class  PlayerViewModel (application: Application):
     // Private
     //
 
-    private fun saveStates() {
-        preferencesDataSource.savePitchFactor(pitchFactor)
-        // TODO: savePitchPosition
+    fun saveState() {
+        preferencesDataSource.savePitchFactorIndex(pitchFactorIndex.value ?: 0)
+        preferencesDataSource.savePitchValue(currentPitchProgress)
     }
 
     private fun loadStates() {
-        pitchFactor = preferencesDataSource.readPitchFactor()
+        pitchFactorIndex.value = preferencesDataSource.readPitchFactorIndex()
+        pitchFactor = PITCH_RANGE_FACTORS[pitchFactorIndex.value ?: 500]
+        pitchValue.value = preferencesDataSource.readPitchValue()
+    }
+
+    fun loadSettings() {
+        autoStart = preferencesDataSource.isAutostartEnabled()
+        autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
+        masterTempo.value = preferencesDataSource.readMasterTempoMode()
     }
 
     private fun startUpdateTimer() {
@@ -313,11 +325,5 @@ class  PlayerViewModel (application: Application):
 
         updateHandler.removeCallbacks(updateRunnable)
         isUpdatetaskRunning = false
-    }
-
-    fun loadSettings() {
-        autoStart = preferencesDataSource.isAutostartEnabled()
-        autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
-        masterTempo.value = preferencesDataSource.readMasterTempoMode()
     }
 }
