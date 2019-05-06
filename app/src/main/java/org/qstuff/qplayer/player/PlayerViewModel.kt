@@ -263,6 +263,7 @@ class  PlayerViewModel (application: Application):
         if (!isMediaServiceBound) return
 
         mediaService.seekTo(position, andStop)
+        onTrackPositionUpdate.value = position.toLong()
     }
 
     fun onTrackCompleted(track: Track) {

@@ -103,8 +103,8 @@ class PlaylistFragment:
 
         val tracks = playlistViewModel.getTracksForPlaylist(playlist)
         val dialogView = layoutInflater.inflate(R.layout.dialog_show_tracks, null)
-        dialogView.listview.apply {
-            adapter = DialogTrackListAdapter(context, tracks ?: listOf())
+        dialogView.listview?.apply {
+            adapter = DialogTrackListAdapter(context, tracks)
         }
 
         AlertDialog.Builder(activity)

@@ -35,7 +35,8 @@ import java.lang.StringBuilder
  * on 2/3/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class FileBrowserFragment: Fragment(),
+class FileBrowserFragment:
+        Fragment(),
         FileBrowserAdapter.FileBrowserItemInteractionListener {
 
     companion object {
@@ -51,6 +52,7 @@ class FileBrowserFragment: Fragment(),
     private lateinit var queueViewModel: QueueViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
     private lateinit var playerViewModel: PlayerViewModel
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -163,8 +165,9 @@ class FileBrowserFragment: Fragment(),
 
         val files = file.listTracks()
         val dialogView = layoutInflater.inflate(R.layout.dialog_show_tracks, null)
-        dialogView.listview.apply {
-            adapter = DialogFileListAdapter(context, files ?: listOf())
+
+        dialogView.listview?.apply {
+            adapter = DialogFileListAdapter(context, files)
         }
 
         AlertDialog.Builder(activity)
