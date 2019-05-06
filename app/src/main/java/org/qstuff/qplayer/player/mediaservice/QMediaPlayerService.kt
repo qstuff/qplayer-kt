@@ -120,8 +120,8 @@ class QMediaPlayerService : LifecycleService() {
         notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
-    fun playerServiceIsPlaying(): Boolean {
-        Timber.d("playerServiceIsPlaying():")
+    fun isPlaying(): Boolean {
+        Timber.d("isPlaying():")
         return player.isPlaying()
     }
 

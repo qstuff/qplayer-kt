@@ -67,6 +67,7 @@ class PlayerActivity : AppCompatActivity() {
     private var isTrackPrepared = false
     private var isBlinkAnimationRunning = false
     private var isCueActive = false
+    private var showRemainingTime = true
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -199,18 +200,28 @@ class PlayerActivity : AppCompatActivity() {
             }
         })
 
+        playerViewModel.showRemainingTime.observe(this, Observer {  showRemain ->
+            showRemainingTime = showRemain
+        })
+
         playerViewModel.onTrackPositionUpdate.observe(this, Observer { position ->
             Timber.v("onTrackPositionUpdate(): $position")
 
+            var pos = position ?: 0
             currentTrack?.let {
-                dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - position)}"
-                if ((it.duration - position) < 30000) {
+                if (showRemainingTime) {
+                    dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - pos)}"
+                } else {
+                    dynamicTrackLength.text = "current: ${getDurationHumanReadable(pos)}"
+                }
+
+                if ((it.duration - pos) < 30000) {
                     startRemainBlinkAnimation()
                 } else {
                     stopRemainBlinkAnimation()
                 }
 
-                updateTrackProgressIndicator(position)
+                updateTrackProgressIndicator(pos)
             }
         })
 
@@ -344,6 +355,10 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
             true
+        }
+
+        dynamicTrackLength.setOnClickListener {
+            playerViewModel.toggleDynamicTrackLengthDisplay()
         }
 
         buttonPitchReset.setOnClickListener {

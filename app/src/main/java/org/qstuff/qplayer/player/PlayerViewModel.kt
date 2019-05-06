@@ -36,9 +36,13 @@ class  PlayerViewModel (application: Application):
     val pitchFactorIndex = MutableLiveData<Int>()
     val masterTempo = MutableLiveData<Boolean>()
     val cueActive = MutableLiveData<Boolean>()
+    val showRemainingTime = MutableLiveData<Boolean>()
 
+
+    // State
     var pitchFactor = PITCH_RANGE_FACTORS[0]
-    var currentPitchProgress = 0
+    private var currentPitchProgress = 0
+    private var showRemainingTrackTime = true
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
@@ -54,6 +58,7 @@ class  PlayerViewModel (application: Application):
     // Settings
     private var autoStart = false
     private var autoStartNextTrack = false
+
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
@@ -209,6 +214,17 @@ class  PlayerViewModel (application: Application):
         }
     }
 
+    fun toggleDynamicTrackLengthDisplay() {
+        showRemainingTrackTime = !showRemainingTrackTime
+        showRemainingTime.value = showRemainingTrackTime
+
+        if (!mediaService.isPlaying()) {
+            val trackPosition = onTrackPositionUpdate.value
+            onTrackPositionUpdate.value = trackPosition
+        }
+        preferencesDataSource.saveRemainigTimeMode(showRemainingTrackTime)
+    }
+
     //
     // MediaService
     //
@@ -297,6 +313,8 @@ class  PlayerViewModel (application: Application):
         pitchFactorIndex.value = preferencesDataSource.readPitchFactorIndex()
         pitchFactor = PITCH_RANGE_FACTORS[pitchFactorIndex.value ?: 500]
         pitchValue.value = preferencesDataSource.readPitchValue()
+        showRemainingTrackTime = preferencesDataSource.readRemainigTimeMode()
+        showRemainingTime.value = showRemainingTrackTime
     }
 
     fun loadSettings() {

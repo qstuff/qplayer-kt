@@ -18,22 +18,22 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     companion object {
 
-        // Saved/Loaded in FileBrowserModel
+        // Saved/Loaded states in FileBrowserModel
         const val PREF_LAST_BROWSED_DIR = "PREF_LAST_BROWSED_DIR"
         const val DEFAULT_ROOT_DIR = "/storage/"
 
-        // Saved/Loaded in QueueViewModel
+        // Saved/Loaded states in QueueViewModel
         const val PREF_QUEUE_LIST = "PREF_QUEUE_LIST"
         const val PREF_SELECTED_TRACK = "PREF_SELECTED_TRACK"
-
         const val PREF_SHUFFLE_MODE = "PREF_SHUFFLE_MODE"
         const val PREF_REPEAT_MODE = "PREF_REPEAT_MODE"
 
-        // Saved/Loaded in PlayerViewModel
+        // Saved/Loaded states in PlayerViewModel
         const val PREF_TRACK_POSITION = "PREF_TRACK_POSITION"
         const val PREF_MASTER_TEMPO_MODE = "PREF_MASTER_TEMPO_MODE"
         const val PREF_PITCH_FACTOR_INDEX = "PREF_PITCH_FACTOR_INDEX"
         const val PREF_PITCH_VALUE = "PREF_PITCH_VALUE"
+        const val PREF_SHOW_REMAINING = "PREF_SHOW_REMAINING"
 
         // From SettingsFragment
         const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
@@ -123,8 +123,15 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
             }
 
 
-    fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
+    fun readRemainigTimeMode() = preferences.getBoolean(PREF_SHOW_REMAINING, true)
 
+    fun saveRemainigTimeMode(enabled: Boolean) =
+            preferences.edit{
+                putBoolean(PREF_SHOW_REMAINING, enabled)
+            }
+
+
+    fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
 
     //
     // SettingsFragment
