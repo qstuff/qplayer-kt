@@ -48,6 +48,11 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
     private external fun analyzeData(path: String): ByteArray
     private external fun destroyNative()
 
+    private external fun jogTouchBegin(ticksForTurn: Int, scratchSlipMs: Int)
+    private external fun jogTicks(value: Int, bendStretch: Boolean, bendMaxPercent: Float, bendHoldMs: Int, parameterMode: Boolean)
+    private external fun jogTouchEnd(decelerate: Float, synchronisedStart: Boolean)
+
+
     //
     // QPlayerWrapper
     //

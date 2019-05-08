@@ -34,7 +34,11 @@ public:
     
     double getPositionMs();
     unsigned int getDurationMs();
-    
+
+    void jogTouchBegin(int ticksPerTurn, SuperpoweredAdvancedAudioPlayerJogMode mode,  unsigned int scratchSlipMs);
+    void jogTick (int value, bool bendStretch, float bendMaxPercent, unsigned int bendHoldMs, bool parameterMode);
+    void jogTouchEnd (float decelerate, bool synchronisedStart);
+
     void onEQBand(unsigned int index, int gain);
     
     void onPrepared();

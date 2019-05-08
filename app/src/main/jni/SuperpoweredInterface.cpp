@@ -190,11 +190,24 @@ bool SuperpoweredInterface::process(short int *output, unsigned int numberOfSamp
     return !silence;
 }
 
+void SuperpoweredInterface::jogTouchBegin(int ticksPerTurn, SuperpoweredAdvancedAudioPlayerJogMode mode,  unsigned int scratchSlipMs) {
+    playerA->jogTouchBegin(ticksPerTurn, mode, scratchSlipMs);
+}
+
+void SuperpoweredInterface::jogTick (int value, bool bendStretch, float bendMaxPercent, unsigned int bendHoldMs, bool parameterMode) {
+    playerA->jogTick(value, bendStretch, bendMaxPercent, bendHoldMs, parameterMode);
+}
+
+void SuperpoweredInterface::jogTouchEnd (float decelerate, bool synchronisedStart) {
+    playerA->jogTouchEnd(decelerate, synchronisedStart);
+}
+
+
 //
 // Calls back to JAVA
 //
 
-SuperpoweredInterface *example = nullptr;
+SuperpoweredInterface *pInterface = nullptr;
 JavaVM *jvm;
 
 jclass jClassRef;
@@ -265,7 +278,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_Superpow
         jint     samplerate,
         jint     buffersize) {
 
-    example = new SuperpoweredInterface((unsigned int)samplerate, (unsigned int)buffersize);
+    pInterface = new SuperpoweredInterface((unsigned int)samplerate, (unsigned int)buffersize);
     
     // for calling back to java we need to cache some references
     
@@ -283,7 +296,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_destroyN
     javaEnvironment->DeleteGlobalRef(jClassRef);
     javaEnvironment->DeleteGlobalRef(javaObjectRef);
 
-    // example->destroy();
+    // pInterface->destroy();
 }
 
 extern "C" JNIEXPORT 
@@ -292,7 +305,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onPlayPa
         jobject  __unused obj,
         jboolean play) {
 
-    example->onPlayPause(play);
+    pInterface->onPlayPause(play);
 }
 
 extern "C" JNIEXPORT JNICALL
@@ -305,7 +318,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_loadTrac
     
     const char *path = javaEnvironment->GetStringUTFChars(javapath, JNI_FALSE);
     
-    example->loadTrack(path);
+    pInterface->loadTrack(path);
 
     javaEnvironment->ReleaseStringUTFChars(javapath, path);
 }
@@ -416,7 +429,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxSele
         jobject __unused obj,
         jint value) {
 
-    example->onFxSelect(value);
+    pInterface->onFxSelect(value);
 }
 */
 
@@ -427,7 +440,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetTem
         jfloat value,
         jboolean masterTempo) {
 
-    example->onSetTempo(value, masterTempo);
+    pInterface->onSetTempo(value, masterTempo);
 }
 
 extern "C" JNIEXPORT
@@ -438,7 +451,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetPos
         jboolean andStop,
         jboolean synchStart) {
 
-    example->onSetPosition(position, andStop, synchStart);
+    pInterface->onSetPosition(position, andStop, synchStart);
 }
 
 extern "C" JNIEXPORT
@@ -446,7 +459,7 @@ jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getPosi
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
 
-    return (jlong)(unsigned long long)example->getPositionMs();
+    return (jlong)(unsigned long long)pInterface->getPositionMs();
 }
 
 extern "C" JNIEXPORT
@@ -454,7 +467,7 @@ jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getDura
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
 
-    return (jlong)(unsigned long long)example->getDurationMs();
+    return (jlong)(unsigned long long)pInterface->getDurationMs();
 }
 
 extern "C" JNIEXPORT 
@@ -462,7 +475,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpoweredImplon_Fx
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
 
-    example->onFxOff();
+    pInterface->onFxOff();
 }
 
 extern "C" JNIEXPORT 
@@ -471,5 +484,39 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxValu
         jobject  __unused obj,
         jint     value) {
 
-    example->onFxValue(value);
+    pInterface->onFxValue(value);
+}
+
+extern "C" JNIEXPORT
+void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_jogTouchBegin(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jint     ticksPerTurn,
+        jint     scratchSlipMs) {
+
+    pInterface->jogTouchBegin(ticksPerTurn, SuperpoweredAdvancedAudioPlayerJogMode_Scratch,
+                              static_cast<unsigned int>(scratchSlipMs));
+}
+
+extern "C" JNIEXPORT
+void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_jogTick(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jint     value,
+        jboolean bendStretch,
+        jfloat   bendMaxPercent,
+        jint     bendHoldMs,
+        jboolean parameterMode) {
+
+    pInterface->jogTick(value, bendStretch, bendMaxPercent, static_cast<unsigned int>(bendHoldMs), parameterMode);
+}
+
+extern "C" JNIEXPORT
+void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_jogTouchEnd(
+        JNIEnv * __unused javaEnvironment,
+        jobject  __unused obj,
+        jfloat     decelerate,
+        jboolean   synchronizedStart) {
+
+    pInterface->jogTouchEnd(decelerate, synchronizedStart);
 }
