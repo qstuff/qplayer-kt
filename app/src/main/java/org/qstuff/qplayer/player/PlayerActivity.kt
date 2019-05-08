@@ -64,7 +64,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private lateinit var jogWheelDial: HGDialV2
     private lateinit var jogWheelInterface: HGDialV2.IHGDial
 
-    private val remainBlinkAnimation = AlphaAnimation(0.0f, 1.0f)
+    private val remainBlinkAnimation = AlphaAnimation(0.4f, 1.0f)
 
     private lateinit var playerViewModel: PlayerViewModel
     private lateinit var queueViewModel: QueueViewModel
@@ -117,6 +117,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         setupCrashlytics()
         playerViewModel.loadSettings()
+        queueViewModel.loadSettings()
     }
 
     override fun onStart() {
@@ -171,7 +172,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 currentTrack = track
 
                 when (track.trackStatus) {
-                    Track.TrackStatus.LOADING -> {
+                        Track.TrackStatus.UNDEFINED,
+                        Track.TrackStatus.LOADING -> {
                         trackTitle.text = "loading..."
                         stopRemainBlinkAnimation()
                         waveformView.updateWaveform(null)
@@ -217,7 +219,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         playerViewModel.onTrackPositionUpdate.observe(this, Observer { position ->
             Timber.v("onTrackPositionUpdate(): $position")
 
-            var pos = position ?: 0
+            val pos = position ?: 0
+
             currentTrack?.let {
                 if (showRemainingTime) {
                     dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - pos)}"
@@ -225,8 +228,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                     dynamicTrackLength.text = "current: ${getDurationHumanReadable(pos)}"
                 }
 
-                if ((it.duration - pos) < 30000) {
-                    startRemainBlinkAnimation()
+                if ((it.duration - pos) in 0..30000) {
+                    startRemainBlinkAnimation(1000)
                 } else {
                     stopRemainBlinkAnimation()
                 }
@@ -543,18 +546,19 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         }
     }
 
-    private fun startRemainBlinkAnimation() {
+    private fun startRemainBlinkAnimation(period: Long) {
 
         if (!isBlinkAnimationRunning) {
             Timber.d("startRemainBlinkAnimation():")
 
             remainBlinkAnimation.apply {
-                duration = 700
+                duration = period
                 repeatMode = Animation.REVERSE
                 repeatCount = Animation.INFINITE
                 start()
             }
             dynamicTrackLength.animation = remainBlinkAnimation
+            trackProgressBar.animation = remainBlinkAnimation
             isBlinkAnimationRunning = true
         }
     }
@@ -565,6 +569,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             Timber.d("stopRemainBlinkAnimation():")
 
             dynamicTrackLength.clearAnimation()
+            trackProgressBar.clearAnimation()
             remainBlinkAnimation.reset()
             isBlinkAnimationRunning = false
         }

@@ -36,8 +36,8 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference(getString(R.string.prefs_key_track_autostart)) as SwitchPreference).isChecked =
                 preferencesDataSource.isAutostartEnabled()
 
-        (findPreference(getString(R.string.prefs_key_autostart_next)) as SwitchPreference).isChecked =
-                preferencesDataSource.isAutoPlayNextTrackEnabled()
+//        (findPreference(getString(R.string.prefs_key_autostart_next)) as SwitchPreference).isChecked =
+//                preferencesDataSource.isAutoPlayNextTrackEnabled()
 
         (findPreference(getString(R.string.prefs_key_skip_back_to_start)) as SwitchPreference).isChecked =
                 preferencesDataSource.isSkipBackToStartEnabled()

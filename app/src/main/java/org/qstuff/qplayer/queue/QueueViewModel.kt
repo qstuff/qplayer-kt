@@ -180,11 +180,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun onTrackCompleted(track: Track) {
-        Timber.d("onTrackCompleted(): ${track.name}, ${preferencesDataSource.isAutoPlayNextTrackEnabled()}")
 
-        if (preferencesDataSource.isAutoPlayNextTrackEnabled()) {
-            nextTrack(track)
-        }
+        nextTrack(track)
     }
 
     fun toggleRepeat() {
@@ -216,7 +213,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         shuffle.value = preferencesDataSource.readShuffleMode()
     }
 
-    private fun loadSettings() {
+    fun loadSettings() {
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isShowClearQueueWarningEnabled = preferencesDataSource.isShowClearQueueWarningEnabled()
     }

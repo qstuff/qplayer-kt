@@ -10,13 +10,13 @@
             android:title="@string/settings_track_autostart_title"
             android:summary="@string/settings_track_autostart_summary"
             android:defaultValue="false"/>
-
+<!--
         <SwitchPreference
             android:key="@string/prefs_key_autostart_next"
             android:title="@string/settings_track_next_auto_title"
             android:summary="@string/settings_track_next_auto_summary"
             android:defaultValue="true"/>
-
+-->
         <SwitchPreference
             android:key="@string/prefs_key_skip_back_to_start"
             android:title="@string/settings_skip_back_behaviour_title"

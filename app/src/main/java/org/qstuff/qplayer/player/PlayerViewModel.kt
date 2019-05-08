@@ -45,7 +45,7 @@ class  PlayerViewModel (application: Application):
 
     // Settings
     private var autoStart = false
-    private var autoStartNextTrack = false
+    //private var autoStartNextTrack = false
     private var isSkipBackToStartEnabled = true
     private var isStopPlaybackOnSettingCuepointEnabled = false
 
@@ -81,7 +81,7 @@ class  PlayerViewModel (application: Application):
                 trackStatusMediator.value = track
             }
             trackStatusMediator.addSource(trackStatus) { track ->
-                trackStatusMediator.value = track
+                trackStatus.value = track
             }
 
            onWaveformDataUpdate = Transformations.map(mediaService.getWaveFormDataObserver()) { it }
@@ -273,20 +273,23 @@ class  PlayerViewModel (application: Application):
             return
         }
 
-        val currentTrack = trackStatus.value
+        val currentTrack = trackStatusMediator.value
 
         mediaService.pause()
         playerStatus.value = PlayerStatus.PAUSED
 
         if (currentTrack?.uri == track.uri && isSkipBackToStartEnabled) {
+            Timber.d("loadTrack(): same track: $track")
             track.trackStatus = Track.TrackStatus.PREPARED
             track.playPosition = 0
             track.isAutoplay = false
         } else {
+            Timber.d("loadTrack(): new track: $track")
             mediaService.loadTrackASync(track)
             track.trackStatus = Track.TrackStatus.LOADING
         }
-        trackStatus.value = track
+        Timber.d("loadTrack(): notify: $track")
+        trackStatusMediator.value = track
     }
 
     fun seekTo(position: Double, andStop: Boolean) {
@@ -326,7 +329,7 @@ class  PlayerViewModel (application: Application):
 
     fun loadSettings() {
         autoStart = preferencesDataSource.isAutostartEnabled()
-        autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
+        // autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
         masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
@@ -341,7 +344,7 @@ class  PlayerViewModel (application: Application):
         updateRunnable = object : Runnable {
             override fun run() {
                 onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
-                updateHandler.postDelayed(this, 500)
+                updateHandler.postDelayed(this, 100)
             }
         }
         updateHandler.post(updateRunnable)
