@@ -42,7 +42,6 @@ class FileBrowserAdapter(val files: List<File>,
 
         fun bind(file: File, interactionListener: FileBrowserItemInteractionListener) {
             itemView.apply {
-                Timber.d("bind(): ${file.name}")
 
                 fileListItemTitle.text = file.name
                 fileListItemTitle.setOnClickListener {
