@@ -37,7 +37,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
         // From SettingsFragment
         const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
-        const val PREFS_AUTOSTART_NEXT_TRACK = "PREFS_AUTOSTART_NEXT_TRACK"
+        const val PREFS_PROCEED_TO_NEXT_TRACK = "PREFS_PROCEED_TO_NEXT_TRACK"
         const val PREFS_SKIP_BACK_TO_START = "PREFS_SKIP_BACK_TO_START"
         const val PREFS_STOP_PLAYBACK_ON_CUE = "PREFS_STOP_PLAYBACK_ON_CUE"
         //const val PREFS_ENABLE_CUE = "PREFS_ENABLE_CUE"
@@ -150,7 +150,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     //
 
     fun isAutostartEnabled() = preferences.getBoolean(PREFS_TRACK_AUTOSTART, false)
-    fun isAutoPlayNextTrackEnabled() = preferences.getBoolean(PREFS_AUTOSTART_NEXT_TRACK, true)
+    fun isProceedToNextTrackEnabled() = preferences.getBoolean(PREFS_PROCEED_TO_NEXT_TRACK, true)
     fun isSkipBackToStartEnabled() = preferences.getBoolean(PREFS_SKIP_BACK_TO_START, true)
     fun isShowClearQueueWarningEnabled() = preferences.getBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, true)
     fun isStopPlaybackOnSettingCuepointEnabled() = preferences.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)

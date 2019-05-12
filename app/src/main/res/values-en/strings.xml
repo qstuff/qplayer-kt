@@ -69,17 +69,14 @@
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Playback Settings</string>
 
-    <string name="settings_track_autostart_title">Autoplay Tracks</string>
-    <string name="settings_track_autostart_summary">If enabled a track is played automatically when selelcted in queue or by skip button</string>
+    <string name="settings_track_autostart_title">Autoplay track</string>
+    <string name="settings_track_autostart_summary">If enabled, a track is played automatically when selelcted in queue or by skip button</string>
 
-    <string name="settings_track_next_auto_title">Continuous Play</string>
-    <string name="settings_track_next_auto_summary">Play the next track of the queue automatically</string>
+    <string name="settings_proceed_to_next_track_title">Autoproceed to next track</string>
+    <string name="settings_proceed_to_next_track_summary">If enabled, after a track has completed the next track is selected.</string>
 
-    <string name="settings_skip_back_behaviour_title">Skip Back Button behaviour</string>
-    <string name="settings_skip_back_behaviour_summary">If enabled the Skip-Back button brings you to the beginning of the current track and stops there in anay case. Otherwise it jumps to the previous track.</string>
-
-    <string name="settings_skip_shuffle_behaviour_title">Skip behaviour in Shuffle-Mode</string>
-    <string name="settings_skip_shuffle_behaviour_summary">if enabled Skip-Back and Skip-Forward will lead to a random track. If disabled the previous or next track from the queue is chosen.</string>
+    <string name="settings_skip_back_behaviour_title">Skip-back button behaviour</string>
+    <string name="settings_skip_back_behaviour_summary">If enabled, the skip-back button brings you to the beginning of the current track and stops there in anay case. Otherwise it jumps to the previous track.</string>
 
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">DJ Settings</string>

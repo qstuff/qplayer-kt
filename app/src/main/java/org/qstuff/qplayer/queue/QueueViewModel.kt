@@ -27,6 +27,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     val shuffle = MutableLiveData<Boolean>()
 
     // Settings
+    private var isProceedToNextTrackEnabled = true
     private var isSkipBackToStartEnabled = true
     var isShowClearQueueWarningEnabled = true
 
@@ -126,8 +127,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun previousTrack(current: Track?) {
 
         current?.let {
+            var index = 0
             if (currentTracks.contains(current)) {
-                var index = currentTracks.indexOf(current)
+                index = currentTracks.indexOf(current)
 
                 if (!isSkipBackToStartEnabled) {
                     if (shuffle.value == true) {
@@ -140,11 +142,11 @@ class QueueViewModel: ViewModel(), KoinComponent {
                         }
                     }
                 }
-                val next = currentTracks.get(index)
-                next.isAutoplay = preferencesDataSource.isAutostartEnabled()
-                onTrackSelected.value = next
-                onTrackSelectedIndex.value = index
             }
+            val next = currentTracks.get(index)
+            next.isAutoplay = preferencesDataSource.isAutostartEnabled()
+            onTrackSelected.value = next
+            onTrackSelectedIndex.value = index
         }
         saveSelectedTrack()
     }
@@ -152,8 +154,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun nextTrack(current: Track?) {
 
         current?.let {
+            var index = 0
             if (currentTracks.contains(current)) {
-                var index = currentTracks.indexOf(current)
+                index = currentTracks.indexOf(current)
 
                 when (repeat.value) {
                     TrackRepeatStatus.ALL,
@@ -170,18 +173,20 @@ class QueueViewModel: ViewModel(), KoinComponent {
                     }
                     else -> {}
                 }
-                val next = currentTracks.get(index)
-                next.isAutoplay = preferencesDataSource.isAutostartEnabled()
-                onTrackSelected.value = next
-                onTrackSelectedIndex.value = index
             }
+            val next = currentTracks.get(index)
+            next.isAutoplay = preferencesDataSource.isAutostartEnabled()
+            onTrackSelected.value = next
+            onTrackSelectedIndex.value = index
         }
         saveSelectedTrack()
     }
 
     fun onTrackCompleted(track: Track) {
 
-        nextTrack(track)
+        if (isProceedToNextTrackEnabled) {
+            nextTrack(track)
+        }
     }
 
     fun toggleRepeat() {
@@ -216,6 +221,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun loadSettings() {
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isShowClearQueueWarningEnabled = preferencesDataSource.isShowClearQueueWarningEnabled()
+        isProceedToNextTrackEnabled = preferencesDataSource.isProceedToNextTrackEnabled()
     }
 
     private fun saveTrackList() {

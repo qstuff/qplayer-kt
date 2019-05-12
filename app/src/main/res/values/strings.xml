@@ -68,7 +68,7 @@
 
     <!-- Prefs Keys -->
     <string name="prefs_key_track_autostart" translatable="false">PREFS_TRACK_AUTOSTART</string>
-    <string name="prefs_key_autostart_next" translatable="false">PREFS_AUTOSTART_NEXT_TRACK</string>
+    <string name="prefs_key_proceed_to_next_track" translatable="false">PREFS_PROCEED_TO_NEXT_TRACK</string>
     <string name="prefs_key_skip_back_to_start" translatable="false">PREFS_SKIP_BACK_TO_START</string>
     <string name="prefs_key_show_clear_queue_dialog" translatable="false">PREFS_SHOW_CLEAR_QUEUE_DIALOG</string>
     <string name="prefs_key_stop_playback_on_cue" translatable="false">PREFS_STOP_PLAYBACK_ON_CUE</string>
@@ -79,17 +79,14 @@
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
 
-    <string name="settings_track_autostart_title">Tracks sofort abspielen</string>
-    <string name="settings_track_autostart_summary">Wenn aktiviert wird ein Track nach Auswahl in der Queue oder nach Skip sofort abgespielt</string>
+    <string name="settings_track_autostart_title">Track autoplay</string>
+    <string name="settings_track_autostart_summary">Wenn aktiviert wird ein Track nach Auswahl in der Queue oder nach Skip sofort abgespielt.</string>
 
-    <string name="settings_track_next_auto_title">Continuous Play</string>
-    <string name="settings_track_next_auto_summary">Den nächsten Track in der Queue automatisch abspielen</string>
+    <string name="settings_proceed_to_next_track_title">Automatisch zum nächsten Track</string>
+    <string name="settings_proceed_to_next_track_summary">Wenn aktiviert wird nach Trackende automatisch der nächste Track geladen.</string>
 
     <string name="settings_skip_back_behaviour_title">Skip-Back Verhalten</string>
     <string name="settings_skip_back_behaviour_summary">Wenn aktiviert führt Skip-Back zum Anfang des Tracks und stoppt dort auf jeden Fall. Wenn deaktiviert wird zum vorherigen Track gesprungen.</string>
-
-    <string name="settings_skip_shuffle_behaviour_title">Skip Verhalten im Shuffle-Mode</string>
-    <string name="settings_skip_shuffle_behaviour_summary">Wenn aktiviert führen Skip-Forward und Skip-Back zu einem Random Track. Wenn deaktiviert zum jeweils vorherigen oder nächsten Track in der Queue.</string>
 
     <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
     <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>

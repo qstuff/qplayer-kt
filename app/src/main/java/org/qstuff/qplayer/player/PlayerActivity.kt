@@ -321,8 +321,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         buttonPlayPause.setOnClickListener {
             if (isTrackPrepared) {
                 playerViewModel.playPause()
+            } else if(currentTrack?.trackStatus == Track.TrackStatus.COMPLETED) {
+                playerViewModel.playPause()
             } else {
-                Timber.w("buttonPlayPause(): track not prepared")
+                Timber.w("buttonPlayPause(): track neither prepared or completed")
             }
         }
 
@@ -465,6 +467,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
+
+                Timber.d("onMove(): speed: ${hgDialInfo?.spinCurrentSpeed}")
+
                 val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
                 onJogWheeMoved(angle)
             }

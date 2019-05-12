@@ -45,7 +45,7 @@ class  PlayerViewModel (application: Application):
 
     // Settings
     private var autoStart = false
-    //private var autoStartNextTrack = false
+    private var isProceedToNextTrackEnabled = false
     private var isSkipBackToStartEnabled = true
     private var isStopPlaybackOnSettingCuepointEnabled = false
 
@@ -84,7 +84,7 @@ class  PlayerViewModel (application: Application):
                 trackStatus.value = track
             }
 
-           onWaveformDataUpdate = Transformations.map(mediaService.getWaveFormDataObserver()) { it }
+            onWaveformDataUpdate = Transformations.map(mediaService.getWaveFormDataObserver()) { it }
 
             onMediaServiceConnected.value = true
             isMediaServiceRunning = true
@@ -301,7 +301,11 @@ class  PlayerViewModel (application: Application):
 
     fun onTrackCompleted(track: Track) {
         Timber.d("onTrackCompleted(): ${track.name}, ${track.isAutoplay}")
-        resetUpdateTimer()
+        if (isProceedToNextTrackEnabled) {
+            resetUpdateTimer()
+        } else {
+            playPause()
+        }
     }
 
     fun getTrackPosition(): Long {
@@ -329,7 +333,7 @@ class  PlayerViewModel (application: Application):
 
     fun loadSettings() {
         autoStart = preferencesDataSource.isAutostartEnabled()
-        // autoStartNextTrack = preferencesDataSource.isAutoPlayNextTrackEnabled()
+        isProceedToNextTrackEnabled = preferencesDataSource.isProceedToNextTrackEnabled()
         masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
