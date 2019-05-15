@@ -203,6 +203,18 @@ class  PlayerViewModel (application: Application):
         }
     }
 
+    fun onJogTouchDown() {
+        mediaService.onJogTouchBegin()
+    }
+
+    fun onJogMove(ticks: Int) {
+        mediaService.onJogTicks(ticks)
+    }
+
+    fun onJogTouchUp() {
+        mediaService.onJogTouchEnd()
+    }
+
     fun toggleCue(track: Track, enable: Boolean) {
         cueActive.value = enable
 

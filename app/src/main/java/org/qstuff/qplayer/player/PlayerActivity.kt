@@ -457,17 +457,33 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         jogWheelDial = jogWheelContainer.hgDialV2Active
         jogWheelInterface = (object: HGDialV2.IHGDial {
 
-            override fun onDown(p0: HGDialInfo?) {}
-            override fun onPointerDown(p0: HGDialInfo?) {}
-            override fun onPointerUp(p0: HGDialInfo?) {}
+            override fun onDown(hgDialInfo: HGDialInfo?) {
+                Timber.d("onDown(): speed: ${hgDialInfo?.spinCurrentSpeed}")
 
-            override fun onUp(p0: HGDialInfo?) {
+                playerViewModel.onJogTouchDown()
+            }
+
+            override fun onUp(hgDialInfo: HGDialInfo?) {
+                Timber.d("onUp(): speed: ${hgDialInfo?.spinCurrentSpeed}")
+
+                playerViewModel.onJogTouchUp()
+
                 jogWheelDial.doManualTextureDial(0.0)
                 onJogWheeMoved(0.0f)
             }
 
-            override fun onMove(hgDialInfo: HGDialInfo?) {
+            override fun onPointerDown(hgDialInfo: HGDialInfo?) {
+                Timber.d("onPointerDown(): speed: ${hgDialInfo?.spinCurrentSpeed}")
 
+            }
+
+            override fun onPointerUp(hgDialInfo: HGDialInfo?) {
+                Timber.d("onPointerUp(): speed: ${hgDialInfo?.spinCurrentSpeed}")
+
+            }
+
+
+            override fun onMove(hgDialInfo: HGDialInfo?) {
                 Timber.d("onMove(): speed: ${hgDialInfo?.spinCurrentSpeed}")
 
                 val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
@@ -480,7 +496,15 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         if ((pitchControl.progress + angle) < 0) return
 
         val current = pitchControl.progress
-        playerViewModel.onPitchChanged((current + (angle * 10)).toInt())
+        //playerViewModel.onPitchChanged((current + (angle * 10)).toInt())
+
+        var back = 1
+        if (angle <  0) {
+            back = -1
+        }
+
+        playerViewModel.onJogMove(100 * back)
+
     }
 
     private fun setupContentSection() {

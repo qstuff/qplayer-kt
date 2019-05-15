@@ -49,7 +49,7 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
     private external fun destroyNative()
 
     private external fun jogTouchBegin(ticksForTurn: Int, scratchSlipMs: Int)
-    private external fun jogTicks(value: Int, bendStretch: Boolean, bendMaxPercent: Float, bendHoldMs: Int, parameterMode: Boolean)
+    private external fun jogTick(value: Int, bendStretch: Boolean, bendMaxPercent: Float, bendHoldMs: Int, parameterMode: Boolean)
     private external fun jogTouchEnd(decelerate: Float, synchronisedStart: Boolean)
 
 
@@ -119,9 +119,9 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
 
     override fun getDurationMillis() = getDurationMs()
 
-    override  fun getStatusObserver(): MutableLiveData<Track> = onPlayerStatusUpdate
+    override fun getStatusObserver(): MutableLiveData<Track> = onPlayerStatusUpdate
 
-    override  fun getWaveFormDataObserver(): MutableLiveData<TrackData> = onWaveFormDataUpdate
+    override fun getWaveFormDataObserver(): MutableLiveData<TrackData> = onWaveFormDataUpdate
 
     private var processing = false;
     private val waveformQueue = arrayListOf<Track>()
@@ -160,6 +160,18 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
                 processAnalzyer()
             }
         }
+    }
+
+    override fun onJogTouchBegin(ticksForTurn: Int, scratchSlipMs: Int) {
+        jogTouchBegin(ticksForTurn, scratchSlipMs)
+    }
+
+    override fun onJogTicks(value: Int, bendStretch: Boolean, bendMaxPercent: Float, bendHoldMs: Int, parameterMode: Boolean) {
+        jogTick(value, bendStretch, bendMaxPercent, bendHoldMs, parameterMode)
+    }
+
+    override fun onJogTouchEnd(decelerate: Float, synchronisedStart: Boolean) {
+        jogTouchEnd(decelerate, synchronisedStart)
     }
 
     //

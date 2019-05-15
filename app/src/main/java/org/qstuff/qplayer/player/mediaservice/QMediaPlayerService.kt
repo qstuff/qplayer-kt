@@ -53,10 +53,6 @@ class QMediaPlayerService : LifecycleService() {
 
     private var currentTrack: Track? = null
 
-
-    val isPrepared: Boolean
-        get() = currentTrack?.trackStatus == Track.TrackStatus.PREPARED
-
     //
     // Service Lifecycle
     //
@@ -71,7 +67,7 @@ class QMediaPlayerService : LifecycleService() {
         super.onCreate()
         Timber.d("onCreate()")
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         }
 
@@ -165,6 +161,19 @@ class QMediaPlayerService : LifecycleService() {
 
     fun getStatusObserver(): MutableLiveData<Track> = player.getStatusObserver()
     fun getWaveFormDataObserver(): MutableLiveData<TrackData> = player.getWaveFormDataObserver()
+
+    fun onJogTouchBegin() {
+        player.onJogTouchBegin(5000, 0)
+    }
+
+    fun onJogTicks(ticks: Int) {
+        Timber.d("onJogTicks(): $ticks")
+        player.onJogTicks(ticks, true, 0.05F, 0, true)
+    }
+
+    fun onJogTouchEnd() {
+        player.onJogTouchEnd(1.0f, true)
+    }
 
     //
     // Private

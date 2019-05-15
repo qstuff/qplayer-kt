@@ -28,4 +28,8 @@ interface QDeqPlayer {
 
     fun getStatusObserver(): MutableLiveData<Track>
     fun getWaveFormDataObserver(): MutableLiveData<TrackData>
+
+    fun onJogTouchBegin(ticksForTurn: Int, scratchSlipMs: Int)
+    fun onJogTicks(value: Int, bendStretch: Boolean, bendMaxPercent: Float, bendHoldMs: Int, parameterMode: Boolean)
+    fun onJogTouchEnd(decelerate: Float, synchronisedStart: Boolean)
 }
