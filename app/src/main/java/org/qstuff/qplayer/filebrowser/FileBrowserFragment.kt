@@ -20,15 +20,10 @@ import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.player.PlayerViewModel
-import org.qstuff.qplayer.playlists.PlaylistFragment
 import org.qstuff.qplayer.queue.QueueViewModel
-import org.qstuff.qplayer.util.directoryContainsFiles
-import org.qstuff.qplayer.util.isM3UList
-import org.qstuff.qplayer.util.listTracks
-import org.qstuff.qplayer.util.shortToast
+import org.qstuff.qplayer.util.*
 import timber.log.Timber
 import java.io.File
-import java.lang.StringBuilder
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -139,16 +134,16 @@ class FileBrowserFragment:
         if (file.isFile) {
             queueViewModel.addFile(file)
         }
-        if (file.isDirectory && !file.directoryContainsFiles()) {
+        if (file.isDirectory && !file.directoryContainsSupportedFiles()) {
             // context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
         }
     }
 
     override fun onFileItemLongClicked(file: File) {
 
-        if (file.isDirectory && file.directoryContainsFiles()) {
+        if (file.isDirectory && file.directoryContainsSupportedFiles()) {
             showAddTracksToQueueDialog(file)
-        } else {
+        } else if (file.isDirectory && !file.directoryContainsSupportedFiles()) {
             context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
         }
     }
@@ -163,7 +158,7 @@ class FileBrowserFragment:
 
     private fun showAddTracksToQueueDialog(file: File) {
 
-        val files = file.listTracks()
+        val files = file.listTracksForAddDialog()
         val dialogView = layoutInflater.inflate(R.layout.dialog_show_tracks, null)
 
         dialogView.listview?.apply {

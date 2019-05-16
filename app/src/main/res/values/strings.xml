@@ -34,8 +34,8 @@
     <string name="filebrowser_dialog_add_tracks_to_queue_title">Diese Tracks in die Queue laden?</string>
     <string name="filebrowser_dialog_queue_overwrite">Queue überschreiben</string>
 
-    <string name="filebrowser_toast_empty_directory">Dieses Verzeichnis enthält keine Tracks</string>
-
+    <string name="filebrowser_toast_empty_directory">Dieses Verzeichnis enthält keine unterstützten Audiotracks</string>
+    
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
     <string name="dialog_cancel">Abbrechen</string>
