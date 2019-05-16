@@ -85,6 +85,8 @@ class QueueFragment:
 
         queueViewModel.readTrackList()
         queueViewModel.readSelectedTrack()
+        queueViewModel.loadStates()
+        queueViewModel.loadSettings()
     }
 
     override fun onDestroyView() {

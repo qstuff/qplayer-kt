@@ -31,28 +31,25 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private var isSkipBackToStartEnabled = true
     var isShowClearQueueWarningEnabled = true
 
-    private var currentTracks: ArrayList<Track> = arrayListOf()
+    private var currentTrackList: ArrayList<Track> = arrayListOf()
+    private var shufflePlayedIndices: HashMap<Int, Boolean> = hashMapOf()
+
     private val random = Random()
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
-    init {
-        loadStates()
-        loadSettings()
-    }
-
     fun addTrack(track: Track) {
 
-        currentTracks.add(track)
-        trackList.value = currentTracks
+        currentTrackList.add(track)
+        trackList.value = currentTrackList
         saveTrackList()
     }
 
     fun addTrackAt(track: Track, position: Int) {
 
-        currentTracks.add(position, track)
-        trackList.value = currentTracks
+        currentTrackList.add(position, track)
+        trackList.value = currentTrackList
         saveTrackList()
     }
 
@@ -64,20 +61,20 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun removeTrack(track: Track) {
 
-        val iterator = currentTracks.iterator()
+        val iterator = currentTrackList.iterator()
         iterator.forEach {
             if (it.uri == track.uri) {
                 iterator.remove()
             }
         }
-        trackList.value = currentTracks
+        trackList.value = currentTrackList
         saveTrackList()
     }
 
     fun addTrackList(tracks: List<Track>) {
 
-        currentTracks.addAll(tracks)
-        trackList.value = currentTracks
+        currentTrackList.addAll(tracks)
+        trackList.value = currentTrackList
         saveTrackList()
     }
 
@@ -85,32 +82,32 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         files.forEach {
             if (it.isFile) {
-                currentTracks.add(Track(it))
+                currentTrackList.add(Track(it))
             }
         }
-        trackList.value = currentTracks
+        trackList.value = currentTrackList
         saveTrackList()
     }
 
     fun replaceTrackList(tracks: List<Track>) {
 
-        currentTracks.clear()
-        currentTracks.addAll(tracks)
-        trackList.value = currentTracks
+        currentTrackList.clear()
+        currentTrackList.addAll(tracks)
+        trackList.value = currentTrackList
         saveTrackList()
     }
 
     fun trackListReordered(tracks: List<Track>) {
 
-        currentTracks.clear()
-        currentTracks.addAll(tracks)
+        currentTrackList.clear()
+        currentTrackList.addAll(tracks)
         saveTrackList()
     }
 
     fun clearTrackList() {
 
-        currentTracks.clear()
-        trackList.value = currentTracks
+        currentTrackList.clear()
+        trackList.value = currentTrackList
         onTrackSelectedIndex.value = -1
         onTrackSelected.value = null
         saveTrackList()
@@ -119,7 +116,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun onTrackSelected(track: Track) {
 
         track.isAutoplay = preferencesDataSource.isAutostartEnabled()
-        onTrackSelectedIndex.value = currentTracks.indexOf(track)
+        onTrackSelectedIndex.value = currentTrackList.indexOf(track)
         onTrackSelected.value = track
         saveSelectedTrack()
     }
@@ -128,22 +125,44 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         current?.let {
             var index = 0
-            if (currentTracks.contains(current)) {
-                index = currentTracks.indexOf(current)
+            if (currentTrackList.contains(current)) {
+                index = currentTrackList.indexOf(current)
 
-                if (!isSkipBackToStartEnabled) {
-                    if (shuffle.value == true) {
-                        index = random.nextInt(currentTracks.size - 1)
-                    } else {
-                        if (index > 0) {
-                            index -= 1
-                        } else if (index == 0) {
-                            index = currentTracks.size - 1
+                when (repeat.value) {
+                    TrackRepeatStatus.ALL -> {
+                        if (!isSkipBackToStartEnabled) {
+                            if (shuffle.value == true) {
+                                val unplayedIndices = getYetUnplayedIndices()
+                                if (unplayedIndices.size == 1) {
+                                    index = unplayedIndices.get(0)
+                                    createIndexMap()
+                                } else if (unplayedIndices.isNotEmpty()) {
+                                    index = processShuffleNext(unplayedIndices)
+                                }
+                            } else {
+                                index = processPrevious(current)
+                            }
                         }
                     }
+                    TrackRepeatStatus.NONE -> {
+                        if (!isSkipBackToStartEnabled) {
+                            if (shuffle.value == true) {
+                                val unplayedIndices = getYetUnplayedIndices()
+                                if (unplayedIndices.size == 1) {
+                                    index = unplayedIndices.get(0)
+                                    shufflePlayedIndices.put(index, true)
+                                } else if (unplayedIndices.isNotEmpty()) {
+                                    index = processShuffleNext(unplayedIndices)
+                                }
+                            } else {
+                                index = processPrevious(current)
+                            }
+                        }
+                    }
+                    else -> {}
                 }
             }
-            val next = currentTracks.get(index)
+            val next = currentTrackList.get(index)
             next.isAutoplay = preferencesDataSource.isAutostartEnabled()
             onTrackSelected.value = next
             onTrackSelectedIndex.value = index
@@ -155,31 +174,72 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         current?.let {
             var index = 0
-            if (currentTracks.contains(current)) {
-                index = currentTracks.indexOf(current)
+            if (currentTrackList.contains(current)) {
 
                 when (repeat.value) {
-                    TrackRepeatStatus.ALL,
-                    TrackRepeatStatus.NONE -> {
+                    TrackRepeatStatus.ALL -> {
                         if (shuffle.value == true) {
-                            index = random.nextInt(currentTracks.size - 1)
-                        } else {
-                            if (index < currentTracks.size - 1) {
-                                index += 1
-                            } else if (index == currentTracks.size - 1) {
-                                index = 0
+                            val unplayedIndices = getYetUnplayedIndices()
+                            if (unplayedIndices.size == 1) {
+                                index = unplayedIndices.get(0)
+                                createIndexMap()
+                            } else if (unplayedIndices.isNotEmpty()) {
+                                index = processShuffleNext(unplayedIndices)
                             }
+                        } else {
+                            index = processNext(current)
+                        }
+                    }
+                    TrackRepeatStatus.NONE -> {
+
+                        if (shuffle.value == true) {
+                            val unplayedIndices = getYetUnplayedIndices()
+                            if (unplayedIndices.size == 1) {
+                                index = unplayedIndices.get(0)
+                                shufflePlayedIndices.put(index, true)
+                            } else if (unplayedIndices.isNotEmpty()) {
+                                index = processShuffleNext(unplayedIndices)
+                            }
+                        } else {
+                            index = processNext(current)
                         }
                     }
                     else -> {}
                 }
             }
-            val next = currentTracks.get(index)
+            val next = currentTrackList.get(index)
             next.isAutoplay = preferencesDataSource.isAutostartEnabled()
             onTrackSelected.value = next
             onTrackSelectedIndex.value = index
         }
         saveSelectedTrack()
+    }
+
+    private fun processShuffleNext(unplayedIndices: List<Int>): Int {
+        val randomIndex = random.nextInt(unplayedIndices.size - 1)
+        val realIndex = unplayedIndices.get(randomIndex)
+        shufflePlayedIndices.put(realIndex, true)
+        return realIndex
+    }
+
+    private fun processNext(current: Track): Int {
+        var index = currentTrackList.indexOf(current)
+        if (index < currentTrackList.size - 1) {
+            index += 1
+        } else if (index == currentTrackList.size - 1) {
+            index = 0
+        }
+        return index
+    }
+
+    private fun processPrevious(current: Track): Int {
+        var index = currentTrackList.indexOf(current)
+        if (index > 0) {
+            index -= 1
+        } else if (index == 0) {
+            index = currentTrackList.size - 1
+        }
+        return index
     }
 
     fun onTrackCompleted(track: Track) {
@@ -191,18 +251,38 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun toggleRepeat() {
         repeat.value = (repeat.value as TrackRepeatStatus).next()
-        if (shuffle.value == true) {
-            shuffle.value = false
-        }
         preferencesDataSource.saveRepeatMode(repeat.value!!.ordinal)
     }
 
     fun toggleShuffle() {
         shuffle.value = !(shuffle.value ?: true)
-        if (repeat.value != TrackRepeatStatus.NONE) {
-            repeat.value = TrackRepeatStatus.NONE
+
+        if (shuffle.value == true) {
+            createIndexMap()
         }
+
         preferencesDataSource.saveShuffleMode(shuffle.value ?: false)
+    }
+
+    private fun createIndexMap() {
+
+        shufflePlayedIndices.clear()
+        var i = 0
+        currentTrackList.forEach {
+            shufflePlayedIndices.put(i, false)
+            i++
+        }
+    }
+
+    private fun getYetUnplayedIndices(): List<Int> {
+
+        val unplayed = arrayListOf<Int>()
+        shufflePlayedIndices.forEach { (index, played) ->
+            if (!played) {
+                unplayed.add(index)
+            }
+        }
+        return unplayed
     }
 
     fun saveStates() {
@@ -213,9 +293,12 @@ class QueueViewModel: ViewModel(), KoinComponent {
         saveSelectedTrack()
     }
 
-    private fun loadStates() {
+    fun loadStates() {
         repeat.value = TrackRepeatStatus.values()[preferencesDataSource.readRepeatMode()]
         shuffle.value = preferencesDataSource.readShuffleMode()
+        if (shuffle.value == true) {
+            createIndexMap()
+        }
     }
 
     fun loadSettings() {
@@ -225,7 +308,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     private fun saveTrackList() {
-        preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTracks)
+        preferencesDataSource.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, currentTrackList)
     }
 
     private fun saveSelectedTrack() {
@@ -242,7 +325,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         val track = preferencesDataSource.readSelectedTrack()
         track?.also {
             var index = 0
-            currentTracks.forEach {
+            currentTrackList.forEach {
                 if (it.uri == track.uri) {
                     onTrackSelectedIndex.value = index
                     onTrackSelected.value = it
@@ -256,10 +339,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
         if (list == null) {
-            currentTracks = arrayListOf()
+            currentTrackList = arrayListOf()
         } else {
-            currentTracks = list
+            currentTrackList = list
         }
-        trackList.value = currentTracks
+        trackList.value = currentTrackList
     }
 }
