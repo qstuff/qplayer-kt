@@ -75,6 +75,7 @@
     <string name="prefs_key_enable_remain_blink" translatable="false">PREFS_ENABLE_REMAIN_BLINK</string>
     <string name="prefs_key_enable_crashreporting" translatable="false">PREFS_ENABLE_CRASHREPORTING</string>
     <string name="prefs_key_app_version" translatable="false">PREFS_APP_VERSION</string>
+    <string name="prefs_key_device_info" translatable="false">PREFS_DEVICE_INFO</string>
 
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
@@ -86,7 +87,7 @@
     <string name="settings_proceed_to_next_track_summary">Wenn aktiviert wird nach Trackende automatisch der nächste Track geladen.</string>
 
     <string name="settings_skip_back_behaviour_title">Skip-Back Verhalten</string>
-    <string name="settings_skip_back_behaviour_summary">Wenn aktiviert führt Skip-Back zum Anfang des Tracks und stoppt dort auf jeden Fall. Wenn deaktiviert wird zum vorherigen Track gesprungen.</string>
+    <string name="settings_skip_back_behaviour_summary">Wenn aktiviert führt Skip-Back zum Anfang des Tracks und stoppt dort auf jeden Fall.\nWenn deaktiviert wird zum vorherigen Track gesprungen.\nBeachte, dass diese Einstellung auch im Shuffle Mode aktiv ist.</string>
 
     <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
     <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>
@@ -109,6 +110,7 @@
     <string name="settings_privacy_crashreport_summary">Wenn aktiviert sendet die App Absturzberichte.\nDie App muss neu gestartet werden damit diese Einstellung wirksam wird.</string>
 
     <string name="settings_app_version_title">App Version</string>
+    <string name="settings_device_info_title">Geräte Info</string>
 
     <!-- Feedback Activity -->
     <string name="feedback_activity_explanation">Um dein Feedback besser zu verstehen ist es für uns sehr nützlich wenn wir bestimmte Informationen zu deinem Gerät erhalten.\nDiese Daten lesen wir aus und du kannst sie uns zusammen mit deinem Feedback zuschicken.\nUnten kannst du sehen um welche Informationen es sich handelt.\nWenn du auf &quot;Mit Geräteinfos Senden&quot; tappst werden die Geräteinfos automatisch in die Nachricht eingefügt.\nWenn du die Geräteinfos nicht mitschicken möchtest dann tapp auf &quot;Ohne Geräteinfos Senden&quot;.</string>

@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.settings
 
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -48,6 +49,8 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
                 preferencesDataSource.isCrashreportingEnabled()
 
         findPreference(getString(R.string.prefs_key_app_version)).summary = getVersionString()
+
+        findPreference(getString(R.string.prefs_key_device_info)).summary = getDeviceInfoString()
     }
 
     override fun onResume() {
@@ -84,5 +87,9 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
             debugTitleSuffix = ("qdeq ${packageInfo?.versionName} (${packageInfo?.versionCode})")
         }
         return debugTitleSuffix
+    }
+
+    private fun getDeviceInfoString(): String {
+        return "${Build.MANUFACTURER} ${Build.MODEL} ${Build.CPU_ABI}"
     }
 }

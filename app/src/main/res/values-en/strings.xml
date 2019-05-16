@@ -76,7 +76,7 @@
     <string name="settings_proceed_to_next_track_summary">If enabled, after a track has completed the next track is selected.</string>
 
     <string name="settings_skip_back_behaviour_title">Skip-back button behaviour</string>
-    <string name="settings_skip_back_behaviour_summary">If enabled, the skip-back button brings you to the beginning of the current track and stops there in anay case. Otherwise it jumps to the previous track.</string>
+    <string name="settings_skip_back_behaviour_summary">If enabled, the skip-back button brings you to the beginning of the current track and stops there in anay case.\nOtherwise it jumps to the previous track.\nNote that this setting is also active when in shuffle mode.</string>
 
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">DJ Settings</string>
@@ -99,6 +99,7 @@
     <string name="settings_privacy_crashreport_summary">If enabled the app sends crashreports.\nThe app needs to be restarted to make the change effective.</string>
 
     <string name="settings_app_version_title">App Version</string>
+    <string name="settings_device_info_title">Device Info</string>
 
     <!-- Feedback Activity -->
     <string name="feedback_activity_explanation">To have a better understanding of your feedback it is very useful for us when we get some information about your device.\nWe can read this data and you can send them along with your feedback message.\nBelow you can see what information it is.\nWhen you tap \"Send with device infos\" this information will automatically added to your message. If you don\'t want to send this information please tap \"Send without device infos\"</string>
