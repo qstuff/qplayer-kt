@@ -172,47 +172,50 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun nextTrack(current: Track?) {
 
-        current?.let {
-            var index = 0
-            if (currentTrackList.contains(current)) {
+        if (currentTrackList.isNotEmpty()) {
+            current?.let {
+                var index = 0
+                if (currentTrackList.contains(current)) {
 
-                when (repeat.value) {
-                    TrackRepeatStatus.ALL -> {
-                        if (shuffle.value == true) {
-                            val unplayedIndices = getYetUnplayedIndices()
-                            if (unplayedIndices.size == 1) {
-                                index = unplayedIndices.get(0)
-                                createIndexMap()
-                            } else if (unplayedIndices.isNotEmpty()) {
-                                index = processShuffleNext(unplayedIndices)
+                    when (repeat.value) {
+                        TrackRepeatStatus.ALL -> {
+                            if (shuffle.value == true) {
+                                val unplayedIndices = getYetUnplayedIndices()
+                                if (unplayedIndices.size == 1) {
+                                    index = unplayedIndices.get(0)
+                                    createIndexMap()
+                                } else if (unplayedIndices.isNotEmpty()) {
+                                    index = processShuffleNext(unplayedIndices)
+                                }
+                            } else {
+                                index = processNext(current)
                             }
-                        } else {
-                            index = processNext(current)
+                        }
+                        TrackRepeatStatus.NONE -> {
+
+                            if (shuffle.value == true) {
+                                val unplayedIndices = getYetUnplayedIndices()
+                                if (unplayedIndices.size == 1) {
+                                    index = unplayedIndices.get(0)
+                                    shufflePlayedIndices.put(index, true)
+                                } else if (unplayedIndices.isNotEmpty()) {
+                                    index = processShuffleNext(unplayedIndices)
+                                }
+                            } else {
+                                index = processNext(current)
+                            }
+                        }
+                        else -> {
                         }
                     }
-                    TrackRepeatStatus.NONE -> {
-
-                        if (shuffle.value == true) {
-                            val unplayedIndices = getYetUnplayedIndices()
-                            if (unplayedIndices.size == 1) {
-                                index = unplayedIndices.get(0)
-                                shufflePlayedIndices.put(index, true)
-                            } else if (unplayedIndices.isNotEmpty()) {
-                                index = processShuffleNext(unplayedIndices)
-                            }
-                        } else {
-                            index = processNext(current)
-                        }
-                    }
-                    else -> {}
                 }
+                val next = currentTrackList.get(index)
+                next.isAutoplay = preferencesDataSource.isAutostartEnabled()
+                onTrackSelected.value = next
+                onTrackSelectedIndex.value = index
             }
-            val next = currentTrackList.get(index)
-            next.isAutoplay = preferencesDataSource.isAutostartEnabled()
-            onTrackSelected.value = next
-            onTrackSelectedIndex.value = index
+            saveSelectedTrack()
         }
-        saveSelectedTrack()
     }
 
     private fun processShuffleNext(unplayedIndices: List<Int>): Int {

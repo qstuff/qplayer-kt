@@ -301,7 +301,8 @@ class  PlayerViewModel (application: Application):
 
     fun onTrackCompleted(track: Track) {
         Timber.d("onTrackCompleted(): ${track.name}, ${track.isAutoplay}")
-        if (isProceedToNextTrackEnabled) {
+        if (isProceedToNextTrackEnabled && autoStart) {
+            Timber.d("onTrackCompleted(): proceed to next")
             resetUpdateTimer()
         } else {
             playPause()
