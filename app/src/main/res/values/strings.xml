@@ -106,7 +106,7 @@
     <string name="settings_dj_remain_blink_summary">Wenn aktiviert blinkt die Zeitanzeige während der letzten 30 Sekunden eines Tracks</string>
 
     <!-- Privacy Settings -->
-    <string name="settings_cat_privacy_title">Einstellungen für Datenschutz</string>
+    <string name="settings_cat_privacy_title">Allgemeine Einstellungen</string>
     <string name="settings_privacy_crashreport_title">Absturzberichte</string>
     <string name="settings_privacy_crashreport_summary">Wenn aktiviert sendet die App Absturzberichte.\nDie App muss neu gestartet werden damit diese Einstellung wirksam wird.</string>
 

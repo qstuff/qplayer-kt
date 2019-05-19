@@ -95,7 +95,7 @@
     <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
 
     <!-- Privacy Settings -->
-    <string name="settings_cat_privacy_title">Privacy Settings</string>
+    <string name="settings_cat_privacy_title">Common Settings</string>
     <string name="settings_privacy_crashreport_title">Crashreports</string>
     <string name="settings_privacy_crashreport_summary">If enabled the app sends crashreports.\nThe app needs to be restarted to make the change effective.</string>
 
