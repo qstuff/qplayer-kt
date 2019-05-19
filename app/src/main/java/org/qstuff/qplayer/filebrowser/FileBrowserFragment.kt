@@ -15,15 +15,18 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.dialog_m3u_show_tracks.view.*
 import kotlinx.android.synthetic.main.fragment_filebrowser.*
 import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.player.PlayerViewModel
+import org.qstuff.qplayer.playlists.M3uUtils
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.util.*
 import timber.log.Timber
 import java.io.File
+import java.io.FileInputStream
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -126,16 +129,15 @@ class FileBrowserFragment:
     override fun onFileItemClicked(file: File) {
         Timber.d("onFileItemClicked()")
 
-        fileBrowserViewModel.onFileItemClicked(file)
         if (file.isM3UList()) {
-            // TODO: Dialog open Playlist
+            showOpenM3uListDialog(file)
             return
         }
         if (file.isFile) {
             queueViewModel.addFile(file)
         }
-        if (file.isDirectory && !file.directoryContainsSupportedFiles()) {
-            // context?.shortToast(getString(R.string.filebrowser_toast_empty_directory))
+        if (file.isDirectory) {
+            fileBrowserViewModel.onFileItemClicked(file)
         }
     }
 
@@ -186,8 +188,82 @@ class FileBrowserFragment:
                 .show()
     }
 
+    private fun showOpenM3uListDialog(file: File) {
+        Timber.d("showOpenM3uListDialog(): ${file.name}")
+
+        val tracks = M3uUtils.m3UParserGetTracks(FileInputStream(file), file.parent)
+
+        val tracksFound = tracks.first
+        val tracksNotFound = tracks.second
+        val dialogView = layoutInflater.inflate(R.layout.dialog_m3u_show_tracks, null)
+
+        if (tracksFound.isNotEmpty()) {
+            Timber.d("showOpenM3uListDialog(): found ${tracksFound.size} tracks")
+            dialogView.titleItemsFound.visibility = View.VISIBLE
+            dialogView.listviewItemsFound?.apply {
+                adapter = DialogTrackListAdapter(context, tracksFound)
+            }
+        } else {
+            dialogView.titleItemsFound.visibility = View.GONE
+        }
+
+        if (tracksNotFound.isNotEmpty()) {
+            Timber.d("showOpenM3uListDialog(): not found ${tracksFound.size} tracks")
+            dialogView.titleItemsNotFound.visibility = View.VISIBLE
+            dialogView.listviewItemsNotFound?.apply {
+                adapter = DialogTrackListAdapter(context, tracksNotFound)
+            }
+        } else {
+            dialogView.titleItemsNotFound.visibility = View.GONE
+        }
+
+        AlertDialog.Builder(activity)
+                .apply {
+                    if(tracksFound.isEmpty()) {
+                        setCancelable(false)
+                        setView(dialogView)
+                        setTitle(getString(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title))
+                        setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                            dialog.dismiss()
+                        }
+                    } else {
+                        setCancelable(false)
+                        setView(dialogView)
+                        setTitle(getString(R.string.add_m3ulist_to_queue_dialog_tracks_found_title))
+                        setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                            queueViewModel.addTrackList(tracksFound)
+                            dialog.dismiss()
+                        }
+                        setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
+                            queueViewModel.clearTrackList()
+                            queueViewModel.addTrackList(tracksFound)
+                            dialog.dismiss()
+                        }
+                        setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
+
+                            dialog.dismiss()
+                        }
+                    }
+                }
+                .show()
+    }
+
     private class DialogFileListAdapter(context: Context, val items: List<File>):
             ArrayAdapter<File>(context, 0, items) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            var view = convertView
+            if (view == null) {
+                view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
+            }
+            val text = view!!.findViewById<TextView>(R.id.itemText)
+            text.text = items.get(position).name
+            return view
+        }
+    }
+
+    private class DialogTrackListAdapter(context: Context, val items: List<Track>):
+            ArrayAdapter<Track>(context, 0, items) {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             var view = convertView

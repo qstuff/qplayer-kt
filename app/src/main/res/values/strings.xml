@@ -35,7 +35,7 @@
     <string name="filebrowser_dialog_queue_overwrite">Queue überschreiben</string>
 
     <string name="filebrowser_toast_empty_directory">Dieses Verzeichnis enthält keine unterstützten Audiotracks</string>
-    
+
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
     <string name="dialog_cancel">Abbrechen</string>
@@ -44,9 +44,10 @@
     <string name="dialog_add_to_playlist">In die Playlist</string>
     <string name="dialog_play">Sofort abspiele</string>
 
-    <string name="add_m3ulist_to_queue_dialog_title">Diese Playlist in die Queue laden?</string>
-    <string name="add_m3ulist_to_queue_empty_dialog_title">Die Playlist konnte nicht geladen werden</string>
-    <string name="add_m3ulist_to_queue_empty_dialog_message">Die in der Playlist referenzierten Tracks wurden nicht gefunden.\n\nBitte überprüfe deine Dateien.</string>
+    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">M3U Playlist in der Queue öffnen</string>
+    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">M3U Playlist kann nicht geöffnet werden</string>
+    <string name="add_m3ulist_to_queue_tracks_found_title">Folgende Tracks wurden gefunden:</string>
+    <string name="add_m3ulist_to_queue_tracks_not_found_title">Folgende Tracks wurden nicht gefunden:</string>
 
     <string name="storage_permission_request_message">Um Tracks von der SD Karte abspielen zu können benötigt die App Zugriffsberechtung</string>
 

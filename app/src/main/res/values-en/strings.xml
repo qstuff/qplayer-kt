@@ -37,16 +37,17 @@
     <string name="filebrowser_toast_empty_directory">This directory contains no supported audio tracks</string>
 
     <!-- Dialogs -->
-    <string name="dialog_ok">Ok</string>
+    <string name="dialog_ok">OK</string>
     <string name="dialog_cancel">Cancel</string>
 
     <string name="dialog_add_to_queue">Add tracks to queue</string>
     <string name="dialog_add_to_playlist">To playlist</string>
     <string name="dialog_play">Play now</string>
 
-    <string name="add_m3ulist_to_queue_dialog_title">Load this playlist into the queue?</string>
-    <string name="add_m3ulist_to_queue_empty_dialog_title">The playlist could not be loaded</string>
-    <string name="add_m3ulist_to_queue_empty_dialog_message">Could not find the tracks referenced in the playlist.\n\nPlease check your files.</string>
+    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">Open M3U playlist in Queue</string>
+    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">Can\'t open this M3U playlist</string>
+    <string name="add_m3ulist_to_queue_tracks_found_title">Following tracks are found:</string>
+    <string name="add_m3ulist_to_queue_tracks_not_found_title">Following tracks are not found:</string>
 
     <string name="storage_permission_request_message">We need the storage permission to access the sound files on your sdcard</string>
 

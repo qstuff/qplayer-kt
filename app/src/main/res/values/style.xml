@@ -18,6 +18,12 @@
 		<item name="android:textSize">16sp</item>
 	</style>
 
+    <style name="DialogTitleText">
+        <item name="android:textColor">@color/q_orange</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
 	<style name="ListView.ChoosePlayList">
 		<item name="android:divider">#242424</item>
 		<item name="android:dividerHeight">1dp</item>
