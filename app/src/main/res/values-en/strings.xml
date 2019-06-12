@@ -2,7 +2,7 @@
 <resources>
 
     <!-- General -->
-    <string name="app_name">qdeck</string>
+    <string name="app_name">qdeq</string>
     <string name="build_type">Release</string>
 
     <!-- Player -->
@@ -44,8 +44,8 @@
     <string name="dialog_add_to_playlist">To playlist</string>
     <string name="dialog_play">Play now</string>
 
-    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">Open M3U playlist in Queue</string>
-    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">Can\'t open this M3U playlist</string>
+    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">Open %1$s  in Queue</string>
+    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">Can\'t open %1$s</string>
     <string name="add_m3ulist_to_queue_tracks_found_title">Following tracks are found:</string>
     <string name="add_m3ulist_to_queue_tracks_not_found_title">Following tracks are not found:</string>
 

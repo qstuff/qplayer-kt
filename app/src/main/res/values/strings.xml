@@ -44,8 +44,8 @@
     <string name="dialog_add_to_playlist">In die Playlist</string>
     <string name="dialog_play">Sofort abspiele</string>
 
-    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">M3U Playlist in der Queue öffnen</string>
-    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">M3U Playlist kann nicht geöffnet werden</string>
+    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">%1$s  in der Queue öffnen</string>
+    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">%1$s kann nicht geöffnet werden</string>
     <string name="add_m3ulist_to_queue_tracks_found_title">Folgende Tracks wurden gefunden:</string>
     <string name="add_m3ulist_to_queue_tracks_not_found_title">Folgende Tracks wurden nicht gefunden:</string>
 

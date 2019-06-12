@@ -1,6 +1,7 @@
 package org.qstuff.qplayer
 
 import android.app.Application
+import android.os.Build
 import android.util.DisplayMetrics
 import androidx.room.Room
 import org.koin.android.ext.android.startKoin
@@ -22,6 +23,8 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        disableDoze();
+
         startKoin(this,
                 listOf(preferencesDataSource,
                         roomDatabaseModule,
@@ -32,6 +35,15 @@ class QDeqApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
     }
+
+    private fun disableDoze() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+
+
+        }
+    }
+
 
     //
     // Koin Modules
