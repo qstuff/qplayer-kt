@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -25,6 +26,7 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.playlists.PlaylistViewModel
+import org.qstuff.qplayer.util.RecyclerItemDecorator
 import org.qstuff.qplayer.util.shortToast
 import timber.log.Timber
 
@@ -154,7 +156,7 @@ class QueueFragment:
 
         Snackbar.make(view!!, getString(R.string.snackbar_title_removed, track.name), Snackbar.LENGTH_LONG)
                 .setAction(getString(R.string.snackbar_undo)) {
-                    queueViewModel.addTrackAt(track, position)
+                    queueViewModel.restoreTrackAt(track, position)
                 }
                 .show()
     }

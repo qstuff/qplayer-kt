@@ -6,11 +6,8 @@
     </style>
 
 	<style name="ListView.FileList">
-		<item name="android:layout_width">fill_parent</item>
-		<item name="android:layout_height">fill_parent</item>
-		<item name="android:divider">#242424</item>
+		<item name="android:divider">@color/q_orange_60</item>
 		<item name="android:dividerHeight">1dp</item>
-		<item name="android:background">@android:color/black</item>
 	</style>
 
 	<style name="TracklistItemText">

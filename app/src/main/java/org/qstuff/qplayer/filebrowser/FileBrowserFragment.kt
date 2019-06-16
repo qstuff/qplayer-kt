@@ -81,6 +81,7 @@ class FileBrowserFragment:
                 fileBrowserRecycler.apply {
                     adapter = FileBrowserAdapter(it, this@FileBrowserFragment)
                     layoutManager = LinearLayoutManager(context)
+
                 }
             }
         })
@@ -222,14 +223,14 @@ class FileBrowserFragment:
                     if(tracksFound.isEmpty()) {
                         setCancelable(false)
                         setView(dialogView)
-                        setTitle(getString(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title))
+                        setTitle(getString(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, file.name))
                         setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
                             dialog.dismiss()
                         }
                     } else {
                         setCancelable(false)
                         setView(dialogView)
-                        setTitle(getString(R.string.add_m3ulist_to_queue_dialog_tracks_found_title))
+                        setTitle(getString(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, file.name))
                         setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
                             queueViewModel.addTrackList(tracksFound)
                             dialog.dismiss()
@@ -275,4 +276,5 @@ class FileBrowserFragment:
             return view
         }
     }
+
 }

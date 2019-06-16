@@ -375,7 +375,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
 
     // Do something with the result.
     LOGD("\rBpm is %f, average loudness is %f db, peak volume is %f db.\n", bpm, loudpartsAverageDecibel, peakDecibel);
-    LOGD("waveforSize: %d", waveformSize);
+    LOGD("waveformSize: %d", waveformSize);
     LOGD("overviewSize: %d", overviewSize);
 
 
