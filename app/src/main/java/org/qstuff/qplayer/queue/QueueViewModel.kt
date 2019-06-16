@@ -8,6 +8,7 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.util.next
+import timber.log.Timber
 import java.io.File
 import java.util.Random
 
@@ -37,6 +38,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
+    private var lastRemovedSelectedIndex = -1;
+
 
     fun addTrack(track: Track) {
 
@@ -58,6 +61,18 @@ class QueueViewModel: ViewModel(), KoinComponent {
         saveTrackList()
     }
 
+    fun restoreTrackAt(track: Track, position: Int) {
+        Timber.d("restoreTrackAt(): pos: $position, selected: ${onTrackSelectedIndex.value}")
+
+        addTrackAt(track, position)
+
+        if (position <= onTrackSelectedIndex.value!!) {
+            onTrackSelectedIndex.value = (onTrackSelectedIndex.value!! +1)
+        } else if (onTrackSelectedIndex.value!! < 0) {
+            onTrackSelectedIndex.value = position
+        }
+    }
+
     fun addFile(file: File) {
         if (file.isFile) {
             addTrack(Track(file))
@@ -67,9 +82,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun removeTrack(track: Track) {
 
         var index = 0
+        var indexRemoved = -1
+        var newSelectedIndex = onTrackSelectedIndex.value
         val iterator = currentTrackList.iterator()
+
         iterator.forEach {
             if (it.uri == track.uri) {
+                indexRemoved = index;
                 iterator.remove()
                 if (shuffle.value == true) {
                     removeIndexFromIndexMap(index)
@@ -77,7 +96,15 @@ class QueueViewModel: ViewModel(), KoinComponent {
             }
             index++
         }
+
+        if (indexRemoved < newSelectedIndex!!) {
+            newSelectedIndex--
+        } else if (indexRemoved == newSelectedIndex) {
+            newSelectedIndex = -1
+            lastRemovedSelectedIndex = indexRemoved
+        }
         trackList.value = currentTrackList
+        onTrackSelectedIndex.value = newSelectedIndex
         saveTrackList()
     }
 

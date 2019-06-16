@@ -156,7 +156,7 @@ class QueueFragment:
 
         Snackbar.make(view!!, getString(R.string.snackbar_title_removed, track.name), Snackbar.LENGTH_LONG)
                 .setAction(getString(R.string.snackbar_undo)) {
-                    queueViewModel.addTrackAt(track, position)
+                    queueViewModel.restoreTrackAt(track, position)
                 }
                 .show()
     }
