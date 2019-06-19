@@ -91,7 +91,7 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
 
     override fun onItemDismiss(position: Int) {
         Timber.d("onItemDismiss(): pos: $position, tracks: ${tracks}")
-        
+
         interactionListener.onQueueItemDismsissed(tracks[position], position)
     }
 

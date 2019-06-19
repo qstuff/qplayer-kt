@@ -20,8 +20,6 @@ data class Track(
         var isAutoplay: Boolean = false,
         var playlistName: String = "") {
 
-
-
     @Ignore
     constructor(file: File): this() {
         this.uri = file.absolutePath
@@ -46,5 +44,5 @@ data class Track(
         ERROR
     }
 
-    override fun toString() = "track: $name, status: ${trackStatus.name}, playPosition: $playPosition"
+    override fun toString() = "track: $name, status: ${trackStatus.name}, duration $duration, playPosition: $playPosition"
 }

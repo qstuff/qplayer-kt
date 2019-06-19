@@ -278,18 +278,20 @@ class  PlayerViewModel (application: Application):
         mediaService.pause()
         playerStatus.value = PlayerStatus.PAUSED
 
-        if (currentTrack?.uri == track.uri && isSkipBackToStartEnabled) {
+        if (currentTrack?.uri == track.uri) {
             Timber.d("loadTrack(): same track: $track")
-            track.trackStatus = Track.TrackStatus.PREPARED
-            track.playPosition = 0
-            track.isAutoplay = false
+
+            currentTrack.trackStatus = Track.TrackStatus.PREPARED
+            currentTrack.playPosition = 0
+            currentTrack.isAutoplay = autoStart
+            trackStatusMediator.value = currentTrack
+
         } else {
             Timber.d("loadTrack(): new track: $track")
             mediaService.loadTrackASync(track)
             track.trackStatus = Track.TrackStatus.LOADING
+            trackStatusMediator.value = track
         }
-        Timber.d("loadTrack(): notify: $track")
-        trackStatusMediator.value = track
     }
 
     fun seekTo(position: Double, andStop: Boolean) {

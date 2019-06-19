@@ -8,7 +8,7 @@ buildscript {
             compileSdkVersion   : 28,
             buildToolsVersion   : "28.0.3",
             minSdkVersion       : 19,
-            targetSdkVersion    : 28,
+            targeptSdkVersion    : 28,
             versionCode         : 200,
             versionName         : "2.0.0",
             versionCommitCount  : 200 + "git rev-list HEAD --count".execute([], project.rootDir).text.trim().toInteger()

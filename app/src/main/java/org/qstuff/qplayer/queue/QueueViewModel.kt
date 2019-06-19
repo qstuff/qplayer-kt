@@ -42,6 +42,12 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
 
     fun addTrack(track: Track) {
+        Timber.d("addTrack(): $track ")
+
+        if (containsTrack(track)) {
+            Timber.d("addTrack(): already in queue ")
+            return;
+        }
 
         currentTrackList.add(track)
         trackList.value = currentTrackList
@@ -49,6 +55,15 @@ class QueueViewModel: ViewModel(), KoinComponent {
             addIndexToIndexMap(currentTrackList.size - 1)
         }
         saveTrackList()
+    }
+
+    private fun containsTrack(track: Track) : Boolean {
+        for (t in currentTrackList) {
+            if (t.uri == track.uri) {
+                return true
+            }
+        }
+        return false
     }
 
     fun addTrackAt(track: Track, position: Int) {
@@ -226,11 +241,12 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun nextTrack(current: Track?) {
+        Timber.d("nextTrack(): current: $current")
 
         if (currentTrackList.isNotEmpty()) {
             current?.let {
                 var index = 0
-                if (currentTrackList.contains(current)) {
+                if (currentTrackList.contains(it)) {
 
                     when (repeat.value) {
                         TrackRepeatStatus.ALL -> {
@@ -243,7 +259,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                                     index = processShuffleNext(unplayedIndices)
                                 }
                             } else {
-                                index = processNext(current)
+                                index = processNext(it)
                             }
                         }
                         TrackRepeatStatus.NONE -> {
@@ -257,7 +273,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                                     index = processShuffleNext(unplayedIndices)
                                 }
                             } else {
-                                index = processNext(current)
+                                index = processNext(it)
                             }
                         }
                         else -> {
@@ -274,19 +290,25 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     private fun processShuffleNext(unplayedIndices: List<Int>): Int {
+        Timber.d("processShuffleNext(): ")
+
         val randomIndex = random.nextInt(unplayedIndices.size - 1)
         val realIndex = unplayedIndices.get(randomIndex)
         shufflePlayedIndices.put(realIndex, true)
+        Timber.d("processShuffleNext(): realIndex: $realIndex")
         return realIndex
     }
 
     private fun processNext(current: Track): Int {
+        Timber.d("processNext(): current: $current")
+
         var index = currentTrackList.indexOf(current)
         if (index < currentTrackList.size - 1) {
             index += 1
         } else if (index == currentTrackList.size - 1) {
             index = 0
         }
+        Timber.d("processNext(): index: $index")
         return index
     }
 

@@ -326,7 +326,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
     auto *decoder = new SuperpoweredDecoder();
     const char *openError = decoder->open(path, false, 0, 0);
     if (openError) {
-        printf("Open error: %s\n", openError);
+        LOGD("analyzeData(): Open error: %s\n", openError);
         delete decoder;
         return 0;
     };
@@ -365,9 +365,16 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
     };
 
     // Get the result.
-    unsigned char *averageWaveform = nullptr, *lowWaveform = nullptr, *midWaveform = nullptr, *highWaveform = nullptr, *peakWaveform = nullptr, *notes = nullptr;
+    unsigned char *averageWaveform = nullptr,
+        *lowWaveform = nullptr,
+        *midWaveform = nullptr,
+        *highWaveform = nullptr,
+        *peakWaveform = nullptr,
+        *notes = nullptr;
+
     int waveformSize, overviewSize, keyIndex;
     char *overviewWaveform = nullptr;
+
     float loudpartsAverageDecibel, peakDecibel, bpm, averageDecibel, beatgridStartMs = 0;
     analyzer->getresults(&averageWaveform, &peakWaveform, &lowWaveform, &midWaveform, &highWaveform, &notes, &waveformSize, &overviewWaveform, &overviewSize, &averageDecibel, &loudpartsAverageDecibel, &peakDecibel, &bpm, &beatgridStartMs, &keyIndex);
 
@@ -402,6 +409,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
     return ret;
 }
 
+/*
 extern "C" JNIEXPORT 
 void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxSelect(
         JNIEnv * __unused javaEnvironment,
@@ -410,6 +418,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxSele
 
     example->onFxSelect(value);
 }
+*/
 
 extern "C" JNIEXPORT
 void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetTempo(
