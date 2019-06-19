@@ -82,13 +82,16 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
                 Collections.swap(tracks, i, i - 1)
             }
         }
+        if (selectedIndex == fromPosition) {
+            selectedIndex = toPosition;
+        }
         notifyItemMoved(fromPosition, toPosition)
         interactionListener.onQueueItemMoved(tracks)
     }
 
     override fun onItemDismiss(position: Int) {
         Timber.d("onItemDismiss(): pos: $position, tracks: ${tracks}")
-
+        
         interactionListener.onQueueItemDismsissed(tracks[position], position)
     }
 
