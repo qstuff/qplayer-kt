@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 
@@ -117,13 +118,42 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
 
     override  fun getWaveFormDataObserver(): MutableLiveData<TrackData> = onWaveFormDataUpdate
 
-    private fun getWaveFormData(track: Track) {
+    private var processing = false;
+    private val waveformQueue = arrayListOf<Track>()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-        CoroutineScope(Dispatchers.IO).launch {
+    private fun getWaveFormData(track: Track) {
+        Timber.v("getWaveFormData(): processing: $processing, $track")
+
+        if (!processing && waveformQueue.isEmpty()) {
+            waveformQueue.add(track)
+            processAnalzyer()
+        } else if (processing) {
+            Timber.v("getWaveFormData(): adding to queue")
+            waveformQueue.clear()
+            waveformQueue.add(track)
+        }
+    }
+
+    private fun processAnalzyer() {
+        Timber.v("processAnalzyer(): queue: ${waveformQueue.size}")
+
+        coroutineScope.launch {
+            processing = true
+            val track = waveformQueue.first()
+            waveformQueue.removeAt(0)
+
             val trackData = TrackData(track, null)
+            Timber.v("processAnalzyer(): ==========> $track")
             trackData.bytes = analyzeData(track.uri)
-            Timber.d("onWaveFormDataUpdate(): ${trackData.bytes?.size}")
+            Timber.v("onWaveFormDataUpdate(): <========== $track, samples: ${trackData.bytes?.size}")
             onWaveFormDataUpdate.postValue(trackData)
+            processing = false
+
+            if (!waveformQueue.isEmpty()) {
+                Timber.v("processAnalzyer(): one more...")
+                processAnalzyer()
+            }
         }
     }
 
