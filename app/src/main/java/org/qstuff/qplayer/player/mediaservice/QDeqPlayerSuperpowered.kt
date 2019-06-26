@@ -123,33 +123,35 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     private fun getWaveFormData(track: Track) {
-        Timber.d("getWaveFormData(): processing: $processing, $track")
+        Timber.v("getWaveFormData(): processing: $processing, $track")
 
         if (!processing && waveformQueue.isEmpty()) {
             waveformQueue.add(track)
             processAnalzyer()
         } else if (processing) {
-            Timber.d("getWaveFormData(): adding to queue")
+            Timber.v("getWaveFormData(): adding to queue")
             waveformQueue.clear()
             waveformQueue.add(track)
         }
     }
 
     private fun processAnalzyer() {
-        Timber.d("processAnalzyer(): queue: ${waveformQueue.size}")
+        Timber.v("processAnalzyer(): queue: ${waveformQueue.size}")
 
         coroutineScope.launch {
             processing = true
             val track = waveformQueue.first()
-            val trackData = TrackData(track, null)
-            Timber.d("processAnalzyer(): $track")
-            trackData.bytes = analyzeData(track.uri)
-            Timber.d("onWaveFormDataUpdate(): $track, samples: ${trackData.bytes?.size}")
-            onWaveFormDataUpdate.postValue(trackData)
             waveformQueue.removeAt(0)
+
+            val trackData = TrackData(track, null)
+            Timber.v("processAnalzyer(): ==========> $track")
+            trackData.bytes = analyzeData(track.uri)
+            Timber.v("onWaveFormDataUpdate(): <========== $track, samples: ${trackData.bytes?.size}")
+            onWaveFormDataUpdate.postValue(trackData)
             processing = false
+
             if (!waveformQueue.isEmpty()) {
-                Timber.d("processAnalzyer(): one more...")
+                Timber.v("processAnalzyer(): one more...")
                 processAnalzyer()
             }
         }
