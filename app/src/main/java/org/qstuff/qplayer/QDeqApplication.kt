@@ -1,7 +1,9 @@
 package org.qstuff.qplayer
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
+import android.os.PowerManager
 import android.util.DisplayMetrics
 import androidx.room.Room
 import org.koin.android.ext.android.startKoin
@@ -19,11 +21,15 @@ import timber.log.Timber
 class QDeqApplication : Application() {
 
     private lateinit var metrics: DisplayMetrics
+    private lateinit var pm: PowerManager
+    private lateinit var wl: PowerManager.WakeLock
 
     override fun onCreate() {
         super.onCreate()
 
-        disableDoze();
+        pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "qdeq:mywakelocktag") as PowerManager.WakeLock
+        //wl.acquire()
 
         startKoin(this,
                 listOf(preferencesDataSource,
@@ -36,15 +42,10 @@ class QDeqApplication : Application() {
         }
     }
 
-    private fun disableDoze() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-
-
-        }
+    override fun onTerminate() {
+        super.onTerminate()
+        //wl.release()
     }
-
-
     //
     // Koin Modules
     //

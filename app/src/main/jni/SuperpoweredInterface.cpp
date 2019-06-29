@@ -210,7 +210,7 @@ void SuperpoweredInterface::onPrepared() {
         jvm->AttachCurrentThread(&env, nullptr);
     }
 
-    jmethodID jmethodID = env->GetMethodID(jClassRef, "onPrepared",   "()V");
+    jmethodID jmethodID = env->GetMethodID(jClassRef, "onPrepared", "()V");
     env->CallVoidMethod(javaObjectRef, jmethodID);
 
     if (getEnvStat == JNI_EDETACHED) {
@@ -283,7 +283,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_destroyN
     javaEnvironment->DeleteGlobalRef(jClassRef);
     javaEnvironment->DeleteGlobalRef(javaObjectRef);
 
-    // example->destroy();
+   // delete example;
 }
 
 extern "C" JNIEXPORT 

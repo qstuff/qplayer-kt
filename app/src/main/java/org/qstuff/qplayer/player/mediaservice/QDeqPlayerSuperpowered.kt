@@ -96,6 +96,7 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
     }
 
     override fun destroy() {
+        onPlayPause(false)
         destroyNative()
         isPlaying = false
     }

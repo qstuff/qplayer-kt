@@ -20,6 +20,9 @@ class  PlayerViewModel (application: Application):
         AndroidViewModel(application), KoinComponent {
 
     companion object {
+        const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
+        const val ACTION_SERVICE_FOREGROUND_STOP = "ACTION_SERVICE_FOREGROUND_STOP"
+
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
     }
 
@@ -238,6 +241,7 @@ class  PlayerViewModel (application: Application):
         if(!isMediaServiceRunning) {
             val app = getApplication<QDeqApplication>()
             val intent = Intent(app, QMediaPlayerService::class.java)
+            intent.setAction(ACTION_SERVICE_FOREGROUND_START)
             app.startService(intent)
             app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
@@ -247,6 +251,11 @@ class  PlayerViewModel (application: Application):
     fun stopMediaService() {
 
         val app = getApplication<QDeqApplication>()
+        val intent = Intent(app, QMediaPlayerService::class.java)
+        intent.setAction(ACTION_SERVICE_FOREGROUND_STOP)
+        app.startService(intent)
+        app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+
         if (isMediaServiceBound) {
             app.unbindService(serviceConnection)
             isMediaServiceBound = false
