@@ -38,6 +38,9 @@ class QMediaPlayerService : LifecycleService() {
         const val MEDIA_SERVICE_NOTIFICATION_PLAY = 2
         const val MEDIA_SERVICE_NOTIFICATION_PAUSE = 3
 
+        const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
+        const val ACTION_SERVICE_FOREGROUND_STOP = "ACTION_SERVICE_FOREGROUND_STOP"
+
         const val ACTION_PLAYER_TOGGLED = "ACTION_PLAYER_TOGGLED"
         const val ACTION_NOTIFICATION_DISMISSED = "ACTION_NOTIFICATION_DISMISSED"
         const val ACTION_NOTIFICATION_CLICKED = "ACTION_NOTIFICATION_CLICKED"
@@ -81,10 +84,17 @@ class QMediaPlayerService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
         Timber.d("onStartCommand()")
 
-        return Service.START_NOT_STICKY
+        if (intent.action == ACTION_SERVICE_FOREGROUND_START) {
+            startForeground(1, createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY))
+
+        }
+        if (intent.action == ACTION_SERVICE_FOREGROUND_STOP) {
+            stopForeground(true)
+            stopSelf()
+        }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onDestroy() {
@@ -172,8 +182,6 @@ class QMediaPlayerService : LifecycleService() {
 
     private fun createPlayer() {
         Timber.d("createPlayer():")
-
-
     }
 
     @SuppressLint("SetTextI18n")
