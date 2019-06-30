@@ -27,10 +27,6 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "qdeq:mywakelocktag") as PowerManager.WakeLock
-        //wl.acquire()
-
         startKoin(this,
                 listOf(preferencesDataSource,
                         roomDatabaseModule,
@@ -42,10 +38,6 @@ class QDeqApplication : Application() {
         }
     }
 
-    override fun onTerminate() {
-        super.onTerminate()
-        //wl.release()
-    }
     //
     // Koin Modules
     //
