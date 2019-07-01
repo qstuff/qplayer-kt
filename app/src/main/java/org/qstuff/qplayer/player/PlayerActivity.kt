@@ -57,18 +57,13 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         const val HTMLPAGE_PRIVACY = "privacy.html"
         const val HTMLPAGE_IMPRINT = "imprint.html"
         const val HTMLPAGE_LICENSES = "licenses.html"
-
-        const val JOGWHEEL_SENSITIVITY_1 = 1;
-        const val JOGWHEEL_SENSITIVITY_5 = 5;
-        const val JOGWHEEL_SENSITIVITY_10 = 10;
-        const val JOGWHEEL_SENSITIVITY_20 = 20;
-
     }
 
     private lateinit var jogWheelContainer: HGViewContainer
     private lateinit var jogWheelDial: HGDialV2
     private lateinit var jogWheelInterface: HGDialV2.IHGDial
     private var currentPitchProgress = 0
+    private var jogwheelSensitivity = 10
 
     private val remainBlinkAnimation = AlphaAnimation(0.4f, 1.0f)
 
@@ -273,6 +268,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         playerViewModel.pitchValue.observe(this, Observer { pitchValue ->
             pitchControl.setNewProgress(pitchValue, false)
+        })
+
+        playerViewModel.jogwheelSensitivity.observe(this, Observer { jogwheelSensitivity ->
+            this.jogwheelSensitivity = jogwheelSensitivity
         })
 
         playerViewModel.pitchFactorIndex.observe(this, Observer { pitchFactorIndex ->
@@ -486,7 +485,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     private fun onJogWheeMoved(angle: Float) {
 
-        val delta = (angle * JOGWHEEL_SENSITIVITY_10)
+        val delta = (angle * jogwheelSensitivity)
         val new = (currentPitchProgress + delta).toInt()
         playerViewModel.onPitchChanged(new)
         pitchControl.setNewProgress(new, false)
@@ -506,7 +505,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private fun setupPitchRangeSpinner() {
 
         val spinnerAdapter = ArrayAdapter<String>(
-                this, R.layout.spinner_pitch_range, resources.getStringArray(R.array.pitchRangeValues))
+                this, R.layout.spinner_pitch_range, resources.getStringArray(R.array.pitch_range_values))
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_pitch_range)
         pitchRangeSpinner.adapter = spinnerAdapter
         pitchRangeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{

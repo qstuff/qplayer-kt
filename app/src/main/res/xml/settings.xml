@@ -46,6 +46,14 @@
             android:title="@string/settings_dj_stop_playback_on_cue_title"
             android:summary="@string/settings_dj_stop_playback_on_cue_summary"
             android:defaultValue="false"/>
+
+        <ListPreference
+            android:key="@string/prefs_key_jogwheel_sensitivity"
+            android:title="@string/settings_dj_jogwheel_sensitivity_title"
+            android:summary="@string/settings_dj_jogwheel_sensitivity_summary"
+            android:entries="@array/jogwheel_sensitivity_entries"
+            android:entryValues="@array/jogwheel_sensitivity_values"
+            android:defaultValue="10"/>
 <!--
         <SwitchPreference
             android:key="@string/prefs_key_enable_remain_blink"

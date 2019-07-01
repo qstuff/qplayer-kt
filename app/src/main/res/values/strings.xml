@@ -77,6 +77,7 @@
     <string name="prefs_key_enable_crashreporting" translatable="false">PREFS_ENABLE_CRASHREPORTING</string>
     <string name="prefs_key_app_version" translatable="false">PREFS_APP_VERSION</string>
     <string name="prefs_key_device_info" translatable="false">PREFS_DEVICE_INFO</string>
+    <string name="prefs_key_jogwheel_sensitivity" translatable="false">PREFS_JOG_WHEEL_SENSITIVITY</string>
 
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
@@ -104,6 +105,9 @@
 
     <string name="settings_dj_enable_remain_blink_title">Zeitanzeige für \"remain\" blinkt</string>
     <string name="settings_dj_remain_blink_summary">Wenn aktiviert blinkt die Zeitanzeige während der letzten 30 Sekunden eines Tracks</string>
+
+    <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel Empfindlichkeit</string>
+    <string name="settings_dj_jogwheel_sensitivity_summary">Legt fest wie stark sich die Geschwindigkeit ändert\nAktuell: %1$s</string>
 
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Allgemeine Einstellungen</string>

@@ -71,9 +71,10 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         Timber.d("onSharedPreferenceChanged(): key: $key")
 
-        val value = sharedPreferences?.getBoolean(key, false)
-
-        Timber.d("onSharedPreferenceChanged(): val: $value")
+        if (key == getString(R.string.prefs_key_jogwheel_sensitivity)) {
+            val value = sharedPreferences?.getInt(key, 10)
+            Timber.d("onSharedPreferenceChanged(): stringValue: $value")
+        }
     }
 
     private fun getVersionString(): String {

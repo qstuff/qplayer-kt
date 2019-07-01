@@ -23,7 +23,7 @@
     <string name="queue_dialog_add_tracks_to_existing_playlist_overwrite">Overwriwe</string>
 
     <string name="queue_toast_save_tracks_as_queue_need_name">Please enter a name for the playlist</string>
-    <string name="queue_toast_add_to_existing_playlist_problem">A problmem occured</string>
+    <string name="queue_toast_add_to_existing_playlist_problem">A problmem occurred</string>
 
     <!-- Playlists -->
     <string name="playlists_title">playlists</string>
@@ -93,6 +93,9 @@
 
     <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
     <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
+
+    <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel sensitivity</string>
+    <string name="settings_dj_jogwheel_sensitivity_summary">Controls how fast the trackspeed changes\nCurrent: %1$s</string>
 
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Common Settings</string>
