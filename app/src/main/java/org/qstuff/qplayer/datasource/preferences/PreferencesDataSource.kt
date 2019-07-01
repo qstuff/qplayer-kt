@@ -158,6 +158,6 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun isStopPlaybackOnSettingCuepointEnabled() = preferences.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)
     fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
     fun isBlinkingRemainEnabled() = preferences.getBoolean(PREFS_ENABLE_REMAIN_BLINK, true)
-    fun getJogWheelSensitivity() = preferences.getInt(PREFS_JOG_WHEEL_SENSITIVITY, 10)
+    fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
 
 }
