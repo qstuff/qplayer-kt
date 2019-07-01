@@ -56,13 +56,19 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         const val EXTRA_URL = "EXTRA_URL"
         const val HTMLPAGE_PRIVACY = "privacy.html"
         const val HTMLPAGE_IMPRINT = "imprint.html"
-        const val HTMLPAGE_CONTACT = "contact.html"
         const val HTMLPAGE_LICENSES = "licenses.html"
+
+        const val JOGWHEEL_SENSITIVITY_1 = 1;
+        const val JOGWHEEL_SENSITIVITY_5 = 5;
+        const val JOGWHEEL_SENSITIVITY_10 = 10;
+        const val JOGWHEEL_SENSITIVITY_20 = 20;
+
     }
 
     private lateinit var jogWheelContainer: HGViewContainer
     private lateinit var jogWheelDial: HGDialV2
     private lateinit var jogWheelInterface: HGDialV2.IHGDial
+    private var currentPitchProgress = 0
 
     private val remainBlinkAnimation = AlphaAnimation(0.4f, 1.0f)
 
@@ -266,7 +272,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         })
 
         playerViewModel.pitchValue.observe(this, Observer { pitchValue ->
-            pitchControl.setNewProgress(pitchValue)
+            pitchControl.setNewProgress(pitchValue, false)
         })
 
         playerViewModel.pitchFactorIndex.observe(this, Observer { pitchFactorIndex ->
@@ -384,13 +390,13 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         buttonPitchControlIncrease.setOnClickListener {
             val current = pitchControl.progress
             val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-            pitchControl.setNewProgress(current + delta)
+            pitchControl.setNewProgress(current + delta, true)
         }
 
         buttonPitchControlDecrease.setOnClickListener {
             val current = pitchControl.progress
             val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-            pitchControl.setNewProgress(current - delta)
+            pitchControl.setNewProgress(current - delta, true)
         }
 
         pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -457,18 +463,20 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         jogWheelDial = jogWheelContainer.hgDialV2Active
         jogWheelInterface = (object: HGDialV2.IHGDial {
 
-            override fun onDown(p0: HGDialInfo?) {}
             override fun onPointerDown(p0: HGDialInfo?) {}
             override fun onPointerUp(p0: HGDialInfo?) {}
 
-            override fun onUp(p0: HGDialInfo?) {
+            override fun onDown(hgDialInfo: HGDialInfo?) {
+                currentPitchProgress = pitchControl.progress
+            }
+
+            override fun onUp(hgDialInfo: HGDialInfo?) {
                 jogWheelDial.doManualTextureDial(0.0)
                 onJogWheeMoved(0.0f)
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
-
-                Timber.d("onMove(): speed: ${hgDialInfo?.spinCurrentSpeed}")
+                Timber.v("onMove(): speed: ${hgDialInfo?.spinCurrentSpeed}")
 
                 val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
                 onJogWheeMoved(angle)
@@ -477,10 +485,11 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     }
 
     private fun onJogWheeMoved(angle: Float) {
-        if ((pitchControl.progress + angle) < 0) return
 
-        val current = pitchControl.progress
-        playerViewModel.onPitchChanged((current + (angle * 10)).toInt())
+        val delta = (angle * JOGWHEEL_SENSITIVITY_10)
+        val new = (currentPitchProgress + delta).toInt()
+        playerViewModel.onPitchChanged(new)
+        pitchControl.setNewProgress(new, false)
     }
 
     private fun setupContentSection() {
@@ -504,7 +513,6 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 playerViewModel.onPitchRangeSelected(position)
-                playerViewModel.onPitchChanged(pitchControl.progress)
             }
         }
     }

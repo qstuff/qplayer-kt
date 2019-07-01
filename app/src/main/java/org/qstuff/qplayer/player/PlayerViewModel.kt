@@ -44,6 +44,7 @@ class  PlayerViewModel (application: Application):
     // States
     var pitchFactor = PITCH_RANGE_FACTORS[0]
     private var currentPitchProgress = 0
+    private var currentTrackSpeed = 0.0f
     private var showRemainingTrackTime = true
 
     // Settings
@@ -118,8 +119,6 @@ class  PlayerViewModel (application: Application):
                 .registerReceiver(notificationBroadcastReceiver,
                         IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
 
-        // TODO: save & read all those from preferences
-        masterTempo.value = false
         pitchValueText.value = "0,0%"
         cueActive.value = false
 
@@ -170,8 +169,14 @@ class  PlayerViewModel (application: Application):
     }
 
     fun onPitchRangeSelected(index: Int) {
+
         pitchFactor = PITCH_RANGE_FACTORS[index]
+        pitchFactorIndex.value = index
         preferencesDataSource.savePitchFactorIndex(index)
+
+        val progress = ((currentTrackSpeed -1) * 100 * pitchFactor + 500)
+        pitchValue.value = progress.toInt()
+        onPitchChanged(progress.toInt())
     }
 
     fun onPitchChanged(progress: Int) {
@@ -201,8 +206,10 @@ class  PlayerViewModel (application: Application):
             return
         }
 
+        currentTrackSpeed = 1.0f + diff / 100
+
         if (isMediaServiceRunning) {
-            mediaService.setTrackSpeed(1.0f + diff / 100, masterTempo.value ?: false)
+            mediaService.setTrackSpeed(currentTrackSpeed, masterTempo.value ?: false)
         }
     }
 
@@ -337,8 +344,9 @@ class  PlayerViewModel (application: Application):
 
     private fun loadStates() {
         pitchFactorIndex.value = preferencesDataSource.readPitchFactorIndex()
-        pitchFactor = PITCH_RANGE_FACTORS[pitchFactorIndex.value ?: 500]
+        pitchFactor = PITCH_RANGE_FACTORS[pitchFactorIndex.value ?: 0]
         pitchValue.value = preferencesDataSource.readPitchValue()
+        onPitchChanged(pitchValue.value!!)
         showRemainingTrackTime = preferencesDataSource.readRemainigTimeMode()
         showRemainingTime.value = showRemainingTrackTime
     }
