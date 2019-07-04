@@ -11,7 +11,7 @@
     <string-array name="jogwheel_sensitivity_entries">
         <item>Niedrig (Eine volle Drehung für den vollen Pitchbereich)</item>
         <item>Mittel (Eine halbe Drehung für den vollen Pitchbereich)</item>
-        <item>Hoch (Eine halbe Drehung für den halben Pitchbereich)</item>
+        <item>Hoch (Eine halbe Drehung für den doppelten Pitchbereich)</item>
     </string-array>
 
     <string-array name="jogwheel_sensitivity_values">

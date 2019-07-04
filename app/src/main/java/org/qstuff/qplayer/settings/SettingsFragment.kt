@@ -3,6 +3,7 @@ package org.qstuff.qplayer.settings
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -41,6 +42,9 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
         (findPreference(getString(R.string.prefs_key_stop_playback_on_cue)) as SwitchPreference).isChecked =
                 preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
+
+        (findPreference(getString(R.string.prefs_key_jogwheel_sensitivity)) as ListPreference).value =
+                preferencesDataSource.getJogWheelSensitivity().toString()
 
 //        (findPreference(getString(R.string.prefs_key_enable_remain_blink)) as SwitchPreference).isChecked =
 //                preferencesDataSource.isBlinkingRemainEnabled()
