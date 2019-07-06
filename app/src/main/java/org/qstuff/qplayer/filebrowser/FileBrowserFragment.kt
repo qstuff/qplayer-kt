@@ -23,7 +23,10 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.playlists.M3uUtils
 import org.qstuff.qplayer.queue.QueueViewModel
-import org.qstuff.qplayer.util.*
+import org.qstuff.qplayer.util.directoryContainsSupportedFiles
+import org.qstuff.qplayer.util.isM3UList
+import org.qstuff.qplayer.util.listTracksForAddDialog
+import org.qstuff.qplayer.util.shortToast
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -42,8 +45,7 @@ class FileBrowserFragment:
         const val MY_PERMISSIONS_REQUEST_READ_STORAGE = 222
 
         fun newInstance(): FileBrowserFragment {
-            val contentListFragment = FileBrowserFragment()
-            return contentListFragment
+            return FileBrowserFragment()
         }
     }
 
@@ -258,7 +260,7 @@ class FileBrowserFragment:
                 view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
             }
             val text = view!!.findViewById<TextView>(R.id.itemText)
-            text.text = items.get(position).name
+            text.text = items[position].name
             return view
         }
     }
@@ -272,7 +274,7 @@ class FileBrowserFragment:
                 view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
             }
             val text = view!!.findViewById<TextView>(R.id.itemText)
-            text.text = items.get(position).name
+            text.text = items[position].name
             return view
         }
     }

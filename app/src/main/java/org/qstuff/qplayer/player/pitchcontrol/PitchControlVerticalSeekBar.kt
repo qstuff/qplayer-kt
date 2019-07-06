@@ -7,9 +7,7 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.MotionEvent
-import android.widget.SeekBar
 import androidx.appcompat.widget.AppCompatSeekBar
-
 import org.qstuff.qplayer.R
 
 /**
@@ -19,20 +17,18 @@ import org.qstuff.qplayer.R
  */
 class PitchControlVerticalSeekBar : AppCompatSeekBar {
 
-    private lateinit var rect: Rect
-    private lateinit var paint: Paint
+    private var rect: Rect = Rect()
+    private var paint: Paint = Paint()
     private var seekbarWidth = 0
 
-    private var seekbarListener: SeekBar.OnSeekBarChangeListener? = null
+    private var seekbarListener: OnSeekBarChangeListener? = null
 
-    constructor(context: Context) : super(context) {}
+    constructor(context: Context) : super(context)
 
-    constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle) {}
+    constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle)
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
 
-        rect = Rect()
-        paint = Paint()
         val r = resources
         seekbarWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 r.getDimension(R.dimen.pitchbar_width),
@@ -51,7 +47,7 @@ class PitchControlVerticalSeekBar : AppCompatSeekBar {
         setMeasuredDimension(measuredHeight, measuredWidth)
     }
 
-    override fun setOnSeekBarChangeListener(mListener: SeekBar.OnSeekBarChangeListener) {
+    override fun setOnSeekBarChangeListener(mListener: OnSeekBarChangeListener) {
         this.seekbarListener = mListener
     }
 

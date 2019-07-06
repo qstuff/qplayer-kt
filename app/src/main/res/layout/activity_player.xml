@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/seekbar_height"
         android:layout_below="@+id/midContainer"
-        android:layout_marginTop="@dimen/jog_wheel_border"
+        android:layout_marginTop="4dp"
         android:layout_marginBottom="4dp"
         android:paddingStart="@dimen/rounded_shape_radius"
         android:paddingEnd="@dimen/rounded_shape_radius"
@@ -388,6 +388,7 @@
                 android:background="@drawable/black_rounded_shape"
                 android:textColor="@color/white"
                 android:text="mt"
+                android:layout_alignParentStart="true"
                 tools:ignore="HardcodedText" />
 
             <!-- Cue Button -->
@@ -399,7 +400,6 @@
                 android:paddingStart="@dimen/textview_padding_start"
                 android:layout_marginTop="@dimen/cue_button_top_margin"
                 android:layout_below="@+id/buttonPitchReset"
-                android:src="@null"
                 android:text="cue"
                 android:gravity="start|center_vertical"
                 android:textColor="@color/white"
@@ -435,6 +435,7 @@
                 android:layout_height="@dimen/player_button_height"
                 android:layout_marginBottom="@dimen/jog_wheel_border"
                 android:padding="@dimen/player_button_padding"
+                android:layout_alignParentStart="true"
                 app:srcCompat="@drawable/button_play_selected"
                 android:layout_alignParentBottom="true"/>
 

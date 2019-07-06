@@ -6,10 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import com.WarwickWestonWright.HGDialV2.HGDialInfo
-import com.WarwickWestonWright.HGDialV2.HGDialV2
-import com.WarwickWestonWright.HGDialV2.HGViewContainer
-
 import android.os.Bundle
 import android.text.Html
 import android.view.View
@@ -25,6 +21,9 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.WarwickWestonWright.HGDialV2.HGDialInfo
+import com.WarwickWestonWright.HGDialV2.HGDialV2
+import com.WarwickWestonWright.HGDialV2.HGViewContainer
 import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.core.CrashlyticsCore
 import io.fabric.sdk.android.Fabric
@@ -34,10 +33,10 @@ import org.koin.standalone.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
-import org.qstuff.qplayer.playlists.PlaylistFragment
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
+import org.qstuff.qplayer.playlists.PlaylistFragment
 import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.settings.SettingsActivity
@@ -324,12 +323,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private fun setupInteractionListeners() {
 
         buttonPlayPause.setOnClickListener {
-            if (isTrackPrepared) {
-                playerViewModel.playPause()
-            } else if(currentTrack?.trackStatus == Track.TrackStatus.COMPLETED) {
-                playerViewModel.playPause()
-            } else {
-                Timber.w("buttonPlayPause(): track neither prepared or completed")
+            when {
+                isTrackPrepared -> playerViewModel.playPause()
+                currentTrack?.trackStatus == Track.TrackStatus.COMPLETED -> playerViewModel.playPause()
+                else -> Timber.w("buttonPlayPause(): track neither prepared or completed")
             }
         }
 
@@ -454,7 +451,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 e.printStackTrace()
             }
         }
-        playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>" + debugTitleSuffix)
+        playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix")
     }
 
     private fun setupJogWheel() {
@@ -630,7 +627,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         override fun getCount() = 3
 
-        override fun getPageTitle(position: Int) =
+        override fun getPageTitle(position: Int): String? =
                 when (position) {
                     0 -> context.getString(R.string.queue_title)
                     1 -> context.getString(R.string.filebrowser_title)

@@ -25,16 +25,16 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
 
     private val roomDataSource by inject<RoomDataSource>()
 
-    var currentPlaylistList = arrayListOf<Playlist>()
-    var lastRemovedPlaylistTracks = arrayListOf<Track>()
+    private var currentPlaylistList = arrayListOf<Playlist>()
+    private var lastRemovedPlaylistTracks = arrayListOf<Track>()
 
 
     fun loadPlaylists() {
 
         launch {
-            async {
+            withContext(Dispatchers.Default) {
                 currentPlaylistList = roomDataSource.getAllPlaylists() as ArrayList<Playlist>
-            }.await()
+            }
 
             playlistList.value = currentPlaylistList
         }

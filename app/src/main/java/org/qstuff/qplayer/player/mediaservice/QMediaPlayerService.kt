@@ -5,7 +5,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,12 +17,10 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.player.PlayerActivity
-
 import timber.log.Timber
 
 /**
@@ -74,7 +71,7 @@ class QMediaPlayerService : LifecycleService() {
         super.onCreate()
         Timber.d("onCreate()")
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         }
 
@@ -179,10 +176,6 @@ class QMediaPlayerService : LifecycleService() {
     //
     // Private
     //
-
-    private fun createPlayer() {
-        Timber.d("createPlayer():")
-    }
 
     @SuppressLint("SetTextI18n")
     private fun destroyPlayer() {

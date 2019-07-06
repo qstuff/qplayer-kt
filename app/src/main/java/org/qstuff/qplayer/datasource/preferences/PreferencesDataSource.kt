@@ -61,7 +61,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
             putString(PREF_LAST_BROWSED_DIR, dir)
         }
 
-    fun getLastBrowsedDir() = preferences.getString(PREF_LAST_BROWSED_DIR, DEFAULT_ROOT_DIR)
+    fun getLastBrowsedDir(): String? = preferences.getString(PREF_LAST_BROWSED_DIR, DEFAULT_ROOT_DIR)
 
     //
     // Saved/Loaded in QueueViewModel
@@ -76,7 +76,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
         val json = preferences.getString(key, "")
         if (json.isNullOrBlank()) return null
-        return Gson().fromJson<ArrayList<Track>>(json, object: TypeToken<ArrayList<Track>>() {}.type);
+        return Gson().fromJson<ArrayList<Track>>(json, object: TypeToken<ArrayList<Track>>() {}.type)
     }
 
     fun saveSelectedTrackList(track: Track) =
@@ -87,7 +87,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun readSelectedTrack(): Track? {
         val json = preferences.getString(PREF_SELECTED_TRACK, "")
         if (json.isNullOrBlank()) return null
-        return Gson().fromJson<Track>(json, object: TypeToken<Track>() {}.type);
+        return Gson().fromJson<Track>(json, object: TypeToken<Track>() {}.type)
     }
 
     fun saveShuffleMode(shuffle: Boolean) =

@@ -6,13 +6,11 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.viewpager.widget.ViewPager
-
 import org.qstuff.qplayer.R
 
 /*
@@ -62,7 +60,7 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
         mTitleOffset = (TITLE_OFFSET_DIPS * resources.displayMetrics.density).toInt()
 
         mTabStrip = SlidingTabStrip(context)
-        addView(mTabStrip, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
+        addView(mTabStrip, LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     }
 
     fun setTabStrip(slidingTabStrip: SlidingTabStrip) {
@@ -137,7 +135,7 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
      * Create a default view to be used for tabs. This is called if a custom tab view is not set via
      * [.setCustomTabView].
      */
-    protected fun createDefaultTabView(context: Context): TextView {
+    private fun createDefaultTabView(context: Context): TextView {
 
         val textView = TextView(context)
         textView.gravity = Gravity.CENTER
@@ -277,7 +275,7 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
 
     }
 
-    private inner class TabClickListener : View.OnClickListener {
+    private inner class TabClickListener : OnClickListener {
         override fun onClick(v: View) {
             for (i in 0 until mTabStrip!!.childCount) {
                 if (v === mTabStrip!!.getChildAt(i)) {
@@ -290,8 +288,8 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
 
     companion object {
 
-        private val TITLE_OFFSET_DIPS = 24
-        private val TAB_VIEW_PADDING_DIPS = 16
-        private val TAB_VIEW_TEXT_SIZE_SP = 12
+        private const val TITLE_OFFSET_DIPS = 24
+        private const val TAB_VIEW_PADDING_DIPS = 16
+        private const val TAB_VIEW_TEXT_SIZE_SP = 12
     }
 }

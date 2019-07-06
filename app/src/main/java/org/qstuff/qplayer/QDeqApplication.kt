@@ -1,9 +1,6 @@
 package org.qstuff.qplayer
 
 import android.app.Application
-import android.content.Context
-import android.os.Build
-import android.os.PowerManager
 import android.util.DisplayMetrics
 import androidx.room.Room
 import org.koin.android.ext.android.startKoin
@@ -21,8 +18,6 @@ import timber.log.Timber
 class QDeqApplication : Application() {
 
     private lateinit var metrics: DisplayMetrics
-    private lateinit var pm: PowerManager
-    private lateinit var wl: PowerManager.WakeLock
 
     override fun onCreate() {
         super.onCreate()

@@ -7,15 +7,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_queue.*
 import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
@@ -26,7 +23,6 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.playlists.PlaylistViewModel
-import org.qstuff.qplayer.util.RecyclerItemDecorator
 import org.qstuff.qplayer.util.shortToast
 import timber.log.Timber
 
@@ -43,8 +39,7 @@ class QueueFragment:
     companion object {
 
         fun newInstance(): QueueFragment {
-            val contentListFragment = QueueFragment()
-            return contentListFragment
+            return QueueFragment()
         }
     }
 
@@ -259,7 +254,7 @@ class QueueFragment:
                 view = LayoutInflater.from(context).inflate(R.layout.dialog_playlist_list_item, null)
             }
             val text = view!!.findViewById<TextView>(R.id.itemText)
-            text.text = items.get(position).name
+            text.text = items[position].name
             return view
         }
     }

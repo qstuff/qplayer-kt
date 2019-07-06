@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.filebrowser_list_item.view.*
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.util.isM3UList
-import timber.log.Timber
 import java.io.File
 
 /*
@@ -15,8 +14,8 @@ import java.io.File
  * on 2/10/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class FileBrowserAdapter(val files: List<File>,
-                         val interactionListener: FileBrowserItemInteractionListener):
+class FileBrowserAdapter(private val files: List<File>,
+                         private val interactionListener: FileBrowserItemInteractionListener):
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     interface FileBrowserItemInteractionListener {

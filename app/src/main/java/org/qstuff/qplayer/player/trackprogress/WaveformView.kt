@@ -94,7 +94,7 @@ class WaveformView : View {
 
         viewHeight = height.toFloat()
 
-        bgRect = RectF(sideMargin, 0f, width - sideMargin, viewHeight.toFloat())
+        bgRect = RectF(sideMargin, 0f, width - sideMargin, viewHeight)
 
         waveFormWidth = width - 2 * sideMargin
         waveFormHeight = viewHeight - 2 * topMargin
@@ -121,10 +121,10 @@ class WaveformView : View {
 
         waveformData = data
 
-        if (waveFormWidth > data.bytes!!.size) {
-            stretchFactor = waveFormWidth / data.bytes!!.size
+        stretchFactor = if (waveFormWidth > data.bytes!!.size) {
+            waveFormWidth / data.bytes!!.size
         } else {
-            stretchFactor = data.bytes!!.size.toFloat() / waveFormWidth
+            data.bytes!!.size.toFloat() / waveFormWidth
         }
 
         Timber.v("updateWaveform(): stretchFactor: %f", stretchFactor)

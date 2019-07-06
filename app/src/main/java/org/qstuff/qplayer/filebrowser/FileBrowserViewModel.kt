@@ -77,7 +77,7 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
             nextDir = File(Environment.getExternalStorageDirectory().path)
         }
 
-        Timber.d("browseTo(): nextDir: ${nextDir}")
+        Timber.d("browseTo(): nextDir: $nextDir")
 
         if (nextDir.isDirectory) {
             Timber.d("browseTo(): is Directory")

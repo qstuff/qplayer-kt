@@ -46,9 +46,6 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference(getString(R.string.prefs_key_jogwheel_sensitivity)) as ListPreference).value =
                 preferencesDataSource.getJogWheelSensitivity().toString()
 
-//        (findPreference(getString(R.string.prefs_key_enable_remain_blink)) as SwitchPreference).isChecked =
-//                preferencesDataSource.isBlinkingRemainEnabled()
-
         (findPreference(getString(R.string.prefs_key_enable_crashreporting)) as SwitchPreference).isChecked =
                 preferencesDataSource.isCrashreportingEnabled()
 
@@ -81,10 +78,10 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         var debugTitleSuffix =""
         val packageInfo = activity?.packageManager?.getPackageInfo(activity?.packageName, 0)
 
-        if (BuildConfig.DEBUG) {
-            debugTitleSuffix = ("qdeq-α ${packageInfo?.versionName} (${packageInfo?.versionCode})")
+        debugTitleSuffix = if (BuildConfig.DEBUG) {
+            ("qdeq-α ${packageInfo?.versionName} (${packageInfo?.versionCode})")
         } else {
-            debugTitleSuffix = ("qdeq ${packageInfo?.versionName} (${packageInfo?.versionCode})")
+            ("qdeq ${packageInfo?.versionName} (${packageInfo?.versionCode})")
         }
         return debugTitleSuffix
     }

@@ -34,13 +34,7 @@
     <PreferenceCategory
         android:title="@string/settings_cat_dj_specific_options_title"
         android:key="dj_options_settings">
-<!--
-        <SwitchPreference
-            android:key="PREFS_ENABLE_CUE"
-            android:title="@string/settings_dj_enable_cue"
-            android:summary="@string/settings_dj_enable_cue_summary"
-            android:defaultValue="true" />
--->
+
         <SwitchPreference
             android:key="@string/prefs_key_stop_playback_on_cue"
             android:title="@string/settings_dj_stop_playback_on_cue_title"
@@ -54,13 +48,7 @@
             android:entries="@array/jogwheel_sensitivity_entries"
             android:entryValues="@array/jogwheel_sensitivity_values"
             android:defaultValue="10"/>
-<!--
-        <SwitchPreference
-            android:key="@string/prefs_key_enable_remain_blink"
-            android:title="@string/settings_dj_enable_remain_blink_title"
-            android:summary="@string/settings_dj_remain_blink_summary"
-            android:defaultValue="true"/>
--->
+
     </PreferenceCategory>
 
     <PreferenceCategory

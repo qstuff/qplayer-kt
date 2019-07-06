@@ -9,6 +9,8 @@ import android.util.TypedValue
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import org.qstuff.qplayer.R
+import kotlin.math.max
+import kotlin.math.min
 
 class SlidingTabStrip @JvmOverloads internal constructor(context: Context, attrs: AttributeSet? = null) :
         LinearLayout(context, attrs) {
@@ -91,7 +93,7 @@ class SlidingTabStrip @JvmOverloads internal constructor(context: Context, attrs
 
         val height = height
         val childCount = childCount
-        val dividerHeightPx = (Math.min(Math.max(0f, mDividerHeight), 1f) * height).toInt()
+        val dividerHeightPx = (min(max(0f, mDividerHeight), 1f) * height).toInt()
 
         val tabColorizer = if (mCustomTabColorizer != null)
             mCustomTabColorizer

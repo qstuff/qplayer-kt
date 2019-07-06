@@ -1,7 +1,8 @@
 package org.qstuff.qplayer.datasource.model
 
-import androidx.room.*
-import java.util.ArrayList
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 
 /**
  * Created by Claus Chierici (github@antamauna.net) on 2/19/15

@@ -135,20 +135,20 @@ class  PlayerViewModel (application: Application):
 
         if (!isMediaServiceBound) return
 
-        if (playerStatus.value == PlayerStatus.PLAYING) {
+        when {
+            playerStatus.value == PlayerStatus.PLAYING -> {
 
-            mediaService.pause()
-            playerStatus.value = PlayerStatus.PAUSED
-            resetUpdateTimer()
+                mediaService.pause()
+                playerStatus.value = PlayerStatus.PAUSED
+                resetUpdateTimer()
+            }
+            playerStatus.value == PlayerStatus.PAUSED -> {
 
-        } else if (playerStatus.value == PlayerStatus.PAUSED) {
-
-            mediaService.play()
-            playerStatus.value = PlayerStatus.PLAYING
-            startUpdateTimer()
-
-        } else {
-            Timber.w("playPause(): invalid player status: ${playerStatus.value}")
+                mediaService.play()
+                playerStatus.value = PlayerStatus.PLAYING
+                startUpdateTimer()
+            }
+            else -> Timber.w("playPause(): invalid player status: ${playerStatus.value}")
         }
     }
 
@@ -249,7 +249,7 @@ class  PlayerViewModel (application: Application):
         if(!isMediaServiceRunning) {
             val app = getApplication<QDeqApplication>()
             val intent = Intent(app, QMediaPlayerService::class.java)
-            intent.setAction(ACTION_SERVICE_FOREGROUND_START)
+            intent.action = ACTION_SERVICE_FOREGROUND_START
             app.startService(intent)
             app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
@@ -260,7 +260,7 @@ class  PlayerViewModel (application: Application):
 
         val app = getApplication<QDeqApplication>()
         val intent = Intent(app, QMediaPlayerService::class.java)
-        intent.setAction(ACTION_SERVICE_FOREGROUND_STOP)
+        intent.action = ACTION_SERVICE_FOREGROUND_STOP
         app.startService(intent)
         app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 

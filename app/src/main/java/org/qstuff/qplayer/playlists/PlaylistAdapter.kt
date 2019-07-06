@@ -16,7 +16,7 @@ import java.util.*
  * on 4/1/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class PlaylistAdapter(val interactionListener: PlaylistItemInteractionListener):
+class PlaylistAdapter(private val interactionListener: PlaylistItemInteractionListener):
         RecyclerView.Adapter<RecyclerView.ViewHolder>(),
         ItemTouchHelperAdapter {
 
@@ -30,12 +30,12 @@ class PlaylistAdapter(val interactionListener: PlaylistItemInteractionListener):
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            PlaylistAdapter.PlaylistItemViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.playlist_list_item, parent, false))
+            PlaylistItemViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.playlist_list_item, parent, false))
 
     override fun getItemCount() = playlists.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        Timber.v("onBindViewHolder(): pos: $position, playlists: ${playlists}")
+        Timber.v("onBindViewHolder(): pos: $position, playlists: $playlists")
 
         val playlist = playlists[position]
         holder.itemView.apply {
@@ -73,7 +73,7 @@ class PlaylistAdapter(val interactionListener: PlaylistItemInteractionListener):
     }
 
     override fun onItemDismiss(position: Int) {
-        Timber.d("onItemDismiss(): pos: $position, playlists: ${playlists}")
+        Timber.d("onItemDismiss(): pos: $position, playlists: $playlists")
 
         interactionListener.onPlaylistItemDismsissed(playlists[position], position)
     }

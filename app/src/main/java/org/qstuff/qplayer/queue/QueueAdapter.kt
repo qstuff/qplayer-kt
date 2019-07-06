@@ -16,7 +16,7 @@ import java.util.*
  * on 2/12/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class QueueAdapter(val interactionListener: QueueItemInteractionListener):
+class QueueAdapter(private val interactionListener: QueueItemInteractionListener):
         RecyclerView.Adapter<RecyclerView.ViewHolder>(),
         ItemTouchHelperAdapter {
 
@@ -42,7 +42,7 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
     override fun getItemCount() = tracks.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        Timber.v("onBindViewHolder(): pos: $position, tracks: ${tracks}")
+        Timber.v("onBindViewHolder(): pos: $position, tracks: $tracks")
 
         val track = tracks[position]
 
@@ -83,14 +83,14 @@ class QueueAdapter(val interactionListener: QueueItemInteractionListener):
             }
         }
         if (selectedIndex == fromPosition) {
-            selectedIndex = toPosition;
+            selectedIndex = toPosition
         }
         notifyItemMoved(fromPosition, toPosition)
         interactionListener.onQueueItemMoved(tracks)
     }
 
     override fun onItemDismiss(position: Int) {
-        Timber.d("onItemDismiss(): pos: $position, tracks: ${tracks}")
+        Timber.d("onItemDismiss(): pos: $position, tracks: $tracks")
 
         interactionListener.onQueueItemDismsissed(tracks[position], position)
     }

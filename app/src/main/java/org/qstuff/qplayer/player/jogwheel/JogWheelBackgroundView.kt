@@ -64,8 +64,8 @@ class JogWheelBackgroundView : View {
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 
-        val newHeight = View.MeasureSpec.getSize(heightMeasureSpec)
-        val newWidth = View.MeasureSpec.getSize(widthMeasureSpec)
+        val newHeight = MeasureSpec.getSize(heightMeasureSpec)
+        val newWidth = MeasureSpec.getSize(widthMeasureSpec)
         setupDimensions(newWidth, newHeight)
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)

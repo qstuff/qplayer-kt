@@ -1,16 +1,9 @@
 package org.qstuff.qplayer.playlists
 
-import android.content.Context
 import org.qstuff.qplayer.datasource.model.Track
-
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStreamReader
-import java.util.ArrayList
-
 import timber.log.Timber
+import java.io.*
+import java.util.*
 
 /*
  * For parts of the parser code:
@@ -37,8 +30,8 @@ import timber.log.Timber
  */
 object M3uUtils {
 
-    private val EXTENDED_INFO_TAG = "#EXTM3U"
-    private val RECORD_TAG = "^[#][E|e][X|x][T|t][I|i][N|n][F|f].*"
+    private const val EXTENDED_INFO_TAG = "#EXTM3U"
+    private const val RECORD_TAG = "^[#][E|e][X|x][T|t][I|i][N|n][F|f].*"
 
     @Throws(IOException::class)
     fun m3UParserGetTracks(fis: FileInputStream, directoryPath: String):
@@ -47,8 +40,8 @@ object M3uUtils {
         val notFound = ArrayList<Track>()
 
         val reader = BufferedReader(InputStreamReader(fis))
-        reader.useLines {
-            it.toList().forEach { line ->
+        reader.useLines { sequence ->
+            sequence.toList().forEach { line ->
 
                 Timber.v("m3UParserGetTracks(): line: %s", line)
 
@@ -61,10 +54,10 @@ object M3uUtils {
 
                         val trackFile: File
 
-                        if (line.contains("/")) {
-                            trackFile = File(line)
+                        trackFile = if (line.contains("/")) {
+                            File(line)
                         } else {
-                            trackFile = File("$directoryPath/$line")
+                            File("$directoryPath/$line")
                         }
 
                         if (trackFile.exists() && trackFile.isFile) {

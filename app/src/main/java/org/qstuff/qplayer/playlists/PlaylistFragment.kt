@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -23,7 +22,6 @@ import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.queue.ItemTouchHelperCallback
 import org.qstuff.qplayer.queue.QueueViewModel
-import org.qstuff.qplayer.util.RecyclerItemDecorator
 import timber.log.Timber
 
 /*
@@ -39,8 +37,7 @@ class PlaylistFragment:
     companion object {
 
         fun newInstance(): PlaylistFragment {
-            val contentListFragment = PlaylistFragment()
-            return contentListFragment
+            return PlaylistFragment()
         }
     }
 
@@ -94,7 +91,7 @@ class PlaylistFragment:
         playlistViewModel.removePlaylist(playlist)
 
         Snackbar.make(view!!, getString(R.string.snackbar_title_removed, playlist.name), Snackbar.LENGTH_LONG)
-                .setAction(getString(R.string.snackbar_undo)) { _ ->
+                .setAction(getString(R.string.snackbar_undo)) {
                     playlistViewModel.restorePlaylistAt(playlist, position)
                 }
                 .show()
@@ -145,7 +142,7 @@ class PlaylistFragment:
                 view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
             }
             val text = view!!.findViewById<TextView>(R.id.itemText)
-            text.text = items.get(position).name
+            text.text = items[position].name
             return view
         }
     }

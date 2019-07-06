@@ -1,7 +1,6 @@
 package org.qstuff.qplayer.settings
 
 import android.os.Bundle
-import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.webview.*
 import org.qstuff.qplayer.R

@@ -10,7 +10,7 @@ import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.util.next
 import timber.log.Timber
 import java.io.File
-import java.util.Random
+import java.util.*
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -38,15 +38,15 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
-    private var lastRemovedSelectedIndex = -1;
+    private var lastRemovedSelectedIndex = -1
 
 
-    fun addTrack(track: Track) {
+    private fun addTrack(track: Track) {
         Timber.d("addTrack(): $track ")
 
         if (containsTrack(track)) {
             Timber.d("addTrack(): already in queue ")
-            return;
+            return
         }
 
         currentTrackList.add(track)
@@ -66,7 +66,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         return false
     }
 
-    fun addTrackAt(track: Track, position: Int) {
+    private fun addTrackAt(track: Track, position: Int) {
 
         currentTrackList.add(position, track)
         trackList.value = currentTrackList
@@ -103,7 +103,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         iterator.forEach {
             if (it.uri == track.uri) {
-                indexRemoved = index;
+                indexRemoved = index
                 iterator.remove()
                 if (shuffle.value == true) {
                     removeIndexFromIndexMap(index)
@@ -202,7 +202,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                                 if (shuffle.value == true) {
                                     val unplayedIndices = getYetUnplayedIndices()
                                     if (unplayedIndices.size == 1) {
-                                        index = unplayedIndices.get(0)
+                                        index = unplayedIndices[0]
                                         createIndexMap()
                                     } else if (unplayedIndices.isNotEmpty()) {
                                         index = processShuffleNext(unplayedIndices)
@@ -217,8 +217,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
                                 if (shuffle.value == true) {
                                     val unplayedIndices = getYetUnplayedIndices()
                                     if (unplayedIndices.size == 1) {
-                                        index = unplayedIndices.get(0)
-                                        shufflePlayedIndices.put(index, true)
+                                        index = unplayedIndices[0]
+                                        shufflePlayedIndices[index] = true
                                     } else if (unplayedIndices.isNotEmpty()) {
                                         index = processShuffleNext(unplayedIndices)
                                     }
@@ -231,7 +231,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                         }
                     }
                 }
-                val next = currentTrackList.get(index)
+                val next = currentTrackList[index]
                 next.isAutoplay = preferencesDataSource.isAutostartEnabled()
                 onTrackSelected.value = next
                 onTrackSelectedIndex.value = index
@@ -253,7 +253,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                             if (shuffle.value == true) {
                                 val unplayedIndices = getYetUnplayedIndices()
                                 if (unplayedIndices.size == 1) {
-                                    index = unplayedIndices.get(0)
+                                    index = unplayedIndices[0]
                                     createIndexMap()
                                 } else if (unplayedIndices.isNotEmpty()) {
                                     index = processShuffleNext(unplayedIndices)
@@ -267,8 +267,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
                             if (shuffle.value == true) {
                                 val unplayedIndices = getYetUnplayedIndices()
                                 if (unplayedIndices.size == 1) {
-                                    index = unplayedIndices.get(0)
-                                    shufflePlayedIndices.put(index, true)
+                                    index = unplayedIndices[0]
+                                    shufflePlayedIndices[index] = true
                                 } else if (unplayedIndices.isNotEmpty()) {
                                     index = processShuffleNext(unplayedIndices)
                                 }
@@ -280,7 +280,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                         }
                     }
                 }
-                val next = currentTrackList.get(index)
+                val next = currentTrackList[index]
                 next.isAutoplay = preferencesDataSource.isAutostartEnabled()
                 onTrackSelected.value = next
                 onTrackSelectedIndex.value = index
@@ -293,8 +293,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
         Timber.d("processShuffleNext(): ")
 
         val randomIndex = random.nextInt(unplayedIndices.size - 1)
-        val realIndex = unplayedIndices.get(randomIndex)
-        shufflePlayedIndices.put(realIndex, true)
+        val realIndex = unplayedIndices[randomIndex]
+        shufflePlayedIndices[realIndex] = true
         Timber.d("processShuffleNext(): realIndex: $realIndex")
         return realIndex
     }
@@ -347,15 +347,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private fun createIndexMap() {
 
         shufflePlayedIndices.clear()
-        var i = 0
-        currentTrackList.forEach {
-            shufflePlayedIndices.put(i, false)
-            i++
+        repeat(currentTrackList.size) {
+            shufflePlayedIndices.put(it, false)
         }
     }
 
     private fun addIndexToIndexMap(index: Int) {
-        shufflePlayedIndices.put(index, false)
+        shufflePlayedIndices[index] = false
     }
 
     private fun removeIndexFromIndexMap(index: Int) {
@@ -426,10 +424,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun readTrackList() {
 
         val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
-        if (list == null) {
-            currentTrackList = arrayListOf()
+        currentTrackList = if (list == null) {
+            arrayListOf()
         } else {
-            currentTrackList = list
+            list
         }
         trackList.value = currentTrackList
     }

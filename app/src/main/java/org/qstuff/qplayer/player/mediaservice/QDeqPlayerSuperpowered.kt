@@ -6,10 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
-
 import timber.log.Timber
 
 /**
@@ -119,7 +117,7 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
 
     override  fun getWaveFormDataObserver(): MutableLiveData<TrackData> = onWaveFormDataUpdate
 
-    private var processing = false;
+    private var processing = false
     private val waveformQueue = arrayListOf<Track>()
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -151,7 +149,7 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
             onWaveFormDataUpdate.postValue(trackData)
             processing = false
 
-            if (!waveformQueue.isEmpty()) {
+            if (waveformQueue.isNotEmpty()) {
                 Timber.v("processAnalzyer(): one more...")
                 processAnalzyer()
             }
