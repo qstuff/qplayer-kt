@@ -8,6 +8,7 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 #include <malloc.h>
+#include <Superpowered.h>
 
 #define  LOG_TAG    "QPLAYER_NATIVE"
 #define  LOGV(...)  __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
@@ -58,6 +59,18 @@ SuperpoweredInterface::SuperpoweredInterface(unsigned int samplerate,
                                                             
     LOGD("SuperpoweredInterface(): INIT");
 
+    SuperpoweredInitialize(
+            "eXFxYlc3MDZKeEZIWGQ3ZmFhZDRmOTNiMzQyYzE4NzU4NmNjODk1Y2NlNTllNzgwYTIxOTB5bnJ1U3BTT3pPSXUzbGp2bHky",
+            true, // enableAudioAnalysis (using SuperpoweredAnalyzer, SuperpoweredLiveAnalyzer, SuperpoweredWaveform or SuperpoweredBandpassFilterbank)
+            false, // enableFFTAndFrequencyDomain (using SuperpoweredFrequencyDomain, SuperpoweredFFTComplex, SuperpoweredFFTReal or SuperpoweredPolarFFT)
+            false, // enableAudioTimeStretching (using SuperpoweredTimeStretching)
+            true, // enableAudioEffects (using any SuperpoweredFX class)
+            true, // enableAudioPlayerAndDecoder (using SuperpoweredAdvancedAudioPlayer or SuperpoweredDecoder)
+            false, // enableCryptographics (using Superpowered::RSAPublicKey, Superpowered::RSAPrivateKey, Superpowered::hasher or Superpowered::AES)
+            false  // enableNetworking (using Superpowered::httpRequest)
+    );
+
+
     stereoBuffer = (float *)memalign(16, (buffersize + 16) * sizeof(float) * 2);
 
     playerA = new SuperpoweredAdvancedAudioPlayer(&playerA, playerEventCallbackA, samplerate, 0);
@@ -75,8 +88,7 @@ SuperpoweredInterface::SuperpoweredInterface(unsigned int samplerate,
                                                  audioProcessing, 
                                                  this, 
                                                  -1, 
-                                                 SL_ANDROID_STREAM_MEDIA, 
-                                                 buffersize * 2);                                                                                        
+                                                 SL_ANDROID_STREAM_MEDIA);
 }
 
 SuperpoweredInterface::~SuperpoweredInterface() {

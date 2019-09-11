@@ -81,7 +81,7 @@ class QMediaPlayerService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Timber.d("onStartCommand()")
+        Timber.d("onStartCommand(): intent: $intent, startId: $startId")
 
         if (intent.action == ACTION_SERVICE_FOREGROUND_START) {
             startForeground(1, createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY))
