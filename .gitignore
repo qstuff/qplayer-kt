@@ -11,6 +11,7 @@
 # Generated files
 
 app/release/
+app/.cxx/
 
 bin/
 gen/

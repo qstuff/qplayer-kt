@@ -28,30 +28,30 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings, rootKey)
 
-        (findPreference(getString(R.string.prefs_key_track_autostart)) as SwitchPreference).isChecked =
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_track_autostart)))!!.isChecked =
                 preferencesDataSource.isAutostartEnabled()
 
-        (findPreference(getString(R.string.prefs_key_proceed_to_next_track)) as SwitchPreference).isChecked =
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_proceed_to_next_track)))!!.isChecked =
                 preferencesDataSource.isProceedToNextTrackEnabled()
 
-        (findPreference(getString(R.string.prefs_key_skip_back_to_start)) as SwitchPreference).isChecked =
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_skip_back_to_start)))!!.isChecked =
                 preferencesDataSource.isSkipBackToStartEnabled()
 
-        (findPreference(getString(R.string.prefs_key_show_clear_queue_dialog)) as SwitchPreference).isChecked =
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_show_clear_queue_dialog)))!!.isChecked =
                 preferencesDataSource.isShowClearQueueWarningEnabled()
 
-        (findPreference(getString(R.string.prefs_key_stop_playback_on_cue)) as SwitchPreference).isChecked =
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_stop_playback_on_cue)))!!.isChecked =
                 preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
 
-        (findPreference(getString(R.string.prefs_key_jogwheel_sensitivity)) as ListPreference).value =
+        (findPreference<ListPreference>(getString(R.string.prefs_key_jogwheel_sensitivity)))!!.value =
                 preferencesDataSource.getJogWheelSensitivity().toString()
 
-        (findPreference(getString(R.string.prefs_key_enable_crashreporting)) as SwitchPreference).isChecked =
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_enable_crashreporting)))!!.isChecked =
                 preferencesDataSource.isCrashreportingEnabled()
 
-        findPreference(getString(R.string.prefs_key_app_version)).summary = getVersionString()
+        findPreference<Preference>(getString(R.string.prefs_key_app_version))!!.summary = getVersionString()
 
-        findPreference(getString(R.string.prefs_key_device_info)).summary = getDeviceInfoString()
+        findPreference<Preference>(getString(R.string.prefs_key_device_info))!!.summary = getDeviceInfoString()
     }
 
     override fun onResume() {
