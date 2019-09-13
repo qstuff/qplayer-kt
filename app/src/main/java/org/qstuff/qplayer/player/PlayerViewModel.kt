@@ -22,9 +22,14 @@ class  PlayerViewModel (application: Application):
     companion object {
         const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
         const val ACTION_SERVICE_FOREGROUND_STOP = "ACTION_SERVICE_FOREGROUND_STOP"
+        const val ACTION_SERVICE_BACKGROUND_START = "ACTION_SERVICE_BACKGROUND_START"
+        const val ACTION_SERVICE_BACKGROUND_STOP = "ACTION_SERVICE_BACKGROUND_STOP"
 
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
     }
+
+    var mediaServiceStartMode: String
+    var mediaServiceStopMode: String
 
     // Observables
     lateinit var onWaveformDataUpdate: LiveData<TrackData>
@@ -70,8 +75,23 @@ class  PlayerViewModel (application: Application):
 
     private val notificationBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Timber.d("onReceive(): ")
-            playPause()
+
+            if (intent != null) {
+                val action = intent.action
+                if (action != null) {
+
+                    if (action == QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED) {
+                        Timber.d("onReceive(): NOT_ACTION_PLAYER_TOGGLED")
+                        playPause()
+                    }
+                    if (action == QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED) {
+                        Timber.d("onReceive(): NOT_ACTION_NOTIFICATION_DISMISSED")
+                        mediaService.stop()
+//                        mediaService.player.destroy()
+                        stopMediaService()
+                    }
+                }
+            }
         }
     }
 
@@ -104,21 +124,33 @@ class  PlayerViewModel (application: Application):
         override fun onServiceDisconnected(name: ComponentName) {
             Timber.d("onServiceDisconnected(): ${name.toShortString()}")
 
+            mediaService.stop()
+            mediaService.player.destroy()
+
             onMediaServiceConnected.value = false
 
             trackStatusMediator.removeSource(mediaService.getStatusObserver())
             trackStatusMediator.removeSource(trackStatus)
-
-            // Destroy player
         }
     }
 
-
     init {
+        if (preferencesDataSource.isStartForegroundEnabled()) {
+            mediaServiceStartMode = ACTION_SERVICE_FOREGROUND_START
+            mediaServiceStopMode = ACTION_SERVICE_FOREGROUND_STOP
+        } else {
+            mediaServiceStartMode = ACTION_SERVICE_BACKGROUND_START
+            mediaServiceStopMode = ACTION_SERVICE_BACKGROUND_STOP
+        }
+
         playerStatus.value = PlayerStatus.PAUSED
+
         LocalBroadcastManager.getInstance(application)
                 .registerReceiver(notificationBroadcastReceiver,
                         IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
+        LocalBroadcastManager.getInstance(application)
+                .registerReceiver(notificationBroadcastReceiver,
+                        IntentFilter(QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED))
 
         pitchValueText.value = "0,0%"
         cueActive.value = false
@@ -249,10 +281,9 @@ class  PlayerViewModel (application: Application):
         if(!isMediaServiceRunning) {
             val app = getApplication<QDeqApplication>()
             val intent = Intent(app, QMediaPlayerService::class.java)
-            intent.action = ACTION_SERVICE_FOREGROUND_START
+            intent.action = mediaServiceStartMode
             app.startService(intent)
             app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-
         }
     }
 
@@ -260,7 +291,7 @@ class  PlayerViewModel (application: Application):
 
         val app = getApplication<QDeqApplication>()
         val intent = Intent(app, QMediaPlayerService::class.java)
-        intent.action = ACTION_SERVICE_FOREGROUND_STOP
+        intent.action = mediaServiceStopMode
         app.startService(intent)
         app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 

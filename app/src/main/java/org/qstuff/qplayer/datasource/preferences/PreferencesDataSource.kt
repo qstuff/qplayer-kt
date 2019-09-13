@@ -45,7 +45,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREFS_ENABLE_REMAIN_BLINK = "PREFS_ENABLE_REMAIN_BLINK"
         const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
         const val PREFS_JOG_WHEEL_SENSITIVITY = "PREFS_JOG_WHEEL_SENSITIVITY"
-
+        const val PREFS_START_FOREGROUND = "PREFS_START_FOREGROUND"
 
         // Others
         const val PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN = "PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN"
@@ -159,5 +159,5 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
     fun isBlinkingRemainEnabled() = preferences.getBoolean(PREFS_ENABLE_REMAIN_BLINK, true)
     fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
-
+    fun isStartForegroundEnabled() = preferences.getBoolean(PREFS_START_FOREGROUND, false)
 }

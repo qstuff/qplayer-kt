@@ -29,6 +29,12 @@
             android:summary="@string/settings_show_clear_queue_summary"
             android:defaultValue="true" />
 
+        <SwitchPreference
+            android:key="@string/prefs_key_start_foreground"
+            android:title="@string/settings_start_foreground_title"
+            android:summary="@string/settings_start_foreground_summary"
+            android:defaultValue="false" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

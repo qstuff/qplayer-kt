@@ -10,7 +10,7 @@
 
     <string-array name="jogwheel_sensitivity_entries">
         <item>Low (full turn for full pitch range)</item>
-        <item>Middle (half turn for full pitch range)</item>
+        <item>Medium (half turn for full pitch range)</item>
         <item>High (half turn for double pitch range)</item>
     </string-array>
 

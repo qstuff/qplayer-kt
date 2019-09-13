@@ -79,6 +79,7 @@
     <string name="prefs_key_app_version" translatable="false">PREFS_APP_VERSION</string>
     <string name="prefs_key_device_info" translatable="false">PREFS_DEVICE_INFO</string>
     <string name="prefs_key_jogwheel_sensitivity" translatable="false">PREFS_JOG_WHEEL_SENSITIVITY</string>
+    <string name="prefs_key_start_foreground" translatable="false">PREFS_START_FOREGROUND</string>
 
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
@@ -94,6 +95,9 @@
 
     <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
     <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>
+
+    <string name="settings_start_foreground_title">Im Foreground-Service Modus starten?</string>
+    <string name="settings_start_foreground_summary">Als Foreground-Service läuft der Player auch weiter wenn die App in den Hintergrund geht und die Doze-Funktion des Geräts sich einschaltet.\nNeustart der App erforderlich\nBeachte: Der Akku wird dann auch schneller geleert!</string>
 
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">Einstellungen für DJ Features</string>

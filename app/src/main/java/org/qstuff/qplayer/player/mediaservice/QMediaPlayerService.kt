@@ -41,6 +41,7 @@ class QMediaPlayerService : LifecycleService() {
         const val ACTION_PLAYER_TOGGLED = "ACTION_PLAYER_TOGGLED"
         const val ACTION_NOTIFICATION_DISMISSED = "ACTION_NOTIFICATION_DISMISSED"
         const val ACTION_NOTIFICATION_CLICKED = "ACTION_NOTIFICATION_CLICKED"
+
         const val NOT_ACTION_PLAYER_TOGGLED = "NOT_ACTION_PLAYER_TOGGLED"
         const val NOT_ACTION_NOTIFICATION_DISMISSED = "NOT_ACTION_NOTIFICATION_DISMISSED"
 
@@ -52,7 +53,6 @@ class QMediaPlayerService : LifecycleService() {
     private var notificationManager: NotificationManager? = null
 
     private var currentTrack: Track? = null
-
 
     val isPrepared: Boolean
         get() = currentTrack?.trackStatus == Track.TrackStatus.PREPARED
@@ -85,7 +85,6 @@ class QMediaPlayerService : LifecycleService() {
 
         if (intent.action == ACTION_SERVICE_FOREGROUND_START) {
             startForeground(1, createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY))
-
         }
         if (intent.action == ACTION_SERVICE_FOREGROUND_STOP) {
             stopForeground(true)
@@ -125,6 +124,10 @@ class QMediaPlayerService : LifecycleService() {
         notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
         val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY)
         notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
+    }
+
+    fun stop() {
+        player.stop()
     }
 
     fun isPlaying(): Boolean {
@@ -198,7 +201,6 @@ class QMediaPlayerService : LifecycleService() {
     //
     // Notification
     //
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel() {

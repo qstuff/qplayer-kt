@@ -40,6 +40,9 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference<SwitchPreference>(getString(R.string.prefs_key_show_clear_queue_dialog)))!!.isChecked =
                 preferencesDataSource.isShowClearQueueWarningEnabled()
 
+        (findPreference<SwitchPreference>(getString(R.string.prefs_key_start_foreground)))!!.isChecked =
+                preferencesDataSource.isStartForegroundEnabled()
+
         (findPreference<SwitchPreference>(getString(R.string.prefs_key_stop_playback_on_cue)))!!.isChecked =
                 preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
 
