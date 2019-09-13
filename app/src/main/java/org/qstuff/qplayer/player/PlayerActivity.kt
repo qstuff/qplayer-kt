@@ -151,7 +151,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private fun setupObservers() {
 
         playerViewModel.playerStatus.observe(this, Observer { status ->
-            Timber.d("playerStatus(): $status")
+            Timber.d("XXX playerStatus(): $status")
 
             when(status) {
                 PlayerStatus.PLAYING -> {
@@ -174,7 +174,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 when (track.trackStatus) {
                         Track.TrackStatus.UNDEFINED,
                         Track.TrackStatus.LOADING -> {
-                        trackTitle.text = "loading..."
+                        trackTitle.text = getString(R.string.player_loading)
                         stopRemainBlinkAnimation()
                         waveformView.updateWaveform(null)
                         waveformViewLoadingText.visibility = View.VISIBLE

@@ -249,6 +249,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 if (currentTrackList.contains(it)) {
 
                     when (repeat.value) {
+                        TrackRepeatStatus.ONE -> {
+                            index = currentTrackList.indexOf(current)
+                            current.trackStatus = Track.TrackStatus.PREPARED
+                        }
                         TrackRepeatStatus.ALL -> {
                             if (shuffle.value == true) {
                                 val unplayedIndices = getYetUnplayedIndices()
@@ -401,7 +405,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         if (onTrackSelected.value != null) {
             val track = onTrackSelected.value
-            track?.trackStatus = Track.TrackStatus.UNDEFINED
             preferencesDataSource.saveSelectedTrackList(track!!)
         }
     }

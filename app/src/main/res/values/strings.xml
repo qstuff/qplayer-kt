@@ -6,7 +6,8 @@
     <string name="build_type">Release</string>
 
     <!-- Player -->
-    <string name="player_no_track_loaded">… kein track geladen …</string>
+    <string name="player_no_track_loaded">…kein track geladen…</string>
+    <string name="player_loading">lade…</string>
 
     <!-- Queue -->
     <string name="queue_title">queue</string>
