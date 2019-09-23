@@ -80,6 +80,7 @@
     <string name="prefs_key_device_info" translatable="false">PREFS_DEVICE_INFO</string>
     <string name="prefs_key_jogwheel_sensitivity" translatable="false">PREFS_JOG_WHEEL_SENSITIVITY</string>
     <string name="prefs_key_start_foreground" translatable="false">PREFS_START_FOREGROUND</string>
+    <string name="prefs_key_equalizer" translatable="false">PREFS_EQUALIZER</string>
 
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
@@ -96,9 +97,6 @@
     <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
     <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>
 
-    <string name="settings_start_foreground_title">Im Foreground-Service Modus starten?</string>
-    <string name="settings_start_foreground_summary">Als Foreground-Service läuft der Player auch weiter wenn die App in den Hintergrund geht und die Doze-Funktion des Geräts sich einschaltet.\nNeustart der App erforderlich\nBeachte: Der Akku wird dann auch schneller geleert!</string>
-
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">Einstellungen für DJ Features</string>
 
@@ -114,12 +112,23 @@
     <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel Empfindlichkeit</string>
     <string name="settings_dj_jogwheel_sensitivity_summary">Legt fest wie stark sich die Geschwindigkeit ändert\nAktuell: %1$s</string>
 
-    <!-- Privacy Settings -->
-    <string name="settings_cat_privacy_title">Allgemeine Einstellungen</string>
+    <!-- Sound Settings -->
+    <string name="settings_cat_sound_title">Sound Einstellungen</string>
+
+    <string name="settings_equalizer_title">3-Band Equalizer</string>
+    <string name="settings_equalizer_summary"></string>
+
+    <!-- Common Settings -->
+    <string name="settings_cat_common_title">Allgemeine Einstellungen</string>
+
+    <string name="settings_start_foreground_title">Im Foreground-Service Modus starten?</string>
+    <string name="settings_start_foreground_summary">Als Foreground-Service läuft der Player auch weiter wenn die App in den Hintergrund geht und die Doze-Funktion des Geräts sich einschaltet.\nNeustart der App erforderlich\nBeachte: Der Akku wird dann auch schneller geleert!</string>
+
     <string name="settings_privacy_crashreport_title">Absturzberichte</string>
     <string name="settings_privacy_crashreport_summary">Wenn aktiviert sendet die App Absturzberichte.\nDie App muss neu gestartet werden damit diese Einstellung wirksam wird.</string>
 
     <string name="settings_app_version_title">App Version</string>
+
     <string name="settings_device_info_title">Geräte Info</string>
 
     <!-- Feedback Activity -->

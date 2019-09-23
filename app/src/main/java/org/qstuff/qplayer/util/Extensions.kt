@@ -1,7 +1,13 @@
 package org.qstuff.qplayer.util
 
 import android.content.Context
+import android.text.TextUtils.replace
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.OneShotPreDrawListener.add
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -25,3 +31,18 @@ fun Context.longToast(message: String, length: Int = Toast.LENGTH_LONG) =
  */
 inline fun <reified T : Enum<T>> Enum<T>.next(values: Array<T> = enumValues()) =
     values[(ordinal + 1) % values.size]
+
+//
+// Simplify Fragment transactions
+//
+fun AppCompatActivity.addFragment(fragment: Fragment, frameId: Int){
+   supportFragmentManager.inTransaction { add(frameId, fragment) }
+}
+
+fun AppCompatActivity.replaceFragment(fragment: Fragment, frameId: Int) {
+   supportFragmentManager.inTransaction{ replace(frameId, fragment) }
+}
+
+inline fun FragmentManager.inTransaction(func: FragmentTransaction.() -> FragmentTransaction) {
+   beginTransaction().func().commit()
+}

@@ -11,18 +11,17 @@
 #include <Superpowered.h>
 
 #define  LOG_TAG    "QPLAYER_NATIVE"
-#define  LOGV(...)  __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
-#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define  LOG_V(...)  __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#define  LOG_D(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     JNIEnv* env;
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
-        LOGD("JNI_OnLoad: ERROR");
+        LOG_D("JNI_OnLoad: ERROR");
         return -1;
     }
 
-    LOGD("JNI_OnLoad: INIT");
+    LOG_D("JNI_OnLoad: INIT");
     
     // Get jclass with env->FindClass.
     // Register methods with env->RegisterNatives.
@@ -57,7 +56,7 @@ SuperpoweredInterface::SuperpoweredInterface(unsigned int samplerate,
                                          unsigned int buffersize) : activeFx(0), 
                                          volA(1.0f * headroom) {
                                                             
-    LOGD("SuperpoweredInterface(): INIT");
+    LOG_D("SuperpoweredInterface(): INIT");
 
     SuperpoweredInitialize(
             "eXFxYlc3MDZKeEZIWGQ3ZmFhZDRmOTNiMzQyYzE4NzU4NmNjODk1Y2NlNTllNzgwYTIxOTB5bnJ1U3BTT3pPSXUzbGp2bHky",
@@ -77,9 +76,8 @@ SuperpoweredInterface::SuperpoweredInterface(unsigned int samplerate,
     
     playerA->syncMode = SuperpoweredAdvancedAudioPlayerSyncMode_TempoAndBeat;
 
-    roll = new SuperpoweredRoll(samplerate);
     filter = new SuperpoweredFilter(SuperpoweredFilter_Resonant_Lowpass, samplerate);
-    flanger = new SuperpoweredFlanger(samplerate);
+    equalizer = new Superpowered3BandEQ(samplerate);
 
     audioSystem = new SuperpoweredAndroidAudioIO(samplerate, 
                                                  buffersize, 
@@ -96,16 +94,15 @@ SuperpoweredInterface::~SuperpoweredInterface() {
     delete audioSystem;
     delete playerA;
     delete waveform;
-    delete roll;
     delete filter;
-    delete flanger;
-    
+    delete equalizer;
+
     free(stereoBuffer);
 }
 
 void SuperpoweredInterface::onPlayPause(bool play) {
 
-    LOGD("onPlayPause()");
+    LOG_D("onPlayPause()");
     
     if (!play) {
         playerA->pause();
@@ -113,17 +110,6 @@ void SuperpoweredInterface::onPlayPause(bool play) {
         playerA->play(true);
     };
     SuperpoweredCPU::setSustainedPerformanceMode(play); // <-- Important to prevent audio dropouts.
-}
-
-void SuperpoweredInterface::onFxSelect(int value) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "SuperpoweredInterface", "FXSEL %i", value);
-    activeFx = (unsigned char)value;
-}
-
-void SuperpoweredInterface::onFxOff() {
-    filter->enable(false);
-    roll->enable(false);
-    flanger->enable(false);
 }
 
 #define MINFREQ 60.0f
@@ -136,32 +122,17 @@ static inline float floatToFrequency(float value) {
     return value < MAXFREQ ? value : MAXFREQ;
 }
 
-void SuperpoweredInterface::onFxValue(int ivalue) {
+// Low/mid/high gain.
+// 1.0f is "flat",
+// 2.0f is +6db.
+// Kill is enabled under -40 db (0.01f).
+// Limits: 0.0f and 8.0f.
+void SuperpoweredInterface::onEqValuesSet(float band1, float band2, float band3) {
 
-    float value = float(ivalue) * 0.01f;
-    switch (activeFx) {
-        case 1:
-            filter->setResonantParameters(floatToFrequency(1.0f - value), 0.2f);
-            filter->enable(true);
-            flanger->enable(false);
-            roll->enable(false);
-            break;
-        case 2:
-            if (value > 0.8f) roll->beats = 0.0625f;
-            else if (value > 0.6f) roll->beats = 0.125f;
-            else if (value > 0.4f) roll->beats = 0.25f;
-            else if (value > 0.2f) roll->beats = 0.5f;
-            else roll->beats = 1.0f;
-            roll->enable(true);
-            filter->enable(false);
-            flanger->enable(false);
-            break;
-        default:
-            flanger->setWet(value);
-            flanger->enable(true);
-            filter->enable(false);
-            roll->enable(false);
-    };
+    equalizer->enable(true);
+    equalizer->bands[0] = band1;
+    equalizer->bands[1] = band2;
+    equalizer->bands[2] = band3;
 }
 
 void SuperpoweredInterface::loadTrack(const char *path) {
@@ -188,13 +159,9 @@ bool SuperpoweredInterface::process(short int *output, unsigned int numberOfSamp
     
     double masterBpm = playerA->currentBpm;
     bool silence = !playerA->process(stereoBuffer, false, numberOfSamples, volA, masterBpm, playerA->msElapsedSinceLastBeat);
-    
-    roll->bpm = flanger->bpm = (float)masterBpm; // Syncing fx is one line.
-
-    if (roll->process(silence ? nullptr : stereoBuffer, stereoBuffer, numberOfSamples) && silence) silence = false;
     if (!silence) {
         filter->process(stereoBuffer, stereoBuffer, numberOfSamples);
-        flanger->process(stereoBuffer, stereoBuffer, numberOfSamples);
+        equalizer->process(stereoBuffer, stereoBuffer, numberOfSamples);
     };
 
     // The stereoBuffer is ready now, let's put the finished audio into the requested buffers.
@@ -213,7 +180,7 @@ jclass jClassRef;
 jobject javaObjectRef;
 
 void SuperpoweredInterface::onPrepared() {
-    LOGD("onPrepared()");
+    LOG_D("onPrepared()");
     
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -231,7 +198,7 @@ void SuperpoweredInterface::onPrepared() {
 }
 
 void SuperpoweredInterface::onCompletion() {
-    LOGD("onCompletion()");
+    LOG_D("onCompletion()");
 
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -249,7 +216,7 @@ void SuperpoweredInterface::onCompletion() {
 }
 
 void SuperpoweredInterface::onError() {
-    LOGD("onError()");
+    LOG_D("onError()");
 
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -313,7 +280,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_loadTrac
         jobject  __unused obj,
         jstring  javapath) {
 
-    LOGD("loadTrack():");
+    LOG_D("loadTrack():");
     
     const char *path = javaEnvironment->GetStringUTFChars(javapath, JNI_FALSE);
     
@@ -328,7 +295,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
         jobject  __unused obj,
         jstring  javaPath) {
 
-    LOGD("analyzeData():");
+    LOG_D("analyzeData():");
 
     jboolean isCopy;
 
@@ -338,7 +305,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
     auto *decoder = new SuperpoweredDecoder();
     const char *openError = decoder->open(path, false, 0, 0);
     if (openError) {
-        LOGD("analyzeData(): Open error: %s\n", openError);
+        LOG_D("analyzeData(): Open error: %s\n", openError);
         delete decoder;
         return 0;
     };
@@ -371,7 +338,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
         if (progress != p) {
             progress = p;
             printf("\r%i%%", progress);
-            LOGV("analyzeData(): progress: %i", progress);
+            LOG_V("analyzeData(): progress: %i", progress);
             fflush(stdout);
         }
     };
@@ -393,10 +360,9 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
     // Cleanup.
 
     // Do something with the result.
-    LOGD("\rBpm is %f, average loudness is %f db, peak volume is %f db.\n", bpm, loudpartsAverageDecibel, peakDecibel);
-    LOGD("waveformSize: %d", waveformSize);
-    LOGD("overviewSize: %d", overviewSize);
-
+    LOG_D("\rBpm is %f, average loudness is %f db, peak volume is %f db.\n", bpm, loudpartsAverageDecibel, peakDecibel);
+    LOG_D("waveformSize: %d", waveformSize);
+    LOG_D("overviewSize: %d", overviewSize);
 
     jbyteArray ret = javaEnvironment->NewByteArray(overviewSize);
 
@@ -420,17 +386,6 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
     
     return ret;
 }
-
-/*
-extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxSelect(
-        JNIEnv * __unused javaEnvironment,
-        jobject __unused obj,
-        jint value) {
-
-    example->onFxSelect(value);
-}
-*/
 
 extern "C" JNIEXPORT
 void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetTempo(
@@ -469,19 +424,19 @@ jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getDura
     return (jlong)(unsigned long long)example->getDurationMs();
 }
 
-extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpoweredImplon_FxOff(
+extern "C" JNIEXPORT
+void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_setEqValues(
         JNIEnv * __unused javaEnvironment,
-        jobject  __unused obj) {
-
-    example->onFxOff();
+        jobject  __unused obj,
+        jfloat   band1,
+        jfloat   band2,
+        jfloat   band3) {
 }
 
+// Prototype for upcoming JNI functions
 extern "C" JNIEXPORT 
 void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxValue(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
         jint     value) {
-
-    example->onFxValue(value);
 }

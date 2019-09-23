@@ -7,8 +7,7 @@
 #include "SuperpoweredInterface.h"
 #include <SuperpoweredAdvancedAudioPlayer.h>
 #include <SuperpoweredFilter.h>
-#include <SuperpoweredRoll.h>
-#include <SuperpoweredFlanger.h>
+#include <Superpowered3BandEQ.h>
 #include <SuperpoweredAnalyzer.h>
 #include <AndroidIO/SuperpoweredAndroidAudioIO.h>
 
@@ -30,6 +29,7 @@ public:
     void onSetTempo(float factor, bool mastertempo);
     void onSetPosition(double ms, bool andStop, bool synchronisedStart);
     void loadTrack(const char *path);
+    void onEqValuesSet(float band1, float band2, float band3);
     void destroy();
     
     double getPositionMs();
@@ -45,9 +45,8 @@ private:
     SuperpoweredAndroidAudioIO *audioSystem;
     SuperpoweredAdvancedAudioPlayer *playerA;
     SuperpoweredWaveform *waveform;
-    SuperpoweredRoll *roll;
     SuperpoweredFilter *filter;
-    SuperpoweredFlanger *flanger;
+    Superpowered3BandEQ *equalizer;
     float *stereoBuffer;
     unsigned char activeFx;
     float volA;

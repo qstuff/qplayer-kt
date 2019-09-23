@@ -83,9 +83,6 @@
     <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
     <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
 
-    <string name="settings_start_foreground_title">Start as Foreground-Service?</string>
-    <string name="settings_start_foreground_summary">As a Foreground-Service the player keeps running when the app goes to background and the device enters doze!\nYou need to restart the app to make this setting effective.\nBe aware that activating this may result in more battery usage!</string>
-
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">DJ Settings</string>
 
@@ -101,12 +98,23 @@
     <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel sensitivity</string>
     <string name="settings_dj_jogwheel_sensitivity_summary">Controls how fast the trackspeed changes\nCurrent: %1$s</string>
 
-    <!-- Privacy Settings -->
-    <string name="settings_cat_privacy_title">Common Settings</string>
+    <!-- Sound Settings -->
+    <string name="settings_cat_sound_title">Sound Settings</string>
+
+    <string name="settings_equalizer_title">3-Band Equalizer</string>
+    <string name="settings_equalizer_summary"></string>
+
+    <!-- Common Settings -->
+    <string name="settings_cat_common_title">Common Settings</string>
+
+    <string name="settings_start_foreground_title">Start as Foreground-Service?</string>
+    <string name="settings_start_foreground_summary">As a Foreground-Service the player keeps running when the app goes to background and the device enters doze!\nYou need to restart the app to make this setting effective.\nBe aware that activating this may result in more battery usage!</string>
+
     <string name="settings_privacy_crashreport_title">Crashreports</string>
     <string name="settings_privacy_crashreport_summary">If enabled the app sends crashreports.\nThe app needs to be restarted to make the change effective.</string>
 
     <string name="settings_app_version_title">App Version</string>
+
     <string name="settings_device_info_title">Device Info</string>
 
     <!-- Feedback Activity -->

@@ -29,12 +29,6 @@
             android:summary="@string/settings_show_clear_queue_summary"
             android:defaultValue="true" />
 
-        <SwitchPreference
-            android:key="@string/prefs_key_start_foreground"
-            android:title="@string/settings_start_foreground_title"
-            android:summary="@string/settings_start_foreground_summary"
-            android:defaultValue="false" />
-
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -58,8 +52,24 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/settings_cat_privacy_title"
+        android:title="@string/settings_cat_sound_title"
+        android:key="player_sound_settings">
+
+        <Preference
+            android:key="@string/prefs_key_equalizer"
+            android:title="@string/settings_equalizer_title"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_cat_common_title"
         android:key="player_privacy_settings">
+
+        <SwitchPreference
+            android:key="@string/prefs_key_start_foreground"
+            android:title="@string/settings_start_foreground_title"
+            android:summary="@string/settings_start_foreground_summary"
+            android:defaultValue="false" />
 
         <SwitchPreference
             android:key="@string/prefs_key_enable_crashreporting"

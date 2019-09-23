@@ -31,7 +31,7 @@ import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
 
-/*
+/**
  * Created by Claus Chierici (claus@qstuff.org) 
  * on 2/3/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.

@@ -3,6 +3,7 @@ package org.qstuff.qplayer.settings
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -12,6 +13,9 @@ import org.koin.standalone.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.equalizer.EqualizerFragment
+import org.qstuff.qplayer.util.addFragment
+import org.qstuff.qplayer.util.replaceFragment
 import timber.log.Timber
 
 class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
@@ -69,6 +73,11 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         Timber.d("onPreferenceTreeClick(): ${preference?.key}")
+
+        if (preference?.key == getString(R.string.prefs_key_equalizer)) {
+            openEqualizerFragment()
+        }
+
         return true
     }
 
@@ -91,5 +100,9 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
     private fun getDeviceInfoString(): String {
         return "${Build.MANUFACTURER} ${Build.MODEL} ${Build.CPU_ABI}"
+    }
+
+    private fun openEqualizerFragment() {
+        (activity as AppCompatActivity).replaceFragment(EqualizerFragment.newInstance(), R.id.settingsContainer )
     }
 }

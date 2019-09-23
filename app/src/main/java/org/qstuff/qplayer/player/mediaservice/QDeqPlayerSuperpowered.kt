@@ -44,6 +44,7 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
     private external fun getPositionMs(): Long
     private external fun getDurationMs(): Long
     private external fun analyzeData(path: String): ByteArray
+    private external fun setEqValues(band1: Float, band2: Float, band3: Float)
     private external fun destroyNative()
 
     //
