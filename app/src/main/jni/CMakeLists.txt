@@ -4,6 +4,7 @@ set(PATH_TO_SUPERPOWERED "$ENV{HOME}/private/repos/SuperpoweredSDK/Superpowered/
 set(CACHE STRING "")
 
 message(================= ${ANDROID_ABI})
+message(================= "PATH_TO_SUPERPOWERED = ${PATH_TO_SUPERPOWERED}")
 
 file(GLOB CPP_FILES "*.cpp")
 
@@ -11,11 +12,11 @@ add_library(
 	SuperpoweredInterface
 	SHARED
 	${CPP_FILES}
-	${PATH_TO_SUPERPOWERED}/AndroidIO/SuperpoweredAndroidAudioIO.cpp
+	/Users/claus/private/repos/SuperpoweredSDK/Superpowered/AndroidIO/SuperpoweredAndroidAudioIO.cpp
 )
 
 include_directories(src/main/jni)
-include_directories(${PATH_TO_SUPERPOWERED})
+include_directories(/Users/claus/private/repos/SuperpoweredSDK/Superpowered/)
 
 find_library( 
     # Sets the name of the path variable.
@@ -31,5 +32,5 @@ target_link_libraries(
     log
     android
     OpenSLES
-	${PATH_TO_SUPERPOWERED}/libSuperpoweredAndroid${ANDROID_ABI}.a
+	/Users/claus/private/repos/SuperpoweredSDK/Superpowered/libSuperpoweredAndroid${ANDROID_ABI}.a
 )

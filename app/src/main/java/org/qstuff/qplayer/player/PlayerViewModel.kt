@@ -87,7 +87,6 @@ class  PlayerViewModel (application: Application):
                     if (action == QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED) {
                         Timber.d("onReceive(): NOT_ACTION_NOTIFICATION_DISMISSED")
                         mediaService.stop()
-//                        mediaService.player.destroy()
                         stopMediaService()
                     }
                 }

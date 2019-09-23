@@ -4,7 +4,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent" 
-    android:background="@color/white">
+    android:background="@color/black">
 
     <TextView
         android:id="@+id/fragmentEqualizerTitle"
@@ -22,6 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/fragmentEqualizerTitle"
         android:layout_marginTop="100dp"
+        android:layout_marginBottom="150dp"
         android:layout_centerVertical="true"
         android:gravity="center"
         android:orientation="horizontal"
@@ -31,13 +32,17 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_marginTop="@dimen/jog_wheel_border"
+            android:padding="10dp"
             android:gravity="center"
+            android:background="@color/white"
             android:layout_weight="1">
 
             <FrameLayout
                 android:id="@+id/equalizerBandOneFrame"
                 android:layout_width="@dimen/pitchbar_width"
                 android:layout_height="match_parent"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
                 android:background="@drawable/black_rounded_shape">
@@ -48,7 +53,7 @@
                     android:layout_height="match_parent"
                     android:background="@color/transparent"
                     android:max="800"
-                    android:progress="100"
+                    android:progress="300"
                     android:progressDrawable="@android:color/transparent"
                     android:thumb="@drawable/pitchbar_progress_white"
                     android:thumbOffset="17dp" />
@@ -62,13 +67,17 @@
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:layout_marginTop="@dimen/jog_wheel_border"
+            android:padding="10dp"
             android:gravity="center"
+            android:background="@color/white"
             android:layout_weight="1">
 
             <FrameLayout
                 android:id="@+id/equalizerBandTwoFrame"
                 android:layout_width="@dimen/pitchbar_width"
                 android:layout_height="match_parent"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
                 android:background="@drawable/black_rounded_shape">
@@ -79,7 +88,7 @@
                     android:layout_height="match_parent"
                     android:background="@color/transparent"
                     android:max="800"
-                    android:progress="400"
+                    android:progress="300"
                     android:progressDrawable="@android:color/transparent"
                     android:thumb="@drawable/pitchbar_progress_white"
                     android:thumbOffset="17dp" />
@@ -93,13 +102,17 @@
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:layout_marginTop="@dimen/jog_wheel_border"
+            android:padding="10dp"
             android:gravity="center"
+            android:background="@color/white"
             android:layout_weight="1">
 
             <FrameLayout
                 android:id="@+id/equalizerBandThreeFrame"
                 android:layout_width="@dimen/pitchbar_width"
                 android:layout_height="match_parent"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
                 android:background="@drawable/black_rounded_shape">
@@ -120,149 +133,6 @@
         </RelativeLayout>
 
     </LinearLayout>
-
-    <!--
-    <RelativeLayout
-        android:id="@+id/fragmentEqualizerSliderContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/fragmentEqualizerTitle"
-        android:layout_marginTop="100dp"
-        android:layout_centerVertical="true"
-        android:gravity="center"
-        android:rotation="270">
-
-        <RelativeLayout
-            android:id="@+id/fragmentEqualizerBandOneContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true">
-
-            <SeekBar
-                android:id="@+id/fragmentEqualizerBandOne"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:max="400"
-                android:progress="100"
-                android:foregroundGravity="center"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/fragmentEqualizerBandOne"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:textColor="@color/q_orange"
-                android:text="LOW"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="100dp"
-                android:layout_marginTop="5dp"
-                android:layout_below="@+id/fragmentEqualizerBandOne"
-                android:gravity="center"
-                android:textSize="15sp"
-                android:textColor="@color/q_orange"
-                android:text="0db"/>
-
-            <View
-                android:layout_width="2dp"
-                android:layout_height="40dp"
-                android:layout_marginLeft="105dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/q_orange_80"/>
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/fragmentEqualizerBandTwoContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
-            android:layout_below="@+id/fragmentEqualizerBandOneContainer">
-
-            <SeekBar
-                android:id="@+id/fragmentEqualizerBandTwo"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:max="400"
-                android:progress="100"
-                android:foregroundGravity="center"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/fragmentEqualizerBandTwo"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:textColor="@color/q_orange"
-                android:text="MID"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="100dp"
-                android:layout_below="@+id/fragmentEqualizerBandTwo"
-                android:gravity="center"
-                android:textSize="15sp"
-                android:textColor="@color/q_orange"
-                android:text="0db"/>
-
-            <View
-                android:layout_width="2dp"
-                android:layout_height="40dp"
-                android:layout_marginLeft="105dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/q_orange_80"/>
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/fragmentEqualizerBandThreeContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
-            android:layout_below="@+id/fragmentEqualizerBandTwoContainer">
-
-            <SeekBar
-                android:id="@+id/fragmentEqualizerBandTree"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:max="400"
-                android:progress="100"
-                android:foregroundGravity="center"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/fragmentEqualizerBandTree"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:textColor="@color/q_orange"
-                android:text="HIGH"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="100dp"
-                android:layout_below="@+id/fragmentEqualizerBandTree"
-                android:gravity="center"
-                android:textSize="15sp"
-                android:textColor="@color/q_orange"
-                android:text="0db"/>
-
-            <View
-                android:layout_width="2dp"
-                android:layout_height="40dp"
-                android:layout_marginLeft="105dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/q_orange_80"/>
-
-        </RelativeLayout>
-
-    </RelativeLayout>
-    -->
 
 </RelativeLayout>
 

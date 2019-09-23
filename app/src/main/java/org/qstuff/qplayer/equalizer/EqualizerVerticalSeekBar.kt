@@ -18,11 +18,15 @@ import org.qstuff.qplayer.R
 class EqualizerVerticalSeekBar : AppCompatSeekBar {
 
     companion object {
-
+        const val PROGRESS_MAX = 800
+        const val PROGRESS_START = 300
     }
 
-    private var rect: Rect = Rect()
-    private var paint: Paint = Paint()
+    private var progressRect: Rect = Rect()
+    private var progressPaint: Paint = Paint()
+    private var zeroRect: Rect = Rect()
+    private var zeroPaint: Paint = Paint()
+
     private var seekbarWidth = 0
 
     private var seekbarListener: OnSeekBarChangeListener? = null
@@ -66,7 +70,7 @@ class EqualizerVerticalSeekBar : AppCompatSeekBar {
 
     fun reset() {
 
-        progress = 500
+        progress = PROGRESS_START
         onSizeChanged(width, height, 0, 0)
         if (seekbarListener != null) {
             seekbarListener!!.onProgressChanged(this, 500, true)
@@ -84,38 +88,28 @@ class EqualizerVerticalSeekBar : AppCompatSeekBar {
 
         val progress = progress
 
-        rect.set(offset,
+        canvas.drawRect(progressRect, progressPaint)
+
+        val diff = height.toFloat() / PROGRESS_MAX
+
+        progressRect.set(0,
                 width / 2 - seekbarWidth / 2,
-                height,
+                (diff * (progress)).toInt(),
                 width / 2 + seekbarWidth / 2)
 
-        paint.color = resources.getColor(R.color.black)
+        progressPaint.color = resources.getColor(R.color.q_orange)
+        canvas.drawRect(progressRect, progressPaint)
 
-        canvas.drawRect(rect, paint)
-
-        val diff = height.toFloat() / 1000
-
-        if (progress > 500) {
-
-            rect.set(height / 2,
-                    width / 2 - seekbarWidth / 2,
-                    (height / 2 + diff * (progress - 500)).toInt(),
-                    width / 2 + seekbarWidth / 2)
-
-            paint.color = resources.getColor(R.color.q_orange)
-            canvas.drawRect(rect, paint)
-        }
-
-        if (progress < 500) {
-
-            rect.set((height / 2 - diff * (500 - progress)).toInt(),
-                    width / 2 - seekbarWidth / 2,
-                    height / 2,
-                    width / 2 + seekbarWidth / 2)
-
-            paint.color = resources.getColor(R.color.q_orange)
-            canvas.drawRect(rect, paint)
-        }
+        zeroRect.set(PROGRESS_START + offset,
+                width ,
+                    PROGRESS_START + offset,
+                width )
+        zeroPaint.color = resources.getColor(R.color.black)
+        zeroPaint.strokeWidth = 2f
+        canvas.drawLine(PROGRESS_START.toFloat(),
+                0f ,
+                PROGRESS_START.toFloat(),
+                width.toFloat(), zeroPaint)
 
         super.onDraw(canvas)
     }
