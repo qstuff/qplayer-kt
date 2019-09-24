@@ -12,7 +12,7 @@ import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.player.mediaservice.QMediaPlayerService
+import org.qstuff.qplayer.datasource.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
@@ -270,6 +270,11 @@ class  PlayerViewModel (application: Application):
         }
         preferencesDataSource.saveRemainigTimeMode(showRemainingTrackTime)
     }
+
+
+
+
+
 
     //
     // MediaService

@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.mediaservice
+package org.qstuff.qplayer.datasource.mediaservice
 
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
@@ -28,4 +28,6 @@ interface QDeqPlayer {
 
     fun getStatusObserver(): MutableLiveData<Track>
     fun getWaveFormDataObserver(): MutableLiveData<TrackData>
+
+    fun set3BandEqValues(band1: Float, band2: Float, band3: Float)
 }

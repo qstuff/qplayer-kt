@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.mediaservice
+package org.qstuff.qplayer.datasource.mediaservice
 
 import android.annotation.SuppressLint
 import android.app.Notification

@@ -8,9 +8,9 @@ import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import kotlinx.android.synthetic.main.activity_player.*
 import kotlinx.android.synthetic.main.fragment_equalizer.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.player.PlayerViewModel
 import timber.log.Timber
 
 
@@ -29,11 +29,14 @@ class EqualizerFragment: Fragment() {
     }
 
     private lateinit var equalizerViewModel: EqualizerViewModel
+    private lateinit var playerViewModel: PlayerViewModel
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
         equalizerViewModel = ViewModelProviders.of(activity!!).get(EqualizerViewModel::class.java)
+        playerViewModel = ViewModelProviders.of(activity!!).get(PlayerViewModel::class.java)
 
         return inflater.inflate(R.layout.fragment_equalizer, container, false)
     }
@@ -51,15 +54,15 @@ class EqualizerFragment: Fragment() {
 
     private fun setupObservers() {
 
-        equalizerViewModel.bandOneValue.observe(this, Observer { bandOneValue ->
+        equalizerViewModel.bandOneSliderValue.observe(this, Observer { bandOneValue ->
             equalizerBandOne.setNewProgress(bandOneValue, false)
         })
 
-        equalizerViewModel.bandOneValue.observe(this, Observer { bandOneValue ->
+        equalizerViewModel.bandOneSliderValue.observe(this, Observer { bandOneValue ->
             equalizerBandOne.setNewProgress(bandOneValue, false)
         })
 
-        equalizerViewModel.bandOneValue.observe(this, Observer { bandOneValue ->
+        equalizerViewModel.bandOneSliderValue.observe(this, Observer { bandOneValue ->
             equalizerBandOne.setNewProgress(bandOneValue, false)
         })
 

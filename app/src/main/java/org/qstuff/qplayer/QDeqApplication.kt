@@ -5,6 +5,7 @@ import android.util.DisplayMetrics
 import androidx.room.Room
 import org.koin.android.ext.android.startKoin
 import org.koin.dsl.module.module
+import org.qstuff.qplayer.datasource.mediaservice.MediaServiceDataSource
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
@@ -25,7 +26,8 @@ class QDeqApplication : Application() {
         startKoin(this,
                 listOf(preferencesDataSource,
                         roomDatabaseModule,
-                        roomDataSource
+                        roomDataSource,
+                        mediaServiceDataSource
         ))
 
         if (BuildConfig.DEBUG) {
@@ -55,6 +57,13 @@ class QDeqApplication : Application() {
             RoomDataSource()
         }
     })
+
+    private val mediaServiceDataSource = module (definition = {
+        single {
+            MediaServiceDataSource(this@QDeqApplication)
+        }
+    })
+
 
     //
     // Debug

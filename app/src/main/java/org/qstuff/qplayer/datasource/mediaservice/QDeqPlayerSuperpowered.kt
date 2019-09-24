@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.mediaservice
+package org.qstuff.qplayer.datasource.mediaservice
 
 import android.content.Context
 import android.media.AudioManager
@@ -117,6 +117,10 @@ class QDeqPlayerSuperpowered : QDeqPlayer {
     override  fun getStatusObserver(): MutableLiveData<Track> = onPlayerStatusUpdate
 
     override  fun getWaveFormDataObserver(): MutableLiveData<TrackData> = onWaveFormDataUpdate
+
+    override fun set3BandEqValues(band1: Float, band2: Float, band3: Float) {
+        set3BandEqValues(band1, band2, band3)
+    }
 
     private var processing = false
     private val waveformQueue = arrayListOf<Track>()

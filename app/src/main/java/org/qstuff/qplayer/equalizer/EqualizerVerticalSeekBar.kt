@@ -1,5 +1,6 @@
 package org.qstuff.qplayer.equalizer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -73,7 +74,7 @@ class EqualizerVerticalSeekBar : AppCompatSeekBar {
         progress = PROGRESS_START
         onSizeChanged(width, height, 0, 0)
         if (seekbarListener != null) {
-            seekbarListener!!.onProgressChanged(this, 500, true)
+            seekbarListener!!.onProgressChanged(this, PROGRESS_START, true)
         }
     }
 
@@ -100,11 +101,17 @@ class EqualizerVerticalSeekBar : AppCompatSeekBar {
         progressPaint.color = resources.getColor(R.color.q_orange)
         canvas.drawRect(progressRect, progressPaint)
 
-        zeroRect.set(PROGRESS_START + offset,
+        zeroRect.set(PROGRESS_START + offset + 20,
                 width ,
-                    PROGRESS_START + offset,
+                    PROGRESS_START + offset + 20,
                 width )
-        zeroPaint.color = resources.getColor(R.color.black)
+
+        if (progress > PROGRESS_START) {
+            zeroPaint.color = resources.getColor(R.color.black)
+        } else {
+            zeroPaint.color = resources.getColor(R.color.white)
+        }
+
         zeroPaint.strokeWidth = 2f
         canvas.drawLine(PROGRESS_START.toFloat(),
                 0f ,
@@ -114,6 +121,7 @@ class EqualizerVerticalSeekBar : AppCompatSeekBar {
         super.onDraw(canvas)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
 
         if (!isEnabled || seekbarListener == null) {
