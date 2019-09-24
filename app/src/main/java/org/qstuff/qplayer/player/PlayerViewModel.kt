@@ -3,12 +3,11 @@ package org.qstuff.qplayer.player
 import android.app.Application
 import android.content.*
 import android.os.Handler
-import android.os.IBinder
 import androidx.lifecycle.*
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
-import org.qstuff.qplayer.QDeqApplication
+import org.qstuff.qplayer.datasource.mediaservice.MediaServiceDataSource
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
@@ -19,25 +18,22 @@ import timber.log.Timber
 class  PlayerViewModel (application: Application):
         AndroidViewModel(application), KoinComponent {
 
-    companion object {
-        const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
-        const val ACTION_SERVICE_FOREGROUND_STOP = "ACTION_SERVICE_FOREGROUND_STOP"
-        const val ACTION_SERVICE_BACKGROUND_START = "ACTION_SERVICE_BACKGROUND_START"
-        const val ACTION_SERVICE_BACKGROUND_STOP = "ACTION_SERVICE_BACKGROUND_STOP"
+    interface MediaServiceConnectionInfo {
+        fun onMediaServiceConnected()
+        fun onMediaServiceDisconnected()
+        fun onPendingTrack(pendingTrack: Track)
+    }
 
+    companion object {
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
     }
 
-    var mediaServiceStartMode: String
-    var mediaServiceStopMode: String
-
     // Observables
-    lateinit var onWaveformDataUpdate: LiveData<TrackData>
-
+    var onWaveformDataUpdate = MutableLiveData<TrackData>()
+    val onMediaServiceConnected = MediatorLiveData<Boolean>()
     val trackStatus = MutableLiveData<Track>()
     val trackStatusMediator = MediatorLiveData<Track>()
     val playerStatus = MutableLiveData<PlayerStatus>()
-    val onMediaServiceConnected = MediatorLiveData<Boolean>()
     val onTrackPositionUpdate = MutableLiveData<Long>()
     val pitchValueText = MutableLiveData<String>()
     val pitchValue = MutableLiveData<Int>()
@@ -61,9 +57,6 @@ class  PlayerViewModel (application: Application):
 
     // MediaService
     private lateinit var mediaService: QMediaPlayerService
-    private var isMediaServiceRunning = false
-    private var isMediaServiceBound = false
-    private var pendingTrack: Track? = null
 
     // Update Task
     private var updateHandler = Handler()
@@ -71,6 +64,7 @@ class  PlayerViewModel (application: Application):
     private var isUpdatetaskRunning = false
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
+    private val mediaServiceDataSource by inject<MediaServiceDataSource>()
 
 
     private val notificationBroadcastReceiver = object : BroadcastReceiver() {
@@ -86,7 +80,6 @@ class  PlayerViewModel (application: Application):
                     }
                     if (action == QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED) {
                         Timber.d("onReceive(): NOT_ACTION_NOTIFICATION_DISMISSED")
-                        mediaService.stop()
                         stopMediaService()
                     }
                 }
@@ -94,68 +87,47 @@ class  PlayerViewModel (application: Application):
         }
     }
 
-    private val serviceConnection = object : ServiceConnection {
-
-        override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            Timber.d("onServiceConnected(): ${name.toShortString()}")
-
-            mediaService = (binder as QMediaPlayerService.MyBinder).service
-
-            trackStatusMediator.addSource(mediaService.getStatusObserver()) { track ->
-                trackStatusMediator.value = track
-            }
-            trackStatusMediator.addSource(trackStatus) { track ->
-                trackStatus.value = track
-            }
-
-            onWaveformDataUpdate = Transformations.map(mediaService.getWaveFormDataObserver()) { it }
-
-            onMediaServiceConnected.value = true
-            isMediaServiceRunning = true
-            isMediaServiceBound = true
-
-            if (pendingTrack != null) {
-                this@PlayerViewModel.loadTrack(pendingTrack)
-                pendingTrack = null
-            }
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            Timber.d("onServiceDisconnected(): ${name.toShortString()}")
-
-            mediaService.stop()
-            mediaService.player.destroy()
-
-            onMediaServiceConnected.value = false
-
-            trackStatusMediator.removeSource(mediaService.getStatusObserver())
-            trackStatusMediator.removeSource(trackStatus)
-        }
-    }
 
     init {
-        if (preferencesDataSource.isStartForegroundEnabled()) {
-            mediaServiceStartMode = ACTION_SERVICE_FOREGROUND_START
-            mediaServiceStopMode = ACTION_SERVICE_FOREGROUND_STOP
-        } else {
-            mediaServiceStartMode = ACTION_SERVICE_BACKGROUND_START
-            mediaServiceStopMode = ACTION_SERVICE_BACKGROUND_STOP
-        }
+        mediaServiceDataSource.registerMediaServiceConnectionInfo(object : MediaServiceConnectionInfo{
+            override fun onMediaServiceConnected() {
+                mediaService = mediaServiceDataSource.getMediaService()
+                onMediaServiceConnected.value = true
 
-        playerStatus.value = PlayerStatus.PAUSED
+                playerStatus.value = PlayerStatus.PAUSED
 
-        LocalBroadcastManager.getInstance(application)
-                .registerReceiver(notificationBroadcastReceiver,
-                        IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
-        LocalBroadcastManager.getInstance(application)
-                .registerReceiver(notificationBroadcastReceiver,
-                        IntentFilter(QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED))
+                LocalBroadcastManager.getInstance(application)
+                        .registerReceiver(notificationBroadcastReceiver,
+                                IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
+                LocalBroadcastManager.getInstance(application)
+                        .registerReceiver(notificationBroadcastReceiver,
+                                IntentFilter(QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED))
 
-        pitchValueText.value = "0,0%"
-        cueActive.value = false
+                pitchValueText.value = "0,0%"
+                cueActive.value = false
 
-        loadStates()
-        loadSettings()
+                trackStatusMediator.addSource(mediaService.getStatusObserver()) { track ->
+                    trackStatusMediator.value = track
+                }
+                trackStatusMediator.addSource(trackStatus) { track ->
+                    trackStatus.value = track
+                }
+
+                onWaveformDataUpdate = mediaService.getWaveFormDataObserver()
+
+                loadStates()
+                loadSettings()
+            }
+
+            override fun onMediaServiceDisconnected() {
+                onMediaServiceConnected.value = false
+            }
+
+            override fun onPendingTrack(pendingTrack: Track) {
+                loadTrack(pendingTrack)
+
+            }
+        })
     }
 
     //
@@ -164,7 +136,7 @@ class  PlayerViewModel (application: Application):
 
     fun playPause() {
 
-        if (!isMediaServiceBound) return
+        if (!mediaServiceDataSource.isMediaServiceBound()) return
 
         when {
             playerStatus.value == PlayerStatus.PLAYING -> {
@@ -185,7 +157,7 @@ class  PlayerViewModel (application: Application):
 
     fun playFromCue(track: Track?) {
 
-        if (!isMediaServiceBound) return
+        if (!mediaServiceDataSource.isMediaServiceBound()) return
         if (track == null) return
 
         mediaService.seekTo(track.cuePosition.toDouble(), true)
@@ -240,7 +212,7 @@ class  PlayerViewModel (application: Application):
 
         currentTrackSpeed = 1.0f + diff / 100
 
-        if (isMediaServiceRunning) {
+        if (mediaServiceDataSource.isMediaServiceRunning()) {
             mediaService.setTrackSpeed(currentTrackSpeed, masterTempo.value ?: false)
         }
     }
@@ -248,7 +220,7 @@ class  PlayerViewModel (application: Application):
     fun toggleCue(track: Track, enable: Boolean) {
         cueActive.value = enable
 
-        if (isMediaServiceRunning) {
+        if (mediaServiceDataSource.isMediaServiceRunning()) {
             if (enable) {
                 if (isStopPlaybackOnSettingCuepointEnabled && mediaService.isPlaying()) {
                     playPause()
@@ -271,42 +243,16 @@ class  PlayerViewModel (application: Application):
         preferencesDataSource.saveRemainigTimeMode(showRemainingTrackTime)
     }
 
-
-
-
-
-
     //
     // MediaService
     //
 
     fun startMediaService() {
-
-        if(!isMediaServiceRunning) {
-            val app = getApplication<QDeqApplication>()
-            val intent = Intent(app, QMediaPlayerService::class.java)
-            intent.action = mediaServiceStartMode
-            app.startService(intent)
-            app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-        }
+        mediaServiceDataSource.startMediaService(getApplication())
     }
 
     fun stopMediaService() {
-
-        val app = getApplication<QDeqApplication>()
-        val intent = Intent(app, QMediaPlayerService::class.java)
-        intent.action = mediaServiceStopMode
-        app.startService(intent)
-        app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-
-        if (isMediaServiceBound) {
-            app.unbindService(serviceConnection)
-            isMediaServiceBound = false
-        }
-        if (isMediaServiceRunning) {
-            app.stopService(Intent(app, QMediaPlayerService::class.java))
-            isMediaServiceRunning = false
-        }
+        mediaServiceDataSource.stopMediaService(getApplication())
     }
 
     //
@@ -316,8 +262,8 @@ class  PlayerViewModel (application: Application):
     fun loadTrack(track: Track?) {
         Timber.d("loadTrack(): $track")
 
-        if (!isMediaServiceBound) {
-            pendingTrack = track
+        if (!mediaServiceDataSource.isMediaServiceBound()) {
+            mediaServiceDataSource.pendingTrack = track
             return
         }
 
@@ -347,7 +293,7 @@ class  PlayerViewModel (application: Application):
     }
 
     fun seekTo(position: Double, andStop: Boolean) {
-        if (!isMediaServiceBound) return
+        if (!mediaServiceDataSource.isMediaServiceBound()) return
 
         mediaService.seekTo(position, andStop)
         onTrackPositionUpdate.value = position.toLong()
@@ -364,7 +310,7 @@ class  PlayerViewModel (application: Application):
     }
 
     fun getTrackPosition(): Long {
-        if (!isMediaServiceBound) return 0
+        if (!mediaServiceDataSource.isMediaServiceBound()) return 0
 
         return mediaService.getCurrentPositionMillis()
     }

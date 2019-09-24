@@ -238,7 +238,7 @@ void SuperpoweredInterface::onError() {
 //
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_SuperpoweredNative(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_SuperpoweredNative(
         JNIEnv * __unused jniEnv,
         jobject  __unused obj,
         jint     samplerate,
@@ -255,7 +255,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_Superpow
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_destroyNative(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_destroyNative(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
 
@@ -266,7 +266,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_destroyN
 }
 
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onPlayPause(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_onPlayPause(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
         jboolean play) {
@@ -275,7 +275,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onPlayPa
 }
 
 extern "C" JNIEXPORT JNICALL
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_loadTrack(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_loadTrack(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
         jstring  javapath) {
@@ -290,7 +290,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_loadTrac
 }
 
 extern "C" JNIEXPORT JNICALL
-jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_analyzeData(
+jbyteArray Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_analyzeData(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
         jstring  javaPath) {
@@ -388,7 +388,7 @@ jbyteArray Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_an
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetTempo(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_onSetTempo(
         JNIEnv * __unused javaEnvironment,
         jobject __unused obj,
         jfloat value,
@@ -398,7 +398,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetTem
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetPosition(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_onSetPosition(
         JNIEnv *  __unused javaEnvironment,
         jobject  __unused obj,
         jdouble  position,
@@ -409,7 +409,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onSetPos
 }
 
 extern "C" JNIEXPORT
-jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getPositionMs(
+jlong Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_getPositionMs(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
 
@@ -417,7 +417,7 @@ jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getPosi
 }
 
 extern "C" JNIEXPORT
-jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getDurationMs(
+jlong Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_getDurationMs(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj) {
 
@@ -425,7 +425,7 @@ jlong Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_getDura
 }
 
 extern "C" JNIEXPORT
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_setEqValues(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_setEqValues(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
         jfloat   band1,
@@ -435,7 +435,7 @@ void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_setEqVal
 
 // Prototype for upcoming JNI functions
 extern "C" JNIEXPORT 
-void Java_org_qstuff_qplayer_player_mediaservice_QDeqPlayerSuperpowered_onFxValue(
+void Java_org_qstuff_qplayer_datasource_mediaservice_QDeqPlayerSuperpowered_onFxValue(
         JNIEnv * __unused javaEnvironment,
         jobject  __unused obj,
         jint     value) {
