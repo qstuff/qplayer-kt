@@ -2,15 +2,12 @@ package org.qstuff.qplayer.datasource.mediaservice
 
 import android.content.*
 import android.os.IBinder
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.player.PlayerViewModel
-import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
 /*

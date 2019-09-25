@@ -77,7 +77,7 @@ class EqualizerFragment: Fragment() {
         equalizerBandOne.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 Timber.d("equalizerBandOne: onProgressChanged(): $progress")
-                equalizerViewModel.onBandOneChanged(progress)
+                //equalizerViewModel.onBandOneChanged(progress)
 
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -87,7 +87,7 @@ class EqualizerFragment: Fragment() {
         equalizerBandTwo.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 Timber.d("equalizerBandTwo: onProgressChanged(): $progress")
-                equalizerViewModel.onBandTwoChanged(progress)
+                //equalizerViewModel.onBandTwoChanged(progress)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -96,7 +96,7 @@ class EqualizerFragment: Fragment() {
         equalizerBandThree.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 Timber.d("equalizerBandThree: onProgressChanged(): $progress")
-                equalizerViewModel.onBandThreeChanged(progress)
+                //equalizerViewModel.onBandThreeChanged(progress)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}

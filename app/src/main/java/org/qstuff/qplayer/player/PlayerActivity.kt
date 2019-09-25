@@ -269,7 +269,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             pitchControl.setNewProgress(pitchValue, false)
         })
 
-        playerViewModel.jogwheelSensitivity.observe(this, Observer { jogwheelSensitivity ->
+        playerViewModel.jogWheelSensitivity.observe(this, Observer { jogwheelSensitivity ->
             this.jogwheelSensitivity = jogwheelSensitivity
         })
 

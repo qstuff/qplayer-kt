@@ -37,7 +37,7 @@ class  PlayerViewModel (application: Application):
     val onTrackPositionUpdate = MutableLiveData<Long>()
     val pitchValueText = MutableLiveData<String>()
     val pitchValue = MutableLiveData<Int>()
-    val jogwheelSensitivity = MutableLiveData<Int>()
+    val jogWheelSensitivity = MutableLiveData<Int>()
     val pitchFactorIndex = MutableLiveData<Int>()
     val masterTempo = MutableLiveData<Boolean>()
     val cueActive = MutableLiveData<Boolean>()
@@ -114,6 +114,7 @@ class  PlayerViewModel (application: Application):
                 }
 
                 onWaveformDataUpdate = mediaService.getWaveFormDataObserver()
+
 
                 loadStates()
                 loadSettings()
@@ -339,7 +340,7 @@ class  PlayerViewModel (application: Application):
         masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
-        jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
+        jogWheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
     }
 
     private fun startUpdateTimer() {

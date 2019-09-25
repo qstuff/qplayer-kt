@@ -175,6 +175,8 @@ class QMediaPlayerService : LifecycleService() {
 
     fun getStatusObserver(): MutableLiveData<Track> = player.getStatusObserver()
     fun getWaveFormDataObserver(): MutableLiveData<TrackData> = player.getWaveFormDataObserver()
+    fun set3BandEqValues(band1: Float, band2: Float, band3: Float) = player.set3BandEqValues(band1, band2, band3)
+
 
     //
     // Private
