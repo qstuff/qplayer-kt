@@ -127,4 +127,5 @@ dependencies {
 
     implementation project(':HGDialV2-release')
 }
+
 apply plugin: 'com.google.gms.google-services'

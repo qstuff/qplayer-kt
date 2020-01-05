@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.6.0)
 
-set(
-	PATH_TO_SUPERPOWERED "/Users/claus/private/repos/SuperpoweredSDK/Superpowered/"
-	CACHE STRING ""
-)
+set(PATH_TO_SUPERPOWERED "$ENV{HOME}/private/repos/SuperpoweredSDK/Superpowered/")
+set(CACHE STRING "")
 
 message(================= ${ANDROID_ABI})
 
