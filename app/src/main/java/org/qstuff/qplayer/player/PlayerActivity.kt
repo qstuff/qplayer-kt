@@ -20,13 +20,11 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
 import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
-import com.crashlytics.android.Crashlytics
-import com.crashlytics.android.core.CrashlyticsCore
-import io.fabric.sdk.android.Fabric
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.android.synthetic.main.activity_player.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -85,10 +83,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         setContentView(R.layout.activity_player)
 
-        playerViewModel = ViewModelProviders.of(this).get(PlayerViewModel::class.java)
+        playerViewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
 
-        queueViewModel = ViewModelProviders.of(this).get(QueueViewModel::class.java)
+        queueViewModel = ViewModelProvider(this).get(QueueViewModel::class.java)
 
         trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
         trackProgressBar.progress = 0
@@ -207,7 +205,6 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                     Track.TrackStatus.ERROR -> {
                         // TODO: Error message?
                     }
-                    else -> {}
                 }
             }
         })
@@ -413,21 +410,16 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 when (item.itemId) {
                     R.id.more_menu_settings -> {
                         startSettingsActivity()
-                        true
                     }
                     R.id.more_menu_privacy -> {
                         startWebViewActivity(HTMLPAGE_PRIVACY)
-                        true
                     }
                     R.id.more_menu_imprint -> {
                         startWebViewActivity(HTMLPAGE_IMPRINT)
-                        true
                     }
                     R.id.more_menu_licenses -> {
                         startWebViewActivity(HTMLPAGE_LICENSES)
-                        true
                     }
-                    else -> false
                 }
 
                 false
@@ -446,13 +438,21 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         if (BuildConfig.DEBUG) {
             try {
                 val packageInfo = packageManager.getPackageInfo(packageName, 0)
-                debugTitleSuffix = ("-α ${packageInfo.versionName} (${packageInfo.versionCode}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}")
+                debugTitleSuffix = ("-α ${packageInfo.versionName} (${getVersionCode()}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}")
             } catch(e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
             }
         }
         playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix")
     }
+
+    @Suppress("DEPRECATION")
+    private fun getVersionCode() =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageManager.getPackageInfo(packageName, 0).longVersionCode
+            } else {
+                packageManager.getPackageInfo(packageName, 0).versionCode.toLong()
+            }
 
     private fun setupJogWheel() {
         jogWheelContainer = HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, jogWheel)
@@ -532,9 +532,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             return
         }
 
-        val isCrashreportingEnabled = preferencesDataSource.isCrashreportingEnabled()
-        val core = CrashlyticsCore.Builder().disabled(!isCrashreportingEnabled).build()
-        Fabric.with(this, Crashlytics.Builder().core(core).build())
+        FirebaseCrashlytics
+                .getInstance()
+                .setCrashlyticsCollectionEnabled(preferencesDataSource.isCrashreportingEnabled())
     }
 
     //
@@ -601,11 +601,11 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                     setCancelable(false)
                     setTitle(getString(R.string.dialog_crashlytics_opt_in_title))
                     setMessage(getString(R.string.dialog_crashlytics_opt_in_message))
-                    setPositiveButton(getString(R.string.dialog_crashlytics_opt_in_go_to_settings)) { dialog, which ->
+                    setPositiveButton(getString(R.string.dialog_crashlytics_opt_in_go_to_settings)) { dialog, _ ->
                         startSettingsActivity()
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_crashlytics_opt_in_no_thanks)) { dialog, which ->
+                    setNegativeButton(getString(R.string.dialog_crashlytics_opt_in_no_thanks)) { dialog, _ ->
                         dialog.dismiss()
                     }
                 }.show()

@@ -20,7 +20,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
         // Saved/Loaded states in FileBrowserModel
         const val PREF_LAST_BROWSED_DIR = "PREF_LAST_BROWSED_DIR"
-        const val DEFAULT_ROOT_DIR = "/storage/"
+        const val DEFAULT_ROOT_DIR = "/storage/emulated/0"
 
         // Saved/Loaded states in QueueViewModel
         const val PREF_QUEUE_LIST = "PREF_QUEUE_LIST"
@@ -61,7 +61,10 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
             putString(PREF_LAST_BROWSED_DIR, dir)
         }
 
-    fun getLastBrowsedDir(): String? = preferences.getString(PREF_LAST_BROWSED_DIR, DEFAULT_ROOT_DIR)
+    fun getLastBrowsedDir(): String? =
+            preferences.getString(
+                    PREF_LAST_BROWSED_DIR,
+                    DEFAULT_ROOT_DIR)
 
     //
     // Saved/Loaded in QueueViewModel
