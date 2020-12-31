@@ -10,7 +10,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -55,10 +55,10 @@ class QueueFragment:
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
-        playlistViewModel = ViewModelProviders.of(activity!!).get(PlaylistViewModel::class.java)
-        queueViewModel = ViewModelProviders.of(activity!!).get(QueueViewModel::class.java)
-        fileBrowserViewModel = ViewModelProviders.of(activity!!).get(FileBrowserViewModel::class.java)
-        playerViewModel = ViewModelProviders.of(activity!!).get(PlayerViewModel::class.java)
+        playlistViewModel = ViewModelProvider(requireActivity()).get(PlaylistViewModel::class.java)
+        queueViewModel = ViewModelProvider(requireActivity()).get(QueueViewModel::class.java)
+        fileBrowserViewModel = ViewModelProvider(requireActivity()).get(FileBrowserViewModel::class.java)
+        playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
 
         return inflater.inflate(R.layout.fragment_queue, container, false)
     }
@@ -171,11 +171,11 @@ class QueueFragment:
                     setCancelable(false)
                     setTitle(getString(R.string.queue_dialog_confirm_clear_title))
                     setMessage(getString(R.string.queue_dialog_confirm_clear_message))
-                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                         queueViewModel.clearTrackList()
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, _ ->
                         dialog.dismiss()
                     }
                 }.show()
@@ -193,7 +193,7 @@ class QueueFragment:
                     setCancelable(false)
                     setTitle(getString(R.string.queue_dialog_save_tracks_as_playlist_title))
                     setMessage(getString(R.string.queue_dialog_save_tracks_as_playlist_message))
-                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
 
                         if (dialogView.textInput.text.isBlank()) {
                             context.shortToast(getString(R.string.queue_toast_save_tracks_as_queue_need_name))
@@ -203,14 +203,14 @@ class QueueFragment:
                         }
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNegativeButton(getString(R.string.dialog_cancel)) { dialog, _ ->
                         dialog.dismiss()
                     }
                 }.show()
 
         dialogView.listview.apply {
             adapter = DialogListAdapter(context, playlists ?: listOf())
-            setOnItemClickListener { parent, view, position, id ->
+            setOnItemClickListener { _, _, position, _ ->
                 showAddToExistingPlaylistDialog(position)
                 dialog.dismiss()
             }
@@ -231,15 +231,15 @@ class QueueFragment:
                     setCancelable(false)
                     setTitle(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_title))
                     setMessage(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_message))
-                    setPositiveButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_overwrite)) { dialog, which ->
+                    setPositiveButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_overwrite)) { dialog, _ ->
                         playlistViewModel.saveTracksToExistingPlaylist(tracks, playlist?.name, true)
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_append)) { dialog, which ->
+                    setNegativeButton(getString(R.string.queue_dialog_add_tracks_to_existing_playlist_append)) { dialog, _ ->
                         playlistViewModel.saveTracksToExistingPlaylist(tracks, playlist?.name, false)
                         dialog.dismiss()
                     }
-                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, _ ->
                         dialog.dismiss()
                     }
                 }.show()

@@ -61,7 +61,7 @@ class QMediaPlayerService : LifecycleService() {
     // Service Lifecycle
     //
 
-    override fun onBind(intent: Intent): IBinder? {
+    override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
         Timber.d("onBind")
         return binder
@@ -80,16 +80,19 @@ class QMediaPlayerService : LifecycleService() {
         player.create(this)
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Timber.d("onStartCommand(): intent: $intent, startId: $startId")
 
-        if (intent.action == ACTION_SERVICE_FOREGROUND_START) {
-            startForeground(1, createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY))
+        intent?.let {
+            if (it.action == ACTION_SERVICE_FOREGROUND_START) {
+                startForeground(1, createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY))
+            }
+            if (it.action == ACTION_SERVICE_FOREGROUND_STOP) {
+                stopForeground(true)
+                stopSelf()
+            }
         }
-        if (intent.action == ACTION_SERVICE_FOREGROUND_STOP) {
-            stopForeground(true)
-            stopSelf()
-        }
+
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -264,9 +267,7 @@ class QMediaPlayerService : LifecycleService() {
 
         remoteViews.setTextViewText(R.id.notificationTitle, currentTrack?.name)
 
-        val builder = NotificationCompat.Builder(
-                this)
-                .setChannelId(getString(R.string.notification_channel_id))
+        val builder = NotificationCompat.Builder(this, getString(R.string.notification_channel_id))
                 .setSmallIcon(R.drawable.qpl_status_bar_icon)
                 .setContent(remoteViews)
                 .setAutoCancel(false)

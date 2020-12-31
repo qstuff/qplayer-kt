@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.dialog_m3u_show_tracks.view.*
 import kotlinx.android.synthetic.main.fragment_filebrowser.*
@@ -57,9 +57,9 @@ class FileBrowserFragment:
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
-        queueViewModel = ViewModelProviders.of(activity!!).get(QueueViewModel::class.java)
-        fileBrowserViewModel = ViewModelProviders.of(activity!!).get(FileBrowserViewModel::class.java)
-        playerViewModel = ViewModelProviders.of(activity!!).get(PlayerViewModel::class.java)
+        queueViewModel = ViewModelProvider(requireActivity()).get(QueueViewModel::class.java)
+        fileBrowserViewModel = ViewModelProvider(requireActivity()).get(FileBrowserViewModel::class.java)
+        playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
 
         return inflater.inflate(R.layout.fragment_filebrowser, container, false)
     }
@@ -175,16 +175,16 @@ class FileBrowserFragment:
                     setCancelable(false)
                     setView(dialogView)
                     setTitle(getString(R.string.filebrowser_dialog_add_tracks_to_queue_title))
-                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                    setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                         queueViewModel.addFileList(files)
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
+                    setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, _ ->
                         queueViewModel.clearTrackList()
                         queueViewModel.addFileList(files)
                         dialog.dismiss()
                     }
-                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                    setNeutralButton(getString(R.string.dialog_cancel)) { dialog, _ ->
                         dialog.dismiss()
                     }
                 }
@@ -226,23 +226,23 @@ class FileBrowserFragment:
                         setCancelable(false)
                         setView(dialogView)
                         setTitle(getString(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, file.name))
-                        setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                        setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                             dialog.dismiss()
                         }
                     } else {
                         setCancelable(false)
                         setView(dialogView)
                         setTitle(getString(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, file.name))
-                        setPositiveButton(getString(R.string.dialog_ok)) { dialog, which ->
+                        setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                             queueViewModel.addTrackList(tracksFound)
                             dialog.dismiss()
                         }
-                        setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, which ->
+                        setNegativeButton(getString(R.string.filebrowser_dialog_queue_overwrite)) { dialog, _ ->
                             queueViewModel.clearTrackList()
                             queueViewModel.addTrackList(tracksFound)
                             dialog.dismiss()
                         }
-                        setNeutralButton(getString(R.string.dialog_cancel)) { dialog, which ->
+                        setNeutralButton(getString(R.string.dialog_cancel)) { dialog, _ ->
 
                             dialog.dismiss()
                         }

@@ -1,6 +1,8 @@
 package org.qstuff.qplayer.settings
 
 import android.content.SharedPreferences
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.preference.ListPreference
@@ -49,6 +51,13 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference<ListPreference>(getString(R.string.prefs_key_jogwheel_sensitivity)))!!.value =
                 preferencesDataSource.getJogWheelSensitivity().toString()
 
+        Timber.d("XXX onCreatePreferences(): JOG SENS: ${preferencesDataSource.getJogWheelSensitivity()} ")
+
+        (findPreference<ListPreference>(getString(R.string.prefs_key_jogwheel_mode)))!!.value =
+                preferencesDataSource.getJogWheelMode().toString()
+
+        Timber.d("XXX onCreatePreferences(): JOG MODE: ${preferencesDataSource.getJogWheelMode()} ")
+
         (findPreference<SwitchPreference>(getString(R.string.prefs_key_enable_crashreporting)))!!.isChecked =
                 preferencesDataSource.isCrashreportingEnabled()
 
@@ -77,19 +86,26 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
     }
 
     private fun getVersionString(): String {
-
-        var debugTitleSuffix =""
         val packageInfo = activity?.packageManager?.getPackageInfo(activity?.packageName, 0)
 
-        debugTitleSuffix = if (BuildConfig.DEBUG) {
-            ("qdeq-α ${packageInfo?.versionName} (${packageInfo?.versionCode})")
+        packageInfo ?: return "n/a"
+
+        return if (BuildConfig.DEBUG) {
+            ("qdeq-α ${packageInfo.versionName} (${getVersionCode(packageInfo)})")
         } else {
-            ("qdeq ${packageInfo?.versionName} (${packageInfo?.versionCode})")
+            ("qdeq ${packageInfo.versionName} (${getVersionCode(packageInfo)}")
         }
-        return debugTitleSuffix
     }
 
     private fun getDeviceInfoString(): String {
         return "${Build.MANUFACTURER} ${Build.MODEL} ${Build.CPU_ABI}"
     }
+
+    @Suppress("DEPRECATION")
+    private fun getVersionCode(packageInfo: PackageInfo) =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                packageInfo.versionCode.toLong()
+            }
 }

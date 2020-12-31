@@ -44,7 +44,7 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
     }
 
     fun navigateUp() {
-        Timber.d("navigateUp(): ${currentDir.path}")
+        Timber.d("navigateUp(): ${currentDir.absolutePath}")
 
         if (currentDir.parentFile.absolutePath == SD_CARD_HACK_PATH) {
             Timber.d("navigateUp(): SD_HACK: ${currentDir.path}")

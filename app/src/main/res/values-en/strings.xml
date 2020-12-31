@@ -99,7 +99,10 @@
     <string name="settings_dj_remain_blink_summary">If enabled the timer blinks during the last 30 seconds of a track</string>
 
     <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel sensitivity</string>
-    <string name="settings_dj_jogwheel_sensitivity_summary">Controls how fast the trackspeed changes\nCurrent: %1$s</string>
+    <string name="settings_dj_jogwheel_sensitivity_summary">Determines how sensitiv the jogwheel responds to action\nCurrent: %1$s</string>
+
+    <string name="settings_dj_jogwheel_mode_title">Jogwheel mode</string>
+    <string name="settings_dj_jogwheel_mode_summary">Determines which way the jogwheel responds to action\nCurrent: %1$s</string>
 
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Common Settings</string>

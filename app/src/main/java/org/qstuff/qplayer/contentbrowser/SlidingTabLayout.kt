@@ -29,7 +29,7 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private var mViewPager: ViewPager? = null
     private var mViewPagerPageChangeListener: ViewPager.OnPageChangeListener? = null
-
+    private lateinit var internalViewPagerListener: InternalViewPagerListener
     private var mTabStrip: SlidingTabStrip? = null
 
     /**
@@ -61,6 +61,8 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
 
         mTabStrip = SlidingTabStrip(context)
         addView(mTabStrip, LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+
+        internalViewPagerListener = InternalViewPagerListener()
     }
 
     fun setTabStrip(slidingTabStrip: SlidingTabStrip) {
@@ -123,12 +125,13 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setViewPager(viewPager: ViewPager?) {
         mTabStrip!!.removeAllViews()
-
         mViewPager = viewPager
-        if (viewPager != null) {
-            viewPager.setOnPageChangeListener(InternalViewPagerListener())
+        mViewPager?.let {
+            it.removeOnPageChangeListener(internalViewPagerListener)
+            it.addOnPageChangeListener(internalViewPagerListener)
             populateTabStrip()
         }
+
     }
 
     /**
@@ -144,7 +147,7 @@ class SlidingTabLayout @JvmOverloads constructor(context: Context, attrs: Attrib
 
         textView.setTextColor(ContextCompat.getColorStateList(context, R.color.white))
         textView.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-        textView.setBackgroundDrawable(resources.getDrawable(R.drawable.black_rounded_top_shape))
+        textView.setBackground(resources.getDrawable(R.drawable.black_rounded_top_shape))
 
         val paddingBottom = (resources.getDimensionPixelOffset(R.dimen.tab_strip_bottom_padding) * resources.displayMetrics.density).toInt()
 

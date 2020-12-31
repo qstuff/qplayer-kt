@@ -9,15 +9,27 @@
     </string-array>
 
     <string-array name="jogwheel_sensitivity_entries">
-        <item>Niedrig (Eine volle Drehung für den vollen Pitchbereich)</item>
-        <item>Mittel (Eine halbe Drehung für den vollen Pitchbereich)</item>
-        <item>Hoch (Eine halbe Drehung für den doppelten Pitchbereich)</item>
+        <item>Niedrig</item>
+        <item>Mittel</item>
+        <item>Hoch</item>
     </string-array>
 
     <string-array name="jogwheel_sensitivity_values">
         <item>5</item>
         <item>10</item>
         <item>20</item>
+    </string-array>
+
+    <string-array name="jogwheel_mode_entries">
+        <item>Nach Winkel:\nJe weiter du drehst desto mehr Aktion\n</item>
+        <item>Nach Geschwindigkeit:\nJe schneller du drehts desto mehr Aktion\n</item>
+        <item>Scratch (noch nicht unterstützt):\nDas Jogwheel spult vor oder zurück</item>
+    </string-array>
+
+    <string-array name="jogwheel_mode_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
 </resources>

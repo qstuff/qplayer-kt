@@ -55,6 +55,14 @@
             android:entryValues="@array/jogwheel_sensitivity_values"
             android:defaultValue="10"/>
 
+        <ListPreference
+            android:key="@string/prefs_key_jogwheel_mode"
+            android:title="@string/settings_dj_jogwheel_mode_title"
+            android:summary="@string/settings_dj_jogwheel_mode_summary"
+            android:entries="@array/jogwheel_mode_entries"
+            android:entryValues="@array/jogwheel_mode_values"
+            android:defaultValue="0"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -20,13 +20,11 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
 import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
-import com.crashlytics.android.Crashlytics
-import com.crashlytics.android.core.CrashlyticsCore
-import io.fabric.sdk.android.Fabric
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.android.synthetic.main.activity_player.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -41,8 +39,7 @@ import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.settings.SettingsActivity
 import org.qstuff.qplayer.settings.WebViewActivity
-import org.qstuff.qplayer.util.PlayerStatus
-import org.qstuff.qplayer.util.TrackRepeatStatus
+import org.qstuff.qplayer.util.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -78,6 +75,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private var isCueActive = false
     private var showRemainingTime = true
 
+    private var onMoveTime = 0L
+    private var lastOnMoveTime = 0L
+    private var lastAngle = 0.0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,10 +86,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         setContentView(R.layout.activity_player)
 
-        playerViewModel = ViewModelProviders.of(this).get(PlayerViewModel::class.java)
+        playerViewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
 
-        queueViewModel = ViewModelProviders.of(this).get(QueueViewModel::class.java)
+        queueViewModel = ViewModelProvider(this).get(QueueViewModel::class.java)
 
         trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
         trackProgressBar.progress = 0
@@ -114,7 +115,6 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     override fun onResume() {
         super.onResume()
-
         setupCrashlytics()
         playerViewModel.loadSettings()
         queueViewModel.loadSettings()
@@ -122,25 +122,21 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     override fun onStart() {
         super.onStart()
-
         jogWheelDial.registerCallback(jogWheelInterface)
     }
 
     override fun onPause() {
         super.onPause()
-
         playerViewModel.saveState()
     }
 
     override fun onStop() {
         super.onStop()
-
         jogWheelDial.unRegisterCallback()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
         playerViewModel.stopMediaService()
     }
 
@@ -151,7 +147,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private fun setupObservers() {
 
         playerViewModel.playerStatus.observe(this, Observer { status ->
-            Timber.d("XXX playerStatus(): $status")
+            Timber.d("playerStatus(): $status")
 
             when(status) {
                 PlayerStatus.PLAYING -> {
@@ -207,7 +203,6 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                     Track.TrackStatus.ERROR -> {
                         // TODO: Error message?
                     }
-                    else -> {}
                 }
             }
         })
@@ -413,21 +408,16 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 when (item.itemId) {
                     R.id.more_menu_settings -> {
                         startSettingsActivity()
-                        true
                     }
                     R.id.more_menu_privacy -> {
                         startWebViewActivity(HTMLPAGE_PRIVACY)
-                        true
                     }
                     R.id.more_menu_imprint -> {
                         startWebViewActivity(HTMLPAGE_IMPRINT)
-                        true
                     }
                     R.id.more_menu_licenses -> {
                         startWebViewActivity(HTMLPAGE_LICENSES)
-                        true
                     }
-                    else -> false
                 }
 
                 false
@@ -446,13 +436,21 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         if (BuildConfig.DEBUG) {
             try {
                 val packageInfo = packageManager.getPackageInfo(packageName, 0)
-                debugTitleSuffix = ("-α ${packageInfo.versionName} (${packageInfo.versionCode}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}")
+                debugTitleSuffix = ("-α ${packageInfo.versionName} (${getVersionCode()}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}")
             } catch(e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
             }
         }
         playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix")
     }
+
+    @Suppress("DEPRECATION")
+    private fun getVersionCode() =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageManager.getPackageInfo(packageName, 0).longVersionCode
+            } else {
+                packageManager.getPackageInfo(packageName, 0).versionCode.toLong()
+            }
 
     private fun setupJogWheel() {
         jogWheelContainer = HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, jogWheel)
@@ -464,28 +462,61 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
             override fun onDown(hgDialInfo: HGDialInfo?) {
                 currentPitchProgress = pitchControl.progress
+                onMoveTime = System.currentTimeMillis()
             }
 
             override fun onUp(hgDialInfo: HGDialInfo?) {
+                hgDialInfo ?: return
+
                 jogWheelDial.doManualTextureDial(0.0)
-                onJogWheeMoved(0.0f)
+                onJogWheeMovedByAngle(hgDialInfo, true)
+                onMoveTime = 0L
+                lastOnMoveTime = 0L
+                lastAngle = 0.0
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
-                Timber.v("onMove(): speed: ${hgDialInfo?.spinCurrentSpeed}")
+                hgDialInfo ?: return
 
-                val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
-                onJogWheeMoved(angle)
+                lastOnMoveTime = onMoveTime
+                onMoveTime = System.currentTimeMillis()
+
+                when (preferencesDataSource.getJogWheelModeEnum()) {
+                    JogwheelMode.SPEED_ANGULAR -> onJogWheeMovedByAngle(hgDialInfo, false)
+                    JogwheelMode.SPEED_VELOCITY -> onJogWheeMovedByVelocity(hgDialInfo, false)
+                    else -> { Timber.w("onMove(): ELSE ") }
+                }
             }
         })
     }
 
-    private fun onJogWheeMoved(angle: Float) {
+    private fun onJogWheeMovedByAngle(hgDialInfo: HGDialInfo, reset: Boolean) {
+
+        var angle = 0.0
+        if (!reset) angle = (hgDialInfo.textureAngle * 100)
 
         val delta = (angle * jogwheelSensitivity)
+
         val new = (currentPitchProgress + delta).toInt()
         playerViewModel.onPitchChanged(new)
         pitchControl.setNewProgress(new, false)
+    }
+
+    private fun onJogWheeMovedByVelocity(hgDialInfo: HGDialInfo, reset: Boolean) {
+
+        var currentVelocity = 0.0
+        val timeDiff = onMoveTime - lastOnMoveTime
+        val angleDiff = hgDialInfo.textureAngle - lastAngle
+
+        if (!reset) currentVelocity = angleDiff / timeDiff * 10000
+
+        val delta = (currentVelocity * jogwheelSensitivity)
+        val new = (currentPitchProgress + delta).toInt()
+
+        playerViewModel.onPitchChanged(new)
+        pitchControl.setNewProgress(new, false)
+
+        lastAngle = hgDialInfo.textureAngle
     }
 
     private fun setupContentSection() {
@@ -514,12 +545,14 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     }
 
     private fun startWebViewActivity(url: String) {
+
         val intent = Intent(this, WebViewActivity::class.java)
         intent.putExtra(EXTRA_URL, url)
         startActivity(intent)
     }
 
     private fun startSettingsActivity() {
+
         val intent = Intent(this, SettingsActivity::class.java)
         startActivity(intent)
     }
@@ -532,9 +565,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             return
         }
 
-        val isCrashreportingEnabled = preferencesDataSource.isCrashreportingEnabled()
-        val core = CrashlyticsCore.Builder().disabled(!isCrashreportingEnabled).build()
-        Fabric.with(this, Crashlytics.Builder().core(core).build())
+        FirebaseCrashlytics
+                .getInstance()
+                .setCrashlyticsCollectionEnabled(preferencesDataSource.isCrashreportingEnabled())
     }
 
     //
@@ -542,12 +575,14 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     //
 
     private fun updateTrackProgressIndicator(position: Long) {
+
         val dTotal = currentTrack!!.duration.toDouble()
         val dPosition = position.toDouble()
         trackProgressBar.progress = ((dPosition / dTotal) * 1000).toInt()
     }
 
     private fun updatePlayButtonUI(playing: Boolean) {
+
         if (playing) {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
         } else {
@@ -601,11 +636,11 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                     setCancelable(false)
                     setTitle(getString(R.string.dialog_crashlytics_opt_in_title))
                     setMessage(getString(R.string.dialog_crashlytics_opt_in_message))
-                    setPositiveButton(getString(R.string.dialog_crashlytics_opt_in_go_to_settings)) { dialog, which ->
+                    setPositiveButton(getString(R.string.dialog_crashlytics_opt_in_go_to_settings)) { dialog, _ ->
                         startSettingsActivity()
                         dialog.dismiss()
                     }
-                    setNegativeButton(getString(R.string.dialog_crashlytics_opt_in_no_thanks)) { dialog, which ->
+                    setNegativeButton(getString(R.string.dialog_crashlytics_opt_in_no_thanks)) { dialog, _ ->
                         dialog.dismiss()
                     }
                 }.show()

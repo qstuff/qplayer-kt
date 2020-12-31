@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'io.fabric'
+apply plugin: 'com.google.firebase.crashlytics'
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -25,7 +25,7 @@ android {
         targetSdkVersion cfg.targetSdkVersion
         versionCode cfg.versionCommitCount
         versionName cfg.versionName
-
+        multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
 
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
@@ -80,11 +80,24 @@ android {
         }
 
         release {
-            minifyEnabled false
+            minifyEnabled true
             debuggable false
 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            firebaseCrashlytics {
+                nativeSymbolUploadEnabled true
+            }
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 }
 
@@ -92,6 +105,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$libs.coroutines"
+    implementation "com.android.support:multidex:$libs.multidex"
 
     implementation "com.google.android.material:material:$libs.material"
 
@@ -117,7 +131,7 @@ dependencies {
 
     // Crash reporting
     implementation "com.google.firebase:firebase-core:$libs.firebase"
-    implementation "com.crashlytics.sdk.android:crashlytics:$libs.crashlytics"
+    implementation "com.google.firebase:firebase-crashlytics:$libs.crashlytics"
 
     debugImplementation "com.amitshekhar.android:debug-db:$libs.debugDatabase"
 
@@ -125,6 +139,8 @@ dependencies {
     androidTestImplementation "androidx.test:runner:$libs.espressoRunner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$libs.espresso"
 
+
+    debugImplementation project(':HGDialV2-debug')
     implementation project(':HGDialV2-release')
 }
 

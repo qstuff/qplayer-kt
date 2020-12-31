@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.koin.standalone.KoinComponent
 import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.TrackRepeatStatus
 
 /*
@@ -20,7 +21,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
         // Saved/Loaded states in FileBrowserModel
         const val PREF_LAST_BROWSED_DIR = "PREF_LAST_BROWSED_DIR"
-        const val DEFAULT_ROOT_DIR = "/storage/"
+        const val DEFAULT_ROOT_DIR = "/storage/emulated/0"
 
         // Saved/Loaded states in QueueViewModel
         const val PREF_QUEUE_LIST = "PREF_QUEUE_LIST"
@@ -34,6 +35,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREF_PITCH_FACTOR_INDEX = "PREF_PITCH_FACTOR_INDEX"
         const val PREF_PITCH_VALUE = "PREF_PITCH_VALUE"
         const val PREF_SHOW_REMAINING = "PREF_SHOW_REMAINING"
+        const val PREF_JOGWHEEL_MODE = "PREF_JOGWHEEL_MODE"
 
         // From SettingsFragment
         const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
@@ -46,6 +48,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
         const val PREFS_JOG_WHEEL_SENSITIVITY = "PREFS_JOG_WHEEL_SENSITIVITY"
         const val PREFS_START_FOREGROUND = "PREFS_START_FOREGROUND"
+        const val PREFS_JOG_WHEEL_MODE = "PREFS_JOG_WHEEL_MODE"
 
         // Others
         const val PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN = "PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN"
@@ -61,7 +64,10 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
             putString(PREF_LAST_BROWSED_DIR, dir)
         }
 
-    fun getLastBrowsedDir(): String? = preferences.getString(PREF_LAST_BROWSED_DIR, DEFAULT_ROOT_DIR)
+    fun getLastBrowsedDir(): String? =
+            preferences.getString(
+                    PREF_LAST_BROWSED_DIR,
+                    DEFAULT_ROOT_DIR)
 
     //
     // Saved/Loaded in QueueViewModel
@@ -127,16 +133,21 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
                 putBoolean(PREF_MASTER_TEMPO_MODE, enabled)
             }
 
+    fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
 
-    fun readRemainigTimeMode() = preferences.getBoolean(PREF_SHOW_REMAINING, true)
-
-    fun saveRemainigTimeMode(enabled: Boolean) =
+    fun saveRemainingTimeMode(enabled: Boolean) =
             preferences.edit{
                 putBoolean(PREF_SHOW_REMAINING, enabled)
             }
 
+    fun readRemainingTimeMode() = preferences.getBoolean(PREF_SHOW_REMAINING, true)
 
-    fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
+    fun saveJogwheelMode(mode: JogwheelMode) =
+            preferences.edit{
+                putInt(PREF_JOGWHEEL_MODE, mode.ordinal)
+            }
+
+    fun readJogwheelMode() = JogwheelMode.values()[preferences.getInt(PREF_JOGWHEEL_MODE, 0)]
 
     //
     // Others
@@ -159,5 +170,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
     fun isBlinkingRemainEnabled() = preferences.getBoolean(PREFS_ENABLE_REMAIN_BLINK, true)
     fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
+    fun getJogWheelMode() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)
+    fun getJogWheelModeEnum() = JogwheelMode.values()[Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)]
     fun isStartForegroundEnabled() = preferences.getBoolean(PREFS_START_FOREGROUND, false)
 }
