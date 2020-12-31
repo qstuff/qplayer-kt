@@ -2,6 +2,8 @@ package org.qstuff.qplayer.util
 
 import android.content.Context
 import android.widget.Toast
+import timber.log.Timber
+import kotlin.math.round
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -25,3 +27,16 @@ fun Context.longToast(message: String, length: Int = Toast.LENGTH_LONG) =
  */
 inline fun <reified T : Enum<T>> Enum<T>.next(values: Array<T> = enumValues()) =
     values[(ordinal + 1) % values.size]
+
+fun Double.fmod(other: Double, roundDigits: Int): Number {
+   Timber.d("YYY $this, $other")
+   val ret = ((this % other) + other) % other
+   Timber.d("YYY >> ${ret.round(roundDigits)}")
+   return ret.round(roundDigits)
+}
+
+fun Double.round(decimals: Int): Double {
+   var multiplier = 1.0
+   repeat(decimals) { multiplier *= 10 }
+   return round(this * multiplier) / multiplier
+}

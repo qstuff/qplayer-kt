@@ -9,15 +9,27 @@
     </string-array>
 
     <string-array name="jogwheel_sensitivity_entries">
-        <item>Low (full turn for full pitch range)</item>
-        <item>Medium (half turn for full pitch range)</item>
-        <item>High (half turn for double pitch range)</item>
+        <item>Low</item>
+        <item>Medium</item>
+        <item>High</item>
     </string-array>
 
     <string-array name="jogwheel_sensitivity_values">
         <item>5</item>
         <item>10</item>
         <item>20</item>
+    </string-array>
+
+    <string-array name="jogwheel_mode_entries">
+        <item>By angle:\nThe farther you spin the more action you get\n</item>
+        <item>By velocity:\nThe faster you spin the more action you get\n</item>
+        <item>Scratch (not yet supported):\nRewind or fast forward</item>
+    </string-array>
+
+    <string-array name="jogwheel_mode_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
 </resources>

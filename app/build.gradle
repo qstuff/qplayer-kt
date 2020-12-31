@@ -139,6 +139,8 @@ dependencies {
     androidTestImplementation "androidx.test:runner:$libs.espressoRunner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$libs.espresso"
 
+
+    debugImplementation project(':HGDialV2-debug')
     implementation project(':HGDialV2-release')
 }
 

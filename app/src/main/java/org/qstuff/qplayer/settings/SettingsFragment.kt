@@ -51,6 +51,13 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference<ListPreference>(getString(R.string.prefs_key_jogwheel_sensitivity)))!!.value =
                 preferencesDataSource.getJogWheelSensitivity().toString()
 
+        Timber.d("XXX onCreatePreferences(): JOG SENS: ${preferencesDataSource.getJogWheelSensitivity()} ")
+
+        (findPreference<ListPreference>(getString(R.string.prefs_key_jogwheel_mode)))!!.value =
+                preferencesDataSource.getJogWheelMode().toString()
+
+        Timber.d("XXX onCreatePreferences(): JOG MODE: ${preferencesDataSource.getJogWheelMode()} ")
+
         (findPreference<SwitchPreference>(getString(R.string.prefs_key_enable_crashreporting)))!!.isChecked =
                 preferencesDataSource.isCrashreportingEnabled()
 

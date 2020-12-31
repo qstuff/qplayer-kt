@@ -19,3 +19,9 @@ enum class TrackRepeatStatus {
     ALL,
     ONE
 }
+
+enum class JogwheelMode {
+    SPEED_ANGULAR,
+    SPEED_VELOCITY,
+    SCRATCH
+}

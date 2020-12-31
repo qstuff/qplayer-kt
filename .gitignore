@@ -24,6 +24,9 @@ libs/HGDialV2-debug.aar
 HGDialV2-release/HGDialV2-release.aar
 HGDialV2-release/build.gradle
 
+HGDialV2-debug/HGDialV2-debug.aar
+HGDialV2-debug/build.gradle
+
 # Gradle files
 .gradle/
 build/
@@ -65,15 +68,3 @@ captures/
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
-
-# Freeline
-freeline.py
-freeline/
-freeline_project_description.json
-
-# fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
-fastlane/readme.md

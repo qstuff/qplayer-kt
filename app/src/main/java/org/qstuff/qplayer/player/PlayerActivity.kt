@@ -39,8 +39,7 @@ import org.qstuff.qplayer.queue.QueueFragment
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.settings.SettingsActivity
 import org.qstuff.qplayer.settings.WebViewActivity
-import org.qstuff.qplayer.util.PlayerStatus
-import org.qstuff.qplayer.util.TrackRepeatStatus
+import org.qstuff.qplayer.util.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -75,6 +74,10 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private var isBlinkAnimationRunning = false
     private var isCueActive = false
     private var showRemainingTime = true
+
+    private var onMoveTime = 0L
+    private var lastOnMoveTime = 0L
+    private var lastAngle = 0.0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +115,6 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     override fun onResume() {
         super.onResume()
-
         setupCrashlytics()
         playerViewModel.loadSettings()
         queueViewModel.loadSettings()
@@ -120,25 +122,21 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     override fun onStart() {
         super.onStart()
-
         jogWheelDial.registerCallback(jogWheelInterface)
     }
 
     override fun onPause() {
         super.onPause()
-
         playerViewModel.saveState()
     }
 
     override fun onStop() {
         super.onStop()
-
         jogWheelDial.unRegisterCallback()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
         playerViewModel.stopMediaService()
     }
 
@@ -149,7 +147,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private fun setupObservers() {
 
         playerViewModel.playerStatus.observe(this, Observer { status ->
-            Timber.d("XXX playerStatus(): $status")
+            Timber.d("playerStatus(): $status")
 
             when(status) {
                 PlayerStatus.PLAYING -> {
@@ -464,28 +462,61 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
             override fun onDown(hgDialInfo: HGDialInfo?) {
                 currentPitchProgress = pitchControl.progress
+                onMoveTime = System.currentTimeMillis()
             }
 
             override fun onUp(hgDialInfo: HGDialInfo?) {
+                hgDialInfo ?: return
+
                 jogWheelDial.doManualTextureDial(0.0)
-                onJogWheeMoved(0.0f)
+                onJogWheeMovedByAngle(hgDialInfo, true)
+                onMoveTime = 0L
+                lastOnMoveTime = 0L
+                lastAngle = 0.0
             }
 
             override fun onMove(hgDialInfo: HGDialInfo?) {
-                Timber.v("onMove(): speed: ${hgDialInfo?.spinCurrentSpeed}")
+                hgDialInfo ?: return
 
-                val angle = (hgDialInfo?.textureAngle!! * 100).toFloat()
-                onJogWheeMoved(angle)
+                lastOnMoveTime = onMoveTime
+                onMoveTime = System.currentTimeMillis()
+
+                when (preferencesDataSource.getJogWheelModeEnum()) {
+                    JogwheelMode.SPEED_ANGULAR -> onJogWheeMovedByAngle(hgDialInfo, false)
+                    JogwheelMode.SPEED_VELOCITY -> onJogWheeMovedByVelocity(hgDialInfo, false)
+                    else -> { Timber.w("onMove(): ELSE ") }
+                }
             }
         })
     }
 
-    private fun onJogWheeMoved(angle: Float) {
+    private fun onJogWheeMovedByAngle(hgDialInfo: HGDialInfo, reset: Boolean) {
+
+        var angle = 0.0
+        if (!reset) angle = (hgDialInfo.textureAngle * 100)
 
         val delta = (angle * jogwheelSensitivity)
+
         val new = (currentPitchProgress + delta).toInt()
         playerViewModel.onPitchChanged(new)
         pitchControl.setNewProgress(new, false)
+    }
+
+    private fun onJogWheeMovedByVelocity(hgDialInfo: HGDialInfo, reset: Boolean) {
+
+        var currentVelocity = 0.0
+        val timeDiff = onMoveTime - lastOnMoveTime
+        val angleDiff = hgDialInfo.textureAngle - lastAngle
+
+        if (!reset) currentVelocity = angleDiff / timeDiff * 10000
+
+        val delta = (currentVelocity * jogwheelSensitivity)
+        val new = (currentPitchProgress + delta).toInt()
+
+        playerViewModel.onPitchChanged(new)
+        pitchControl.setNewProgress(new, false)
+
+        lastAngle = hgDialInfo.textureAngle
     }
 
     private fun setupContentSection() {
@@ -514,12 +545,14 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     }
 
     private fun startWebViewActivity(url: String) {
+
         val intent = Intent(this, WebViewActivity::class.java)
         intent.putExtra(EXTRA_URL, url)
         startActivity(intent)
     }
 
     private fun startSettingsActivity() {
+
         val intent = Intent(this, SettingsActivity::class.java)
         startActivity(intent)
     }
@@ -542,12 +575,14 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     //
 
     private fun updateTrackProgressIndicator(position: Long) {
+
         val dTotal = currentTrack!!.duration.toDouble()
         val dPosition = position.toDouble()
         trackProgressBar.progress = ((dPosition / dTotal) * 1000).toInt()
     }
 
     private fun updatePlayButtonUI(playing: Boolean) {
+
         if (playing) {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
         } else {

@@ -269,7 +269,7 @@ class  PlayerViewModel (application: Application):
             val trackPosition = onTrackPositionUpdate.value
             onTrackPositionUpdate.value = trackPosition
         }
-        preferencesDataSource.saveRemainigTimeMode(showRemainingTrackTime)
+        preferencesDataSource.saveRemainingTimeMode(showRemainingTrackTime)
     }
 
     //
@@ -379,7 +379,7 @@ class  PlayerViewModel (application: Application):
         pitchFactor = PITCH_RANGE_FACTORS[pitchFactorIndex.value ?: 0]
         pitchValue.value = preferencesDataSource.readPitchValue()
         onPitchChanged(pitchValue.value!!)
-        showRemainingTrackTime = preferencesDataSource.readRemainigTimeMode()
+        showRemainingTrackTime = preferencesDataSource.readRemainingTimeMode()
         showRemainingTime.value = showRemainingTrackTime
     }
 
