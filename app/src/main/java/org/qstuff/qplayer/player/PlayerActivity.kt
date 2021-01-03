@@ -78,8 +78,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private var onMoveTime = 0L
     private var lastOnMoveTime = 0L
     private var lastAngle = 0.0
+    private val deltaList = arrayListOf<Double>()
 
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
@@ -508,15 +509,32 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         val timeDiff = onMoveTime - lastOnMoveTime
         val angleDiff = hgDialInfo.textureAngle - lastAngle
 
-        if (!reset) currentVelocity = angleDiff / timeDiff * 10000
+        if (!reset) currentVelocity = angleDiff / timeDiff * 20000
 
-        val delta = (currentVelocity * jogwheelSensitivity)
+        val delta = smoothenDelta(currentVelocity * jogwheelSensitivity)
         val new = (currentPitchProgress + delta).toInt()
 
         playerViewModel.onPitchChanged(new)
         pitchControl.setNewProgress(new, false)
 
         lastAngle = hgDialInfo.textureAngle
+    }
+
+    private fun smoothenDelta(delta: Double): Double {
+
+        if (deltaList.size == 0) {
+            deltaList.add(delta)
+            return delta
+        }
+
+        var average = 0.0
+        if (deltaList.size >= 10) deltaList.removeAt(0)
+        deltaList.add(delta)
+        deltaList.forEach {
+            average += it
+        }
+
+        return average / deltaList.size
     }
 
     private fun setupContentSection() {

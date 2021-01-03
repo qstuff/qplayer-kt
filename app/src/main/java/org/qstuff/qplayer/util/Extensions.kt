@@ -28,11 +28,9 @@ fun Context.longToast(message: String, length: Int = Toast.LENGTH_LONG) =
 inline fun <reified T : Enum<T>> Enum<T>.next(values: Array<T> = enumValues()) =
     values[(ordinal + 1) % values.size]
 
-fun Double.fmod(other: Double, roundDigits: Int): Number {
-   Timber.d("YYY $this, $other")
+fun Double.fModRounded(other: Double, roundDigits: Int): Number {
    val ret = ((this % other) + other) % other
-   Timber.d("YYY >> ${ret.round(roundDigits)}")
-   return ret.round(roundDigits)
+   return if (roundDigits > 0) ret.round(roundDigits) else ret
 }
 
 fun Double.round(decimals: Int): Double {
