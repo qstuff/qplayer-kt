@@ -1,12 +1,13 @@
 package org.qstuff.qplayer.queue
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.queue_list_item.view.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.QueueListItemBinding
 import org.qstuff.qplayer.datasource.model.Track
 import timber.log.Timber
 import java.util.*
@@ -22,13 +23,14 @@ class QueueAdapter(private val interactionListener: QueueItemInteractionListener
 
     interface QueueItemInteractionListener {
         fun onQueueItemClicked(track: Track)
-        fun onQueueItemDismsissed(track: Track, position: Int)
+        fun onQueueItemDismissed(track: Track, position: Int)
         fun onQueueItemMoved(tracks: MutableList<Track>)
     }
 
     private var selectedIndex = -1
     private lateinit var tracks: MutableList<Track>
 
+    @SuppressLint("NotifyDataSetChanged")
     fun onItemSelectedIndex(index: Int) {
         Timber.d("onItemSelectedIndex(): $index")
 
@@ -37,7 +39,11 @@ class QueueAdapter(private val interactionListener: QueueItemInteractionListener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            QueueItemViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.queue_list_item, parent, false))
+            QueueItemViewHolder(
+                LayoutInflater
+                    .from(parent.context)
+                    .inflate(R.layout.queue_list_item, parent, false)
+            )
 
     override fun getItemCount() = tracks.size
 
@@ -45,22 +51,35 @@ class QueueAdapter(private val interactionListener: QueueItemInteractionListener
         Timber.v("onBindViewHolder(): pos: $position, tracks: $tracks")
 
         val track = tracks[position]
+        val binding = (holder as QueueItemViewHolder).binding
+            holder.itemView.apply {
 
-        holder.itemView.apply {
-            if (selectedIndex == position) {
-                queueListItemIcon.setImageResource(R.drawable.icon_track_selected)
-                queueListItemTitle.setTextColor(ContextCompat.getColor(context!!, R.color.q_orange))
-            } else {
-                queueListItemIcon.setImageResource(R.drawable.icon_track)
-                queueListItemTitle.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+                if (selectedIndex == position) {
+                    binding.queueListItemIcon.setImageResource(R.drawable.icon_track_selected)
+                    binding.queueListItemTitle.setTextColor(
+                        ContextCompat.getColor(
+                            context!!,
+                            R.color.q_orange
+                        )
+                    )
+                } else {
+                    binding.queueListItemIcon.setImageResource(R.drawable.icon_track)
+                    binding.queueListItemTitle.setTextColor(
+                        ContextCompat.getColor(
+                            context!!,
+                            R.color.white
+                        )
+                    )
+                }
+                binding.queueListItemTitle.text = track.name
+                binding.queueListItemTitle.setOnClickListener {
+                    interactionListener.onQueueItemClicked(track)
+                }
             }
-            queueListItemTitle.text = track.name
-            queueListItemTitle.setOnClickListener {
-                interactionListener.onQueueItemClicked(track)
-            }
-        }
+
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setTrackList(tracks: MutableList<Track>) {
         this.tracks = tracks
         notifyDataSetChanged()
@@ -92,12 +111,14 @@ class QueueAdapter(private val interactionListener: QueueItemInteractionListener
     override fun onItemDismiss(position: Int) {
         Timber.d("onItemDismiss(): pos: $position, tracks: $tracks")
 
-        interactionListener.onQueueItemDismsissed(tracks[position], position)
+        interactionListener.onQueueItemDismissed(tracks[position], position)
     }
 
     //
     // ViewHolder
     //
 
-    class QueueItemViewHolder(view: View): RecyclerView.ViewHolder(view)
+    class QueueItemViewHolder(view: View): RecyclerView.ViewHolder(view) {
+        val binding = QueueListItemBinding.bind(view)
+    }
 }

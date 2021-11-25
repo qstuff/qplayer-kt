@@ -4,8 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.filebrowser_list_item.view.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.FilebrowserListItemBinding
+import org.qstuff.qplayer.databinding.QueueListItemBinding
 import org.qstuff.qplayer.util.isM3UList
 import java.io.File
 
@@ -38,35 +39,37 @@ class FileBrowserAdapter(private val files: List<File>,
     //
 
     class FileBrowserItemViewHolder(view: View): RecyclerView.ViewHolder(view) {
+        private val binding = FilebrowserListItemBinding.bind(view)
 
         fun bind(file: File, interactionListener: FileBrowserItemInteractionListener) {
             itemView.apply {
+                with(binding) {
+                    fileListItemTitle.text = file.name
+                    fileListItemTitle.setOnClickListener {
+                        interactionListener.onFileItemClicked(file)
+                    }
+                    fileListItemTitle.setOnLongClickListener {
+                        interactionListener.onFileItemLongClicked(file)
+                        true
+                    }
 
-                fileListItemTitle.text = file.name
-                fileListItemTitle.setOnClickListener {
-                    interactionListener.onFileItemClicked(file)
-                }
-                fileListItemTitle.setOnLongClickListener {
-                    interactionListener.onFileItemLongClicked(file)
-                    true
-                }
-
-                if (file.isFile) {
-                    if (file.isM3UList()) {
-                        fileListItemIcon.setImageResource(R.drawable.ic_m3ulist)
+                    if (file.isFile) {
+                        if (file.isM3UList()) {
+                            fileListItemIcon.setImageResource(R.drawable.ic_m3ulist)
+                            fileListItemPrelistenButton.visibility = View.GONE
+                        } else {
+                            fileListItemIcon.setImageResource(R.drawable.icon_track)
+                            fileListItemPrelistenButton.visibility = View.VISIBLE
+                            fileListItemPrelistenButton.setOnClickListener {
+                                interactionListener.onFilePrelistenClicked(file)
+                            }
+                        }
+                    } else if (file.isDirectory) {
+                        fileListItemIcon.setImageResource(R.drawable.icon_directory)
                         fileListItemPrelistenButton.visibility = View.GONE
                     } else {
-                        fileListItemIcon.setImageResource(R.drawable.icon_track)
-                        fileListItemPrelistenButton.visibility = View.VISIBLE
-                        fileListItemPrelistenButton.setOnClickListener {
-                            interactionListener.onFilePrelistenClicked(file)
-                        }
+                        // SHOULD NOT HAPPEN
                     }
-                } else if (file.isDirectory) {
-                    fileListItemIcon.setImageResource(R.drawable.icon_directory)
-                    fileListItemPrelistenButton.visibility = View.GONE
-                } else {
-                    // SHOULD NOT HAPPEN
                 }
             }
         }

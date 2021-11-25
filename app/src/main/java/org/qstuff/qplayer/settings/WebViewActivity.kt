@@ -2,8 +2,8 @@ package org.qstuff.qplayer.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.webview.*
-import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.WebviewBinding
+
 
 class WebViewActivity: AppCompatActivity() {
 
@@ -11,15 +11,19 @@ class WebViewActivity: AppCompatActivity() {
         const val EXTRA_URL = "EXTRA_URL"
     }
 
+    private lateinit var binding: WebviewBinding
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val url = intent.getStringExtra(EXTRA_URL)
 
-        setContentView(R.layout.webview)
+        binding = WebviewBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
 
         if (url != null) {
-            webView.loadUrl("file:///android_asset/$url")
+            binding.webView.loadUrl("file:///android_asset/$url")
         }
     }
 }

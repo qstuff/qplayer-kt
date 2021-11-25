@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -14,10 +15,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_playlist.*
-import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.koin.standalone.KoinComponent
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.DialogShowTracksBinding
+import org.qstuff.qplayer.databinding.FragmentPlaylistBinding
+import org.qstuff.qplayer.databinding.QueueDialogSaveTracksAsPlaylistBinding
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.queue.ItemTouchHelperCallback
@@ -43,8 +45,10 @@ class PlaylistFragment:
 
     private lateinit var playlistViewModel: PlaylistViewModel
     private lateinit var queueViewModel: QueueViewModel
-
     private lateinit var playlistAdapter: PlaylistAdapter
+
+    private var _binding: FragmentPlaylistBinding? = null
+    private val binding get() = _binding!!
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -53,7 +57,8 @@ class PlaylistFragment:
         playlistViewModel = ViewModelProvider(requireActivity()).get(PlaylistViewModel::class.java)
         queueViewModel = ViewModelProvider(requireActivity()).get(QueueViewModel::class.java)
 
-        return inflater.inflate(R.layout.fragment_playlist, container, false)
+        _binding = FragmentPlaylistBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -62,14 +67,14 @@ class PlaylistFragment:
         playlistAdapter = PlaylistAdapter(this@PlaylistFragment)
         val callback = ItemTouchHelperCallback(playlistAdapter)
         val touchHelper = ItemTouchHelper(callback)
-        touchHelper.attachToRecyclerView(playlistRecycler)
+        touchHelper.attachToRecyclerView(binding.playlistRecycler)
 
-        playlistRecycler.apply {
+        binding.playlistRecycler.apply {
             adapter = playlistAdapter
             layoutManager = LinearLayoutManager(context)
         }
 
-        playlistViewModel.playlistList.observe(this, Observer { playlistList ->
+        playlistViewModel.playlistList.observe(viewLifecycleOwner, Observer { playlistList ->
             Timber.d("playlistList(): num: ${playlistList.size}")
 
             playlistList?.also {
@@ -90,7 +95,7 @@ class PlaylistFragment:
     override fun onPlaylistItemDismsissed(playlist: Playlist, position: Int) {
         playlistViewModel.removePlaylist(playlist)
 
-        Snackbar.make(view!!, getString(R.string.snackbar_title_removed, playlist.name), Snackbar.LENGTH_LONG)
+        Snackbar.make(requireView(), getString(R.string.snackbar_title_removed, playlist.name), Snackbar.LENGTH_LONG)
                 .setAction(getString(R.string.snackbar_undo)) {
                     playlistViewModel.restorePlaylistAt(playlist, position)
                 }
@@ -109,14 +114,15 @@ class PlaylistFragment:
     private fun showOpenPlaylistDialog(playlist: Playlist) {
 
         val tracks = playlistViewModel.getTracksForPlaylist(playlist)
-        val dialogView = layoutInflater.inflate(R.layout.dialog_show_tracks, null)
-        dialogView.listview?.apply {
+        val dialogBinding = DialogShowTracksBinding.inflate(LayoutInflater.from(context))
+
+        dialogBinding.listview.apply {
             adapter = DialogTrackListAdapter(context, tracks)
         }
 
         AlertDialog.Builder(activity)
                 .apply {
-                    setView(dialogView)
+                    setView(dialogBinding.root)
                     setCancelable(false)
                     setTitle(getString(R.string.filebrowser_dialog_add_tracks_to_queue_title))
                     setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
