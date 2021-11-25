@@ -15,10 +15,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.dialog_m3u_show_tracks.view.*
-import kotlinx.android.synthetic.main.fragment_filebrowser.*
-import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.*
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.player.PlayerViewModel
 import org.qstuff.qplayer.playlists.M3uUtils
@@ -53,6 +51,8 @@ class FileBrowserFragment:
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
     private lateinit var playerViewModel: PlayerViewModel
 
+    private var _binding: FragmentFilebrowserBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -61,7 +61,8 @@ class FileBrowserFragment:
         fileBrowserViewModel = ViewModelProvider(requireActivity()).get(FileBrowserViewModel::class.java)
         playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
 
-        return inflater.inflate(R.layout.fragment_filebrowser, container, false)
+        _binding = FragmentFilebrowserBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -77,10 +78,10 @@ class FileBrowserFragment:
 
     private fun setupObservers() {
 
-        fileBrowserViewModel.fileList.observe(this, Observer { files ->
+        fileBrowserViewModel.fileList.observe(viewLifecycleOwner, Observer { files ->
             Timber.d("fileList: $files")
             files?.also {
-                fileBrowserRecycler.apply {
+                binding.fileBrowserRecycler.apply {
                     adapter = FileBrowserAdapter(it, this@FileBrowserFragment)
                     layoutManager = LinearLayoutManager(context)
 
@@ -88,11 +89,11 @@ class FileBrowserFragment:
             }
         })
 
-        fileBrowserViewModel.directoryName.observe(this, Observer { name ->
-            fileBrowserHeader.text = name
+        fileBrowserViewModel.directoryName.observe(viewLifecycleOwner, Observer { name ->
+            binding.fileBrowserHeader.text = name
         })
 
-        fileBrowserGoToParentDir.setOnClickListener {
+        binding.fileBrowserGoToParentDir.setOnClickListener {
             fileBrowserViewModel.navigateUp()
         }
     }
@@ -102,7 +103,7 @@ class FileBrowserFragment:
     //
 
     private fun checkForStoragePermission() {
-        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), MY_PERMISSIONS_REQUEST_READ_STORAGE)
@@ -119,7 +120,7 @@ class FileBrowserFragment:
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     setupObservers()
                 } else {
-                    fileBrowserHeader.text = "Please go to app settings and grant storage permission"
+                    binding.fileBrowserHeader.text = "Please go to app settings and grant storage permission"
                 }
             }
         }
@@ -164,16 +165,16 @@ class FileBrowserFragment:
     private fun showAddTracksToQueueDialog(file: File) {
 
         val files = file.listTracksForAddDialog()
-        val dialogView = layoutInflater.inflate(R.layout.dialog_show_tracks, null)
+        val dialogBinding = DialogShowTracksBinding.inflate(LayoutInflater.from(context))
 
-        dialogView.listview?.apply {
+        dialogBinding.listview.apply {
             adapter = DialogFileListAdapter(context, files)
         }
 
         AlertDialog.Builder(activity)
                 .apply {
                     setCancelable(false)
-                    setView(dialogView)
+                    setView(dialogBinding.root)
                     setTitle(getString(R.string.filebrowser_dialog_add_tracks_to_queue_title))
                     setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                         queueViewModel.addFileList(files)
@@ -198,40 +199,41 @@ class FileBrowserFragment:
 
         val tracksFound = tracks.first
         val tracksNotFound = tracks.second
-        val dialogView = layoutInflater.inflate(R.layout.dialog_m3u_show_tracks, null)
+
+        val dialogBinding = DialogM3uShowTracksBinding.inflate(LayoutInflater.from(context))
 
         if (tracksFound.isNotEmpty()) {
             Timber.d("showOpenM3uListDialog(): found ${tracksFound.size} tracks")
-            dialogView.titleItemsFound.visibility = View.VISIBLE
-            dialogView.listviewItemsFound?.apply {
+            dialogBinding.titleItemsFound.visibility = View.VISIBLE
+            dialogBinding.listviewItemsFound?.apply {
                 adapter = DialogTrackListAdapter(context, tracksFound)
             }
         } else {
-            dialogView.titleItemsFound.visibility = View.GONE
+            dialogBinding.titleItemsFound.visibility = View.GONE
         }
 
         if (tracksNotFound.isNotEmpty()) {
             Timber.d("showOpenM3uListDialog(): not found ${tracksFound.size} tracks")
-            dialogView.titleItemsNotFound.visibility = View.VISIBLE
-            dialogView.listviewItemsNotFound?.apply {
+            dialogBinding.titleItemsNotFound.visibility = View.VISIBLE
+            dialogBinding.listviewItemsNotFound?.apply {
                 adapter = DialogTrackListAdapter(context, tracksNotFound)
             }
         } else {
-            dialogView.titleItemsNotFound.visibility = View.GONE
+            dialogBinding.titleItemsNotFound.visibility = View.GONE
         }
 
         AlertDialog.Builder(activity)
                 .apply {
                     if(tracksFound.isEmpty()) {
                         setCancelable(false)
-                        setView(dialogView)
+                        setView(dialogBinding.root)
                         setTitle(getString(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, file.name))
                         setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                             dialog.dismiss()
                         }
                     } else {
                         setCancelable(false)
-                        setView(dialogView)
+                        setView(dialogBinding.root)
                         setTitle(getString(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, file.name))
                         setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
                             queueViewModel.addTrackList(tracksFound)
@@ -259,6 +261,7 @@ class FileBrowserFragment:
             if (view == null) {
                 view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
             }
+
             val text = view!!.findViewById<TextView>(R.id.itemText)
             text.text = items[position].name
             return view
@@ -270,13 +273,14 @@ class FileBrowserFragment:
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             var view = convertView
+
             if (view == null) {
                 view = LayoutInflater.from(context).inflate(R.layout.dialog_track_list_item, null)
             }
+
             val text = view!!.findViewById<TextView>(R.id.itemText)
             text.text = items[position].name
             return view
         }
     }
-
 }

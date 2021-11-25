@@ -221,14 +221,15 @@ class  PlayerViewModel (application: Application):
         if (diff == 0f) {
             pre = "   "
         }
-        if (diff < 10 && diff > 0) {
+        if (diff in 0.0..10.0) {
             pre = "  +"
         }
-        if (diff > -10 && diff < 0) {
+        if (diff in -10.0..0.0) {
             pre = "  "
         }
 
         val pitch = String.format("$pre%02.01f", diff)
+
         if (diff in -99.0..99.0) {
             pitchValueText.value = "$pitch%"
         } else {
@@ -404,13 +405,13 @@ class  PlayerViewModel (application: Application):
                 updateHandler.postDelayed(this, 100)
             }
         }
-        updateHandler.post(updateRunnable)
+        updateHandler.post(updateRunnable as Runnable)
         isUpdatetaskRunning = true
     }
 
     private fun resetUpdateTimer() {
 
-        updateHandler.removeCallbacks(updateRunnable)
+        updateRunnable?.let { updateHandler.removeCallbacks(it) }
         isUpdatetaskRunning = false
     }
 }

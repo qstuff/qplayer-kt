@@ -237,22 +237,31 @@ class QMediaPlayerService : LifecycleService() {
         buttonIntent.putExtra(EXTRA_NOTIFICATION_REQUESTCODE, type)
         buttonIntent.action = ACTION_PLAYER_TOGGLED
 
-        val pendingButtonIntent = PendingIntent.getBroadcast(applicationContext,
-                type, buttonIntent, 0)
+        val pendingButtonIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            type,
+            buttonIntent,
+            PendingIntent.FLAG_IMMUTABLE)
 
         val contentIntent = Intent(this, PlayerActivity::class.java)
         contentIntent.putExtra(EXTRA_NOTIFICATION_REQUESTCODE, type)
         contentIntent.action = ACTION_NOTIFICATION_CLICKED
 
-        val pendingContentIntent = PendingIntent.getActivity(applicationContext,
-                0, contentIntent, 0)
+        val pendingContentIntent = PendingIntent.getActivity(
+            applicationContext,
+            0,
+            contentIntent,
+            PendingIntent.FLAG_IMMUTABLE)
 
         val dismissIntent = Intent(this, NotificationBroadcastReceiver::class.java)
         dismissIntent.putExtra(EXTRA_NOTIFICATION_REQUESTCODE, type)
         dismissIntent.action = ACTION_NOTIFICATION_DISMISSED
 
-        val pendingDismissIntent = PendingIntent.getBroadcast(applicationContext,
-                0, dismissIntent, 0)
+        val pendingDismissIntent = PendingIntent.getBroadcast(
+            applicationContext,
+                0, 
+            dismissIntent,
+            PendingIntent.FLAG_IMMUTABLE)
 
         val remoteViews = RemoteViews(packageName, R.layout.notification_remote_view)
 

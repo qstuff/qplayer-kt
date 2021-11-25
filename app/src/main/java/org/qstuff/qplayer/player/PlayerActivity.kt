@@ -25,12 +25,12 @@ import com.WarwickWestonWright.HGDialV2.HGDialInfo
 import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import kotlinx.android.synthetic.main.activity_player.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.ActivityPlayerBinding
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.filebrowser.FileBrowserFragment
@@ -80,23 +80,26 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     private var lastAngle = 0.0
     private val deltaList = arrayListOf<Double>()
 
-    
+    private lateinit var binding: ActivityPlayerBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
 
-        setContentView(R.layout.activity_player)
+        binding = ActivityPlayerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         playerViewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
 
         queueViewModel = ViewModelProvider(this).get(QueueViewModel::class.java)
 
-        trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
-        trackProgressBar.progress = 0
-
-        waveformView.updateWaveform(null)
-        waveformViewLoadingText.visibility = View.GONE
+        with (binding) {
+            trackProgressBar.setOnSeekBarChangeListener(TrackProgressChangedListener())
+            trackProgressBar.progress = 0
+            waveformView.updateWaveform(null)
+            waveformViewLoadingText.visibility = View.GONE
+        }
 
         setupTitle()
         setupJogWheel()
@@ -171,29 +174,34 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 when (track.trackStatus) {
                         Track.TrackStatus.UNDEFINED,
                         Track.TrackStatus.LOADING -> {
-                        trackTitle.text = getString(R.string.player_loading)
-                        stopRemainBlinkAnimation()
-                        waveformView.updateWaveform(null)
-                        waveformViewLoadingText.visibility = View.VISIBLE
-                        trackProgressBar.progress = 0
+                            with(binding) {
+                                trackTitle.text = getString(R.string.player_loading)
+                                stopRemainBlinkAnimation()
+                                waveformView.updateWaveform(null)
+                                waveformViewLoadingText.visibility = View.VISIBLE
+                                trackProgressBar.progress = 0
+                            }
                     }
                     Track.TrackStatus.PREPARED -> {
-                        isTrackPrepared = true
-                        stopRemainBlinkAnimation()
-                        trackProgressBar.progress = 0
-                        trackTitle.text = track.name
-                        totalTrackLength.text = "total: ${getDurationHumanReadable(track.duration)}"
-                        dynamicTrackLength.text = "remain: ${getDurationHumanReadable(track.duration)}"
+                        with(binding) {
+                            isTrackPrepared = true
+                            stopRemainBlinkAnimation()
+                            trackProgressBar.progress = 0
+                            trackTitle.text = track.name
+                            totalTrackLength.text =
+                                "total: ${getDurationHumanReadable(track.duration)}"
+                            dynamicTrackLength.text =
+                                "remain: ${getDurationHumanReadable(track.duration)}"
 
-                        playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
+                            playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
 
-                        if (track.isAutoplay) {
-                            playerViewModel.playPause()
+                            if (track.isAutoplay) {
+                                playerViewModel.playPause()
+                            }
+                            if (track.cuePosition > 0L) {
+                                // TODO restore cue
+                            }
                         }
-                        if (track.cuePosition > 0L) {
-                            // TODO restore cue
-                        }
-
                     }
                     Track.TrackStatus.COMPLETED -> {
                         stopRemainBlinkAnimation()
@@ -219,9 +227,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
             currentTrack?.let {
                 if (showRemainingTime) {
-                    dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - pos)}"
+                    binding.dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - pos)}"
                 } else {
-                    dynamicTrackLength.text = "current: ${getDurationHumanReadable(pos)}"
+                    binding.dynamicTrackLength.text = "current: ${getDurationHumanReadable(pos)}"
                 }
 
                 if ((it.duration - pos) in 0..30000) {
@@ -239,8 +247,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
             trackData?.let {
                 if (trackData.track == currentTrack) {
-                    waveformView.updateWaveform(trackData)
-                    waveformViewLoadingText.visibility = View.GONE
+                    binding.waveformView.updateWaveform(trackData)
+                    binding.waveformViewLoadingText.visibility = View.GONE
                 } else {
                     Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack?.name}")
                 }
@@ -250,19 +258,19 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         playerViewModel.masterTempo.observe(this, Observer { masterTempo ->
             masterTempo?.let {
                 if (it) {
-                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
+                    binding.buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
                 } else {
-                    buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
+                    binding.buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
                 }
             }
         })
 
         playerViewModel.pitchValueText.observe(this, Observer { pitchValueText ->
-            pitchControlValueIndicator.text = pitchValueText ?: "0,0%"
+            binding.pitchControlValueIndicator.text = pitchValueText ?: "0,0%"
         })
 
         playerViewModel.pitchValue.observe(this, Observer { pitchValue ->
-            pitchControl.setNewProgress(pitchValue, false)
+            binding.pitchControl.setNewProgress(pitchValue, false)
         })
 
         playerViewModel.jogwheelSensitivity.observe(this, Observer { jogwheelSensitivity ->
@@ -270,7 +278,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         })
 
         playerViewModel.pitchFactorIndex.observe(this, Observer { pitchFactorIndex ->
-            pitchRangeSpinner.setSelection(pitchFactorIndex)
+            binding.pitchRangeSpinner.setSelection(pitchFactorIndex)
         })
 
         playerViewModel.cueActive.observe(this, Observer { cueActive ->
@@ -278,9 +286,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 isCueActive = cueActive
 
                 if (it){
-                    buttonCue.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
+                    binding.buttonCue.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
                 } else {
-                    buttonCue.setTextColor(ContextCompat.getColor(this, R.color.white))
+                    binding.buttonCue.setTextColor(ContextCompat.getColor(this, R.color.white))
                 }
             }
         })
@@ -289,13 +297,13 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             repeatStatus?.let {
                 when (it) {
                     TrackRepeatStatus.NONE -> {
-                        buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop))
+                        binding.buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop))
                     }
                     TrackRepeatStatus.ONE -> {
-                        buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop1_selected))
+                        binding.buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop1_selected))
                     }
                     TrackRepeatStatus.ALL -> {
-                        buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop_selected))
+                        binding.buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop_selected))
                     }
                 }
             }
@@ -304,9 +312,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         queueViewModel.shuffle.observe(this, Observer { shuffle ->
             shuffle?.let {
                 if (it) {
-                    buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle_selected))
+                    binding.buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle_selected))
                 } else {
-                    buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle))
+                    binding.buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle))
                 }
             }
         })
@@ -318,112 +326,120 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     private fun setupInteractionListeners() {
 
-        buttonPlayPause.setOnClickListener {
-            when {
-                isTrackPrepared -> playerViewModel.playPause()
-                currentTrack?.trackStatus == Track.TrackStatus.COMPLETED -> playerViewModel.playPause()
-                else -> Timber.w("buttonPlayPause(): track neither prepared or completed")
-            }
-        }
+        with(binding) {
 
-        buttonPrevious.setOnClickListener {
-            queueViewModel.previousTrack(currentTrack)
-        }
-
-        buttonNext.setOnClickListener {
-            queueViewModel.nextTrack(currentTrack)
-        }
-
-        buttonRepeat.setOnClickListener {
-            queueViewModel.toggleRepeat()
-        }
-
-        buttonShuffle.setOnClickListener {
-            queueViewModel.toggleShuffle()
-        }
-
-        buttonMasterTempo.setOnClickListener {
-            playerViewModel.toggleMasterTempo()
-            playerViewModel.onPitchChanged(pitchControl.progress)
-        }
-
-        buttonCue.setOnClickListener {
-            if (isCueActive) {
-                playerViewModel.playFromCue(currentTrack)
-            } else {
-                currentTrack?.also {
-                    cuepointView.cuepointPosition = trackProgressBar.progress
-                    cuepointView.visibility = View.VISIBLE
-                    playerViewModel.toggleCue(it, true)
+            buttonPlayPause.setOnClickListener {
+                when {
+                    isTrackPrepared -> playerViewModel.playPause()
+                    currentTrack?.trackStatus == Track.TrackStatus.COMPLETED -> playerViewModel.playPause()
+                    else -> Timber.w("buttonPlayPause(): track neither prepared or completed")
                 }
             }
-        }
 
-        buttonCue.setOnLongClickListener {
-            if (isCueActive) {
-                currentTrack?.also {
-                    cuepointView.cuepointPosition = trackProgressBar.progress
-                    cuepointView.visibility = View.GONE
-                    playerViewModel.toggleCue(it, false)
+            buttonPrevious.setOnClickListener {
+                queueViewModel.previousTrack(currentTrack)
+            }
+
+            buttonNext.setOnClickListener {
+                queueViewModel.nextTrack(currentTrack)
+            }
+
+            buttonRepeat.setOnClickListener {
+                queueViewModel.toggleRepeat()
+            }
+
+            buttonShuffle.setOnClickListener {
+                queueViewModel.toggleShuffle()
+            }
+
+            buttonMasterTempo.setOnClickListener {
+                playerViewModel.toggleMasterTempo()
+                playerViewModel.onPitchChanged(pitchControl.progress)
+            }
+
+            buttonCue.setOnClickListener {
+                if (isCueActive) {
+                    playerViewModel.playFromCue(currentTrack)
+                } else {
+                    currentTrack?.also {
+                        cuepointView.cuepointPosition = trackProgressBar.progress
+                        cuepointView.visibility = View.VISIBLE
+                        playerViewModel.toggleCue(it, true)
+                    }
                 }
             }
-            true
-        }
 
-        dynamicTrackLength.setOnClickListener {
-            playerViewModel.toggleDynamicTrackLengthDisplay()
-        }
-
-        buttonPitchReset.setOnClickListener {
-            pitchControl.reset()
-            playerViewModel.onPitchChanged(pitchControl.progress)
-        }
-
-        buttonPitchControlIncrease.setOnClickListener {
-            val current = pitchControl.progress
-            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-            pitchControl.setNewProgress(current + delta, true)
-        }
-
-        buttonPitchControlDecrease.setOnClickListener {
-            val current = pitchControl.progress
-            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-            pitchControl.setNewProgress(current - delta, true)
-        }
-
-        pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                Timber.d("onProgressChanged(): $progress")
-                playerViewModel.onPitchChanged(progress)
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        moreMenu.setOnClickListener {
-            val popup = PopupMenu(this, moreMenu)
-            val inflater = popup.menuInflater
-            inflater.inflate(R.menu.more_menu, popup.menu)
-            popup.setOnMenuItemClickListener {item ->
-
-                when (item.itemId) {
-                    R.id.more_menu_settings -> {
-                        startSettingsActivity()
-                    }
-                    R.id.more_menu_privacy -> {
-                        startWebViewActivity(HTMLPAGE_PRIVACY)
-                    }
-                    R.id.more_menu_imprint -> {
-                        startWebViewActivity(HTMLPAGE_IMPRINT)
-                    }
-                    R.id.more_menu_licenses -> {
-                        startWebViewActivity(HTMLPAGE_LICENSES)
+            buttonCue.setOnLongClickListener {
+                if (isCueActive) {
+                    currentTrack?.also {
+                        cuepointView.cuepointPosition = trackProgressBar.progress
+                        cuepointView.visibility = View.GONE
+                        playerViewModel.toggleCue(it, false)
                     }
                 }
-
-                false
+                true
             }
-            popup.show()
+
+            dynamicTrackLength.setOnClickListener {
+                playerViewModel.toggleDynamicTrackLengthDisplay()
+            }
+
+            buttonPitchReset.setOnClickListener {
+                pitchControl.reset()
+                playerViewModel.onPitchChanged(pitchControl.progress)
+            }
+
+            buttonPitchControlIncrease.setOnClickListener {
+                val current = pitchControl.progress
+                val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+                pitchControl.setNewProgress(current + delta, true)
+            }
+
+            buttonPitchControlDecrease.setOnClickListener {
+                val current = pitchControl.progress
+                val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+                pitchControl.setNewProgress(current - delta, true)
+            }
+
+            pitchControl.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    Timber.d("onProgressChanged(): $progress")
+                    playerViewModel.onPitchChanged(progress)
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+
+            moreMenu.setOnClickListener {
+                val popup = PopupMenu(it.context, moreMenu)
+                val inflater = popup.menuInflater
+                inflater.inflate(R.menu.more_menu, popup.menu)
+                popup.setOnMenuItemClickListener { item ->
+
+                    when (item.itemId) {
+                        R.id.more_menu_settings -> {
+                            startSettingsActivity()
+                        }
+                        R.id.more_menu_privacy -> {
+                            startWebViewActivity(HTMLPAGE_PRIVACY)
+                        }
+                        R.id.more_menu_imprint -> {
+                            startWebViewActivity(HTMLPAGE_IMPRINT)
+                        }
+                        R.id.more_menu_licenses -> {
+                            startWebViewActivity(HTMLPAGE_LICENSES)
+                        }
+                    }
+
+                    false
+                }
+                popup.show()
+            }
         }
     }
 
@@ -442,7 +458,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 e.printStackTrace()
             }
         }
-        playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix")
+        binding.playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix")
     }
 
     @Suppress("DEPRECATION")
@@ -454,7 +470,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             }
 
     private fun setupJogWheel() {
-        jogWheelContainer = HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, jogWheel)
+        jogWheelContainer = HGViewContainer(R.drawable.qpl_btn_wheel_ohne_rand01, binding.jogWheel)
         jogWheelDial = jogWheelContainer.hgDialV2Active
         jogWheelInterface = (object: HGDialV2.IHGDial {
 
@@ -462,7 +478,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             override fun onPointerUp(p0: HGDialInfo?) {}
 
             override fun onDown(hgDialInfo: HGDialInfo?) {
-                currentPitchProgress = pitchControl.progress
+                currentPitchProgress = binding.pitchControl.progress
                 onMoveTime = System.currentTimeMillis()
             }
 
@@ -500,7 +516,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         val new = (currentPitchProgress + delta).toInt()
         playerViewModel.onPitchChanged(new)
-        pitchControl.setNewProgress(new, false)
+        binding.pitchControl.setNewProgress(new, false)
     }
 
     private fun onJogWheeMovedByVelocity(hgDialInfo: HGDialInfo, reset: Boolean) {
@@ -515,7 +531,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         val new = (currentPitchProgress + delta).toInt()
 
         playerViewModel.onPitchChanged(new)
-        pitchControl.setNewProgress(new, false)
+        binding.pitchControl.setNewProgress(new, false)
 
         lastAngle = hgDialInfo.textureAngle
     }
@@ -539,12 +555,12 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     private fun setupContentSection() {
 
-        contentPager.apply {
+        binding.contentPager.apply {
             adapter = ContentPagerAdapter(context, supportFragmentManager)
             offscreenPageLimit = 2
         }
-        contentTabbar.apply {
-            setViewPager(contentPager)
+        binding.contentTabbar.apply {
+            setViewPager(binding.contentPager)
         }
     }
 
@@ -553,8 +569,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         val spinnerAdapter = ArrayAdapter<String>(
                 this, R.layout.spinner_pitch_range, resources.getStringArray(R.array.pitch_range_values))
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_pitch_range)
-        pitchRangeSpinner.adapter = spinnerAdapter
-        pitchRangeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+        binding.pitchRangeSpinner.adapter = spinnerAdapter
+        binding.pitchRangeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 playerViewModel.onPitchRangeSelected(position)
@@ -596,15 +612,15 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         val dTotal = currentTrack!!.duration.toDouble()
         val dPosition = position.toDouble()
-        trackProgressBar.progress = ((dPosition / dTotal) * 1000).toInt()
+        binding.trackProgressBar.progress = ((dPosition / dTotal) * 1000).toInt()
     }
 
     private fun updatePlayButtonUI(playing: Boolean) {
 
         if (playing) {
-            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
+            binding.buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_pause_selected))
         } else {
-            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_play_selected))
+            binding.buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_play_selected))
         }
     }
 
@@ -619,8 +635,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 repeatCount = Animation.INFINITE
                 start()
             }
-            dynamicTrackLength.animation = remainBlinkAnimation
-            trackProgressBar.animation = remainBlinkAnimation
+            binding.dynamicTrackLength.animation = remainBlinkAnimation
+            binding.trackProgressBar.animation = remainBlinkAnimation
             isBlinkAnimationRunning = true
         }
     }
@@ -630,8 +646,8 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         if (isBlinkAnimationRunning) {
             Timber.d("stopRemainBlinkAnimation():")
 
-            dynamicTrackLength.clearAnimation()
-            trackProgressBar.clearAnimation()
+            binding.dynamicTrackLength.clearAnimation()
+            binding.trackProgressBar.clearAnimation()
             remainBlinkAnimation.reset()
             isBlinkAnimationRunning = false
         }

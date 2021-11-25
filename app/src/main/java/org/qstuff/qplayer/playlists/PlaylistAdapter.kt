@@ -1,11 +1,12 @@
 package org.qstuff.qplayer.playlists
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.playlist_list_item.view.*
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.PlaylistListItemBinding
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.queue.ItemTouchHelperAdapter
 import timber.log.Timber
@@ -38,14 +39,16 @@ class PlaylistAdapter(private val interactionListener: PlaylistItemInteractionLi
         Timber.v("onBindViewHolder(): pos: $position, playlists: $playlists")
 
         val playlist = playlists[position]
+        val binding = (holder as PlaylistItemViewHolder).binding
         holder.itemView.apply {
-            playlistItemText.text = playlist.name
-            playlistItemText.setOnClickListener {
+            binding.playlistItemText.text = playlist.name
+            binding.playlistItemText.setOnClickListener {
                 interactionListener.onPlaylistItemClicked(playlist)
             }
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setPlaylistList(playlists: MutableList<Playlist>) {
 
         this.playlists = playlists
@@ -82,5 +85,7 @@ class PlaylistAdapter(private val interactionListener: PlaylistItemInteractionLi
     // ViewHolder
     //
 
-    class PlaylistItemViewHolder(view: View): RecyclerView.ViewHolder(view)
+    class PlaylistItemViewHolder(view: View): RecyclerView.ViewHolder(view) {
+        val binding = PlaylistListItemBinding.bind(view)
+    }
 }

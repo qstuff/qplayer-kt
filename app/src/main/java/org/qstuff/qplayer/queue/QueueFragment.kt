@@ -7,6 +7,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.ListView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -14,10 +16,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_queue.*
-import kotlinx.android.synthetic.main.queue_dialog_save_tracks_as_playlist.view.*
 import org.koin.standalone.KoinComponent
 import org.qstuff.qplayer.R
+import org.qstuff.qplayer.databinding.DialogM3uShowTracksBinding
+import org.qstuff.qplayer.databinding.FragmentQueueBinding
+import org.qstuff.qplayer.databinding.QueueDialogSaveTracksAsPlaylistBinding
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
@@ -51,6 +54,9 @@ class QueueFragment:
     private lateinit var queueAdapter: QueueAdapter
     private var currentTrack: Track? = null
 
+    private var _binding: FragmentQueueBinding? = null
+    private val binding get() = _binding!!
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -60,7 +66,8 @@ class QueueFragment:
         fileBrowserViewModel = ViewModelProvider(requireActivity()).get(FileBrowserViewModel::class.java)
         playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
 
-        return inflater.inflate(R.layout.fragment_queue, container, false)
+        _binding = FragmentQueueBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -69,9 +76,9 @@ class QueueFragment:
         queueAdapter = QueueAdapter(this@QueueFragment)
         val callback = ItemTouchHelperCallback(queueAdapter)
         val touchHelper = ItemTouchHelper(callback)
-        touchHelper.attachToRecyclerView(queueRecycler)
+        touchHelper.attachToRecyclerView(binding.queueRecycler)
 
-        queueRecycler.apply {
+        binding.queueRecycler.apply {
             adapter = queueAdapter
             layoutManager = LinearLayoutManager(context)
         }
@@ -98,21 +105,21 @@ class QueueFragment:
 
     private fun setupObservers() {
 
-        queueViewModel.trackList.observe(this, Observer { tracks ->
+        queueViewModel.trackList.observe(viewLifecycleOwner, Observer { tracks ->
             Timber.d("trackList: ${tracks.size}")
             tracks?.also {
                 queueAdapter.setTrackList(tracks.toMutableList())
             }
         })
 
-        queueViewModel.onTrackSelectedIndex.observe(this, Observer { index ->
+        queueViewModel.onTrackSelectedIndex.observe(viewLifecycleOwner, Observer { index ->
             Timber.d("onTrackSelectedIndex(): $index")
 
             queueAdapter.onItemSelectedIndex(index)
-            queueRecycler.scrollToPosition(index)
+            binding.queueRecycler.scrollToPosition(index)
         })
 
-        queueViewModel.onTrackSelected.observe(this, Observer { track ->
+        queueViewModel.onTrackSelected.observe(viewLifecycleOwner, Observer { track ->
             Timber.d("onTrackSelected(): $track")
             currentTrack = track
             playerViewModel.loadTrack(track)
@@ -125,7 +132,7 @@ class QueueFragment:
 
     private fun setupInteractionListeners() {
 
-        queueClearButton.setOnClickListener {
+        binding.queueClearButton.setOnClickListener {
             if (queueViewModel.isShowClearQueueWarningEnabled) {
                 showClearQueueDialog()
             } else {
@@ -133,7 +140,7 @@ class QueueFragment:
             }
         }
 
-        queueSaveAsPlaylistButton.setOnClickListener {
+        binding.queueSaveAsPlaylistButton.setOnClickListener {
             showSaveAsPlaylistDialog()
         }
     }
@@ -146,10 +153,10 @@ class QueueFragment:
         queueViewModel.onTrackSelected(track)
     }
 
-    override fun onQueueItemDismsissed(track: Track, position: Int) {
+    override fun onQueueItemDismissed(track: Track, position: Int) {
         queueViewModel.removeTrack(track)
 
-        Snackbar.make(view!!, getString(R.string.snackbar_title_removed, track.name), Snackbar.LENGTH_LONG)
+        Snackbar.make(requireView(), getString(R.string.snackbar_title_removed, track.name), Snackbar.LENGTH_LONG)
                 .setAction(getString(R.string.snackbar_undo)) {
                     queueViewModel.restoreTrackAt(track, position)
                 }
@@ -186,20 +193,20 @@ class QueueFragment:
         val tracks = queueViewModel.trackList.value
         val playlists = playlistViewModel.playlistList.value
 
-        val dialogView = layoutInflater.inflate(R.layout.queue_dialog_save_tracks_as_playlist, null)
+        val dialogBinding = QueueDialogSaveTracksAsPlaylistBinding.inflate(LayoutInflater.from(context))
         val dialog = AlertDialog.Builder(activity)
                 .apply {
-                    setView(dialogView)
+                    setView(dialogBinding.root)
                     setCancelable(false)
                     setTitle(getString(R.string.queue_dialog_save_tracks_as_playlist_title))
                     setMessage(getString(R.string.queue_dialog_save_tracks_as_playlist_message))
                     setPositiveButton(getString(R.string.dialog_ok)) { dialog, _ ->
 
-                        if (dialogView.textInput.text.isBlank()) {
+                        if (dialogBinding.textInput.text.isBlank()) {
                             context.shortToast(getString(R.string.queue_toast_save_tracks_as_queue_need_name))
                         } else {
                             playlistViewModel.saveTracksAsNewPlaylist(tracks ?: listOf(),
-                                    dialogView.textInput.text.toString())
+                                dialogBinding.textInput.text.toString())
                         }
                         dialog.dismiss()
                     }
@@ -208,7 +215,7 @@ class QueueFragment:
                     }
                 }.show()
 
-        dialogView.listview.apply {
+        dialogBinding.listview.apply {
             adapter = DialogListAdapter(context, playlists ?: listOf())
             setOnItemClickListener { _, _, position, _ ->
                 showAddToExistingPlaylistDialog(position)

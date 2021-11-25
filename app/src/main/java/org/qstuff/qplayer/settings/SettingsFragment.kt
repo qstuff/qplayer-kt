@@ -86,7 +86,8 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
     }
 
     private fun getVersionString(): String {
-        val packageInfo = activity?.packageManager?.getPackageInfo(activity?.packageName, 0)
+        val packageInfo =
+            activity?.packageName?.let { activity?.packageManager?.getPackageInfo(it, 0) }
 
         packageInfo ?: return "n/a"
 
