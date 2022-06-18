@@ -44,16 +44,24 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
     }
 
     fun navigateUp() {
-        Timber.d("navigateUp(): ${currentDir.absolutePath}")
+        Timber.d("navigateUp(): current dir: ${currentDir.absolutePath}")
 
         if (currentDir.parentFile.absolutePath == SD_CARD_HACK_PATH) {
-            Timber.d("navigateUp(): SD_HACK: ${currentDir.path}")
+
+            Timber.d("navigateUp(): SD_HACK current dir 1: ${currentDir.path}")
+
             currentDir = File(preferencesDataSource.getRootDir())
+
+            Timber.d("navigateUp(): SD_HACK current dir 2: ${currentDir.path}")
+
             browseTo(currentDir)
+
         } else if  (currentDir.absolutePath == preferencesDataSource.getRootDir()
+
                 || currentDir.absolutePath == "/"
                 || currentDir.parentFile.absolutePath == "/") {
             return
+
         } else {
             browseTo(currentDir.parentFile)
         }

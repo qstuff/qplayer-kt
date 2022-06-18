@@ -21,7 +21,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
         // Saved/Loaded states in FileBrowserModel
         const val PREF_LAST_BROWSED_DIR = "PREF_LAST_BROWSED_DIR"
-        const val DEFAULT_ROOT_DIR = "/storage/emulated/0"
+        const val DEFAULT_ROOT_DIR = "/storage/"
 
         // Saved/Loaded states in QueueViewModel
         const val PREF_QUEUE_LIST = "PREF_QUEUE_LIST"

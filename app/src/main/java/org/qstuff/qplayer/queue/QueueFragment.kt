@@ -105,25 +105,27 @@ class QueueFragment:
 
     private fun setupObservers() {
 
-        queueViewModel.trackList.observe(viewLifecycleOwner, Observer { tracks ->
+        queueViewModel.trackList.observe(viewLifecycleOwner) { tracks ->
             Timber.d("trackList: ${tracks.size}")
             tracks?.also {
                 queueAdapter.setTrackList(tracks.toMutableList())
             }
-        })
+        }
 
-        queueViewModel.onTrackSelectedIndex.observe(viewLifecycleOwner, Observer { index ->
+        queueViewModel.onTrackSelectedIndex.observe(viewLifecycleOwner) { index ->
             Timber.d("onTrackSelectedIndex(): $index")
 
-            queueAdapter.onItemSelectedIndex(index)
-            binding.queueRecycler.scrollToPosition(index)
-        })
+            index?.let {
+                queueAdapter.onItemSelectedIndex(it)
+                binding.queueRecycler.scrollToPosition(it)
+            }
+        }
 
-        queueViewModel.onTrackSelected.observe(viewLifecycleOwner, Observer { track ->
+        queueViewModel.onTrackSelected.observe(viewLifecycleOwner) { track ->
             Timber.d("onTrackSelected(): $track")
             currentTrack = track
             playerViewModel.loadTrack(track)
-        })
+        }
     }
 
     //
