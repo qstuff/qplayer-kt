@@ -110,7 +110,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$libs.coroutines"
     implementation "com.android.support:multidex:$libs.multidex"
 
@@ -120,7 +120,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$libs.appcompat"
     implementation "androidx.constraintlayout:constraintlayout:$libs.constraintLayout"
     implementation "androidx.lifecycle:lifecycle-extensions:$libs.lifecycle"
-    implementation "androidx.preference:preference:$libs.preference"
+    implementation "androidx.preference:preference-ktx:$libs.preference"
 
     // Room
     implementation "androidx.room:room-runtime:$libs.room"

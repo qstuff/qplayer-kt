@@ -68,16 +68,16 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
 
     override fun onResume() {
         super.onResume()
-        preferenceScreen.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        preferenceScreen.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onPause() {
         super.onPause()
-        preferenceScreen.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        preferenceScreen.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onPreferenceTreeClick(preference: Preference?): Boolean {
-        Timber.d("onPreferenceTreeClick(): ${preference?.key}")
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        Timber.d("onPreferenceTreeClick(): ${preference.key}")
         return true
     }
 
