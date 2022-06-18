@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.5.31'
+    ext.kotlin_version = '1.6.10'
 
     ext.configuration = [
             applicationId       : "org.qstuff.qplayer",
@@ -9,29 +9,29 @@ buildscript {
             buildToolsVersion   : "30.0.2",
             minSdkVersion       : 24,
             targetSdkVersion    : 31,
-            versionCode         : 210,
-            versionName         : "2.1.0",
-            versionCommitCount  : 210 + "git rev-list HEAD --count".execute([], project.rootDir).text.trim().toInteger()
+            versionCode         : 220,
+            versionName         : "2.2.0",
+            versionCommitCount  : 220 + "git rev-list HEAD --count".execute([], project.rootDir).text.trim().toInteger()
     ]
 
     ext.libs = [
-            appcompat               : '1.4.0',
-            constraintLayout        : "2.1.2",
-            coroutines              : "1.4.2",
-            crashlytics             : "18.2.4",
+            appcompat               : '1.4.2',
+            constraintLayout        : '2.1.4',
+            coroutines              : '1.6.1',
+            crashlytics             : '18.2.11',
             espresso                : '3.4.0',
             espressoRunner          : '1.4.0',
-            firebase                : '20.0.0',
-            gson                    : '2.8.8',
+            firebase                : '21.0.0',
+            gson                    : '2.8.9',
             jUnit                   : '4.13.2',
-            koin                    : "1.0.2",
-            ktx                     : '1.7.0',
-            lifecycle               : "2.2.0",
-            material                : "1.4.0",
-            multidex                : "1.0.3",
-            preference              : "1.1.1",
-            room                    : '2.3.0',
-            timber                  : "5.0.1",
+            koin                    : '1.0.2',
+            ktx                     : '1.8.0',
+            lifecycle               : '2.2.0',
+            material                : '1.6.1',
+            multidex                : '1.0.3',
+            preference              : '1.2.1',
+            room                    : '2.4.2',
+            timber                  : '5.0.1',
     ]
 
     repositories {
@@ -41,15 +41,15 @@ buildscript {
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://jitpack.io' }
-        jcenter()
+//        jcenter()
     }
 
     dependencies {
 
         classpath 'com.google.gms:google-services:4.3.10'
-        classpath 'com.android.tools.build:gradle:7.0.3'
+        classpath 'com.android.tools.build:gradle:7.0.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.0'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.0'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
