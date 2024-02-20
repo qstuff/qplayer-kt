@@ -1,5 +1,6 @@
 package org.qstuff.qplayer.player
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.*
 import android.os.Handler
@@ -60,6 +61,7 @@ class  PlayerViewModel (application: Application):
     private var isStopPlaybackOnSettingCuepointEnabled = false
 
     // MediaService
+    @SuppressLint("StaticFieldLeak")
     private lateinit var mediaService: QMediaPlayerService
     private var isMediaServiceRunning = false
     private var isMediaServiceBound = false
@@ -109,7 +111,7 @@ class  PlayerViewModel (application: Application):
                 trackStatus.value = track
             }
 
-            onWaveformDataUpdate = Transformations.map(mediaService.getWaveFormDataObserver()) { it }
+            onWaveformDataUpdate = mediaService.getWaveFormDataObserver().map { it }
 
             onMediaServiceConnected.value = true
             isMediaServiceRunning = true

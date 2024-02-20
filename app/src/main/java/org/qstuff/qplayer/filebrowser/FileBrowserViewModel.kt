@@ -1,24 +1,37 @@
 package org.qstuff.qplayer.filebrowser
 
+import android.app.Application
+import android.os.Build
 import android.os.Environment
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat.getExternalFilesDirs
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
+import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.isSupported
 import timber.log.Timber
 import java.io.File
 import java.util.*
 
+
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
  * on 2/10/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class FileBrowserViewModel: ViewModel(), KoinComponent {
+@RequiresApi(Build.VERSION_CODES.R)
+class FileBrowserViewModel(application: Application) : AndroidViewModel(application), KoinComponent {
 
     companion object {
+        val SAMSUNG_SD_CARD_HACK_PATH = listOf(
+            "/storage/3437-6533",
+            "/storage/3865-3532",
+            "/storage/6262-3034",
+        )
+
         const val SD_CARD_HACK_PATH = "/storage/emulated"
     }
 
@@ -32,9 +45,22 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
 
     init {
         Timber.d("init()")
+
+
+        val dirs = getExternalFilesDirs(application, "")
+        for (currD in dirs) {
+            if (currD.absolutePath == getApplication<QDeqApplication>().getExternalFilesDir("")?.absolutePath) {
+                Timber.d("XXX INTERNAL: $currD")
+            } else {
+                Timber.d("XXX EXTERNAL: $currD")
+            }
+        }
+
         currentDir = File(preferencesDataSource.getLastBrowsedDir())
         browseTo(currentDir)
         Timber.d("init(): ${currentDir.path}")
+
+        browseTo(currentDir)
     }
 
     override fun onCleared() {
@@ -43,10 +69,11 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
         preferencesDataSource.saveLastBrowsedDir(currentDir.path)
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     fun navigateUp() {
         Timber.d("navigateUp(): current dir: ${currentDir.absolutePath}")
 
-        if (currentDir.parentFile.absolutePath == SD_CARD_HACK_PATH) {
+        if (currentDir.parentFile?.absolutePath  == SD_CARD_HACK_PATH) {
 
             Timber.d("navigateUp(): SD_HACK current dir 1: ${currentDir.path}")
 
@@ -57,9 +84,8 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
             browseTo(currentDir)
 
         } else if  (currentDir.absolutePath == preferencesDataSource.getRootDir()
-
                 || currentDir.absolutePath == "/"
-                || currentDir.parentFile.absolutePath == "/") {
+                || currentDir.parentFile?.absolutePath  == "/") {
             return
 
         } else {
@@ -75,37 +101,44 @@ class FileBrowserViewModel: ViewModel(), KoinComponent {
         preferencesDataSource.saveLastBrowsedDir(currentDir.absolutePath)
     }
 
-    private fun browseTo(dir: File) {
-        Timber.d("browseTo(): ${dir.path}")
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun browseTo(dir: File?) {
+        dir?.let {
+            Timber.d("browseTo(): ${dir.path}")
 
-        var nextDir = dir
+            var nextDir = it
 
-        if (nextDir.absolutePath == SD_CARD_HACK_PATH) {
-            Timber.d("browseTo(): SD_HACK: ${dir.path}")
-            nextDir = File(Environment.getExternalStorageDirectory().path)
-        }
-
-        Timber.d("browseTo(): nextDir: $nextDir")
-
-        if (nextDir.isDirectory) {
-            Timber.d("browseTo(): is Directory")
-
-            val fileList =  nextDir.listFiles()
-
-            if (!fileList.isNullOrEmpty()) {
-                currentDir = nextDir
-                filterFileList(fileList.asList())
-            } else {
-
-                Timber.w("browseTo(): empty: ${dir.path}")
+            if (nextDir.absolutePath == SD_CARD_HACK_PATH) {
+                Timber.d("browseTo(): SD_HACK: ${dir.path}")
+                nextDir = Environment.getExternalStorageDirectory()
             }
-        } else if (nextDir.isFile) {
-            Timber.w("browseTo(): is file: ${dir.path}")
-        } else {
-            Timber.w("browseTo(): does not exist: ${dir.path}")
-        }
 
-        saveLastBrowsedDir()
+            val root = Environment.getExternalStorageDirectory()
+            Timber.d("browseTo(): root: $root")
+            Timber.d("browseTo(): root: ${root.listFiles()?.size}")
+
+            Timber.d("browseTo(): nextDir: $nextDir")
+
+            if (nextDir.isDirectory) {
+                Timber.d("browseTo(): is Directory")
+
+                val fileList =  nextDir.listFiles()
+
+                Timber.d("browseTo(): files: $fileList")
+
+                if (!fileList.isNullOrEmpty()) {
+                    currentDir = nextDir
+                    filterFileList(fileList.asList())
+                } else {
+                    Timber.w("browseTo(): empty: ${dir.path}")
+                }
+            } else if (nextDir.isFile) {
+                Timber.w("browseTo(): is file: ${dir.path}")
+            } else {
+                Timber.w("browseTo(): does not exist: ${dir.path}")
+            }
+            saveLastBrowsedDir()
+        }
     }
 
     private fun filterFileList(files: List<File>) {

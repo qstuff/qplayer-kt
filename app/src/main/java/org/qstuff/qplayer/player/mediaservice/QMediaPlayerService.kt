@@ -85,8 +85,9 @@ class QMediaPlayerService : LifecycleService() {
 
         intent?.let {
             if (it.action == ACTION_SERVICE_FOREGROUND_START) {
-                startForeground(1, createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY))
+                startForeground(1, createNotification(MEDIA_SERVICE_NOTIFICATION_PLAY))
             }
+
             if (it.action == ACTION_SERVICE_FOREGROUND_STOP) {
                 stopForeground(true)
                 stopSelf()
@@ -114,7 +115,7 @@ class QMediaPlayerService : LifecycleService() {
         player.play()
 
         notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-        val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PAUSE)
+        val notification = createNotification(MEDIA_SERVICE_NOTIFICATION_PAUSE)
         notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
@@ -125,7 +126,7 @@ class QMediaPlayerService : LifecycleService() {
         player.pause()
 
         notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-        val notification = createNotifcation(MEDIA_SERVICE_NOTIFICATION_PLAY)
+        val notification = createNotification(MEDIA_SERVICE_NOTIFICATION_PLAY)
         notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
@@ -143,9 +144,9 @@ class QMediaPlayerService : LifecycleService() {
         return player.isPaused()
     }
 
-    fun setTrackSpeed(speedFactor: Float, mastertempo: Boolean) {
+    fun setTrackSpeed(speedFactor: Float, masterTempo: Boolean) {
         Timber.v("setTrackSpeed():")
-        player.setSpeed(speedFactor, mastertempo)
+        player.setSpeed(speedFactor, masterTempo)
     }
 
     fun seekTo(position: Double, andStop: Boolean) {
@@ -230,7 +231,7 @@ class QMediaPlayerService : LifecycleService() {
      * @param type Action type of this Notification ("Play" or "Pause")
      * @return
      */
-    private fun createNotifcation(type: Int): Notification {
+    private fun createNotification(type: Int): Notification {
         Timber.d("createNotification(): %d", type)
 
         val buttonIntent = Intent(this, NotificationBroadcastReceiver::class.java)
