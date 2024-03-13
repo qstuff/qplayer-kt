@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.player
 
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -148,6 +149,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     // ViewModel Observers
     //
 
+    @SuppressLint("SetTextI18n")
     private fun setupObservers() {
 
         playerViewModel.playerStatus.observe(this, Observer { status ->

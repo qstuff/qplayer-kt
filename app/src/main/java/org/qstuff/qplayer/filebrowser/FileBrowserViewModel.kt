@@ -15,6 +15,7 @@ import org.qstuff.qplayer.util.isSupported
 import timber.log.Timber
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /*
@@ -23,7 +24,9 @@ import java.util.*
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 @RequiresApi(Build.VERSION_CODES.R)
-class FileBrowserViewModel(application: Application) : AndroidViewModel(application), KoinComponent {
+class FileBrowserViewModel(
+    application: Application
+) : AndroidViewModel(application), KoinComponent {
 
     companion object {
         val SAMSUNG_SD_CARD_HACK_PATH = listOf(
@@ -104,47 +107,46 @@ class FileBrowserViewModel(application: Application) : AndroidViewModel(applicat
     @RequiresApi(Build.VERSION_CODES.R)
     private fun browseTo(dir: File?) {
         dir?.let {
-            Timber.d("browseTo(): ${dir.path}")
+            Timber.d("xxx browseTo(): ${dir.path}")
 
             var nextDir = it
 
             if (nextDir.absolutePath == SD_CARD_HACK_PATH) {
-                Timber.d("browseTo(): SD_HACK: ${dir.path}")
+                Timber.d("xxx browseTo(): SD_HACK: ${dir.path}")
                 nextDir = Environment.getExternalStorageDirectory()
             }
 
             val root = Environment.getExternalStorageDirectory()
-            Timber.d("browseTo(): root: $root")
-            Timber.d("browseTo(): root: ${root.listFiles()?.size}")
-
-            Timber.d("browseTo(): nextDir: $nextDir")
+            Timber.d("xxx browseTo(): root: $root")
+            Timber.d("xxx browseTo(): root: ${root.listFiles()?.size}")
+            Timber.d("xxx browseTo(): nextDir: $nextDir")
 
             if (nextDir.isDirectory) {
-                Timber.d("browseTo(): is Directory")
+                Timber.d("xxx browseTo(): is Directory")
 
                 val fileList =  nextDir.listFiles()
 
-                Timber.d("browseTo(): files: $fileList")
+                Timber.d("xxx browseTo(): files: ${fileList?.size}")
 
                 if (!fileList.isNullOrEmpty()) {
                     currentDir = nextDir
                     filterFileList(fileList.asList())
                 } else {
-                    Timber.w("browseTo(): empty: ${dir.path}")
+                    Timber.w("xxx browseTo(): empty: ${dir.path}")
                 }
             } else if (nextDir.isFile) {
-                Timber.w("browseTo(): is file: ${dir.path}")
+                Timber.w("xxx browseTo(): is file: ${dir.path}")
             } else {
-                Timber.w("browseTo(): does not exist: ${dir.path}")
+                Timber.w("xxx browseTo(): does not exist: ${dir.path}")
             }
             saveLastBrowsedDir()
         }
     }
 
     private fun filterFileList(files: List<File>) {
-        Timber.d("filterFileList(): num: ${files.size}")
+        Timber.d("XXX filterFileList(): num: ${files.size}")
 
-        if (files.isNullOrEmpty()) {
+        if (files.isEmpty()) {
             return
         }
 
@@ -155,6 +157,10 @@ class FileBrowserViewModel(application: Application) : AndroidViewModel(applicat
         supportedFiles.addAll(files.filter { it.isSupported() })
         fileList.value = supportedFiles
         directoryName.value = currentDir.absolutePath
+
+        Timber.d("XXX filterFileList(): supp: ${(fileList.value as ArrayList<File>).size}")
+        Timber.d("XXX filterFileList(): dir : ${directoryName.value}")
+
     }
 
     /**

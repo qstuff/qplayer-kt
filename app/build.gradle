@@ -69,11 +69,11 @@ android {
     buildTypes {
 
         debug {
-            signingConfig android.signingConfigs.debug;
+            signingConfig android.signingConfigs.debug
         }
 
         beta {
-            signingConfig android.signingConfigs.debug;
+            signingConfig android.signingConfigs.debug
 
             minifyEnabled true
             debuggable true

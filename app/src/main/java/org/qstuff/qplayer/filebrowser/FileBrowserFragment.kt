@@ -11,7 +11,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -57,7 +59,24 @@ class FileBrowserFragment:
     private var _binding: FragmentFilebrowserBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                setupObservers()
+            } else {
+                binding.fileBrowserHeader.text = "Please go to app settings and grant storage or audio permission"
+                Timber.d("xxx Permission Not Granted:  ")
+            }
+        }
+
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         super.onCreateView(inflater, container, savedInstanceState)
 
         queueViewModel = ViewModelProvider(requireActivity()).get(QueueViewModel::class.java)
@@ -68,7 +87,10 @@ class FileBrowserFragment:
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         checkForStoragePermission()
@@ -80,10 +102,10 @@ class FileBrowserFragment:
     }
 
     private fun setupObservers() {
+        Timber.d("xxx setupObservers(): ")
+        fileBrowserViewModel.fileList.observe(viewLifecycleOwner) { files ->
 
-        fileBrowserViewModel.fileList.observe(viewLifecycleOwner, Observer { files ->
-
-            Timber.d("fileList: $files")
+            Timber.d("xxx fileList: $files")
             files?.also {
                 binding.fileBrowserRecycler.apply {
                     adapter = FileBrowserAdapter(it, this@FileBrowserFragment)
@@ -91,7 +113,7 @@ class FileBrowserFragment:
 
                 }
             }
-        })
+        }
 
         fileBrowserViewModel.directoryName.observe(viewLifecycleOwner, Observer { name ->
             binding.fileBrowserHeader.text = name
@@ -107,24 +129,63 @@ class FileBrowserFragment:
     //
 
     private fun checkForStoragePermission() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), MY_PERMISSIONS_REQUEST_READ_STORAGE)
-        } else {
-            setupObservers()
-        }
-    }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-
-        when (requestCode) {
-
-            MY_PERMISSIONS_REQUEST_READ_STORAGE -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_MEDIA_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED -> {
                     setupObservers()
-                } else {
+                }
+
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    requireActivity(), Manifest.permission.READ_MEDIA_AUDIO
+                ) -> {
+                    // In an educational UI, explain to the user why your app requires this
+                    // permission for a specific feature to behave as expected, and what
+                    // features are disabled if it's declined. In this UI, include a
+                    // "cancel" or "no thanks" button that lets the user continue
+                    // using your app without granting the permission.
+                    binding.fileBrowserHeader.text = "Please go to app settings and grant audio permission"
+                    Timber.d("xxx Permission Not Granted:  ")
+                }
+
+                else -> {
+                    // You can directly ask for the permission.
+                    // The registered ActivityResultCallback gets the result of this request.
+                    requestPermissionLauncher.launch(
+                        Manifest.permission.READ_MEDIA_AUDIO
+                    )
+                }
+            }
+        } else {
+            when {
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    setupObservers()
+                }
+
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE
+                ) -> {
+                    // In an educational UI, explain to the user why your app requires this
+                    // permission for a specific feature to behave as expected, and what
+                    // features are disabled if it's declined. In this UI, include a
+                    // "cancel" or "no thanks" button that lets the user continue
+                    // using your app without granting the permission.
                     binding.fileBrowserHeader.text = "Please go to app settings and grant storage permission"
+                    Timber.d("xxx Permission Not Granted:  ")
+                }
+
+                else -> {
+                    // You can directly ask for the permission.
+                    // The registered ActivityResultCallback gets the result of this request.
+                    requestPermissionLauncher.launch(
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    )
                 }
             }
         }
@@ -219,7 +280,7 @@ class FileBrowserFragment:
         if (tracksNotFound.isNotEmpty()) {
             Timber.d("showOpenM3uListDialog(): not found ${tracksFound.size} tracks")
             dialogBinding.titleItemsNotFound.visibility = View.VISIBLE
-            dialogBinding.listviewItemsNotFound?.apply {
+            dialogBinding.listviewItemsNotFound.apply {
                 adapter = DialogTrackListAdapter(context, tracksNotFound)
             }
         } else {
