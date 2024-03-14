@@ -4,7 +4,7 @@ buildscript {
     ext.kotlin_version = '1.9.21'
 
     ext.configuration = [
-            applicationId       : "org.qstuff.qplayer",
+            applicationId       : "org.qstuff.qdeq",
             compileSdkVersion   : 34,
             buildToolsVersion   : "30.0.2",
             minSdkVersion       : 24,
@@ -48,7 +48,7 @@ buildscript {
         classpath 'com.google.gms:google-services:4.4.1'
         classpath 'com.android.tools.build:gradle:8.1.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
+        // classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

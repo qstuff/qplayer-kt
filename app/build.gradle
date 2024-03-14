@@ -2,8 +2,8 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
-    id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
+//    id 'com.google.gms.google-services'
+//    id 'com.google.firebase.crashlytics'
 }
 
 Properties properties = new Properties()
@@ -17,6 +17,8 @@ def cfg  = rootProject.ext.configuration
 def libs = rootProject.ext.libs
 
 android {
+    namespace "org.qstuff.qdeq"
+
     compileSdkVersion cfg.compileSdkVersion
     buildToolsVersion cfg.buildToolsVersion
 
@@ -82,14 +84,14 @@ android {
         }
 
         release {
-            minifyEnabled true
+            minifyEnabled false
             debuggable false
 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
-            firebaseCrashlytics {
-                nativeSymbolUploadEnabled true
-            }
+//            firebaseCrashlytics {
+//                nativeSymbolUploadEnabled true
+//            }
         }
     }
 
@@ -141,8 +143,8 @@ dependencies {
     implementation "com.google.code.gson:gson:$libs.gson"
 
     // Crash reporting
-    implementation "com.google.firebase:firebase-core:$libs.firebase"
-    implementation "com.google.firebase:firebase-crashlytics:$libs.crashlytics"
+//    implementation "com.google.firebase:firebase-core:$libs.firebase"
+//    implementation "com.google.firebase:firebase-crashlytics:$libs.crashlytics"
 
     testImplementation "junit:junit:$libs.jUnit"
     androidTestImplementation "androidx.test:runner:$libs.espressoRunner"
@@ -152,4 +154,4 @@ dependencies {
     releaseImplementation project(':HGDialV2-release')
 }
 
-apply plugin: 'com.google.gms.google-services'
+// apply plugin: 'com.google.gms.google-services'

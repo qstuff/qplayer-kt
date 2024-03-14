@@ -45,8 +45,6 @@ class FileBrowserFragment:
 
     companion object {
 
-        const val MY_PERMISSIONS_REQUEST_READ_STORAGE = 222
-
         fun newInstance(): FileBrowserFragment {
             return FileBrowserFragment()
         }

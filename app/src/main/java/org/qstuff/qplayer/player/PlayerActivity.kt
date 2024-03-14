@@ -16,6 +16,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.PopupMenu
 import android.widget.SeekBar
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
@@ -25,7 +26,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
 import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.qstuff.qplayer.BuildConfig
@@ -108,19 +108,19 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         setupInteractionListeners()
         setupPitchRangeSpinner()
 
-        playerViewModel.onMediaServiceConnected.observe(this, Observer { connected ->
+        playerViewModel.onMediaServiceConnected.observe(this) { connected ->
             Timber.d("onMediaServiceConnected(): $connected")
-            if(connected) {
+            if (connected) {
                 setupObservers()
             } else {
                 // TODO: remove observers ?
             }
-        })
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        setupCrashlytics()
+//        setupCrashlytics()
         playerViewModel.loadSettings()
         queueViewModel.loadSettings()
     }
@@ -152,19 +152,21 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
     @SuppressLint("SetTextI18n")
     private fun setupObservers() {
 
-        playerViewModel.playerStatus.observe(this, Observer { status ->
+        playerViewModel.playerStatus.observe(this) { status ->
             Timber.d("playerStatus(): $status")
 
-            when(status) {
+            when (status) {
                 PlayerStatus.PLAYING -> {
                     updatePlayButtonUI(true)
                 }
+
                 PlayerStatus.PAUSED -> {
                     updatePlayButtonUI(false)
                 }
+
                 else -> {}
             }
-        })
+        }
 
         playerViewModel.trackStatusMediator.observe(this, Observer { track ->
             Timber.d("trackStatus(): $track")
@@ -218,18 +220,19 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
             }
         })
 
-        playerViewModel.showRemainingTime.observe(this, Observer {  showRemain ->
+        playerViewModel.showRemainingTime.observe(this) { showRemain ->
             showRemainingTime = showRemain
-        })
+        }
 
-        playerViewModel.onTrackPositionUpdate.observe(this, Observer { position ->
+        playerViewModel.onTrackPositionUpdate.observe(this) { position ->
             Timber.v("onTrackPositionUpdate(): $position")
 
             val pos = position ?: 0
 
             currentTrack?.let {
                 if (showRemainingTime) {
-                    binding.dynamicTrackLength.text = "remain: ${getDurationHumanReadable(it.duration - pos)}"
+                    binding.dynamicTrackLength.text =
+                        "remain: ${getDurationHumanReadable(it.duration - pos)}"
                 } else {
                     binding.dynamicTrackLength.text = "current: ${getDurationHumanReadable(pos)}"
                 }
@@ -242,9 +245,9 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
                 updateTrackProgressIndicator(pos)
             }
-        })
+        }
 
-        playerViewModel.onWaveformDataUpdate.observe(this, Observer { trackData ->
+        playerViewModel.onWaveformDataUpdate.observe(this) { trackData ->
             Timber.d("onWaveformDataUpdate():")
 
             trackData?.let {
@@ -255,71 +258,108 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                     Timber.w("onWaveformDataUpdate(): ${trackData.track.name} not ${currentTrack?.name}")
                 }
             }
-        })
+        }
 
-        playerViewModel.masterTempo.observe(this, Observer { masterTempo ->
+        playerViewModel.masterTempo.observe(this) { masterTempo ->
             masterTempo?.let {
                 if (it) {
-                    binding.buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
+                    binding.buttonMasterTempo.setTextColor(
+                        ContextCompat.getColor(
+                            this,
+                            R.color.q_orange
+                        )
+                    )
                 } else {
-                    binding.buttonMasterTempo.setTextColor(ContextCompat.getColor(this, R.color.white))
+                    binding.buttonMasterTempo.setTextColor(
+                        ContextCompat.getColor(
+                            this,
+                            R.color.white
+                        )
+                    )
                 }
             }
-        })
+        }
 
-        playerViewModel.pitchValueText.observe(this, Observer { pitchValueText ->
+        playerViewModel.pitchValueText.observe(this) { pitchValueText ->
             binding.pitchControlValueIndicator.text = pitchValueText ?: "0,0%"
-        })
+        }
 
-        playerViewModel.pitchValue.observe(this, Observer { pitchValue ->
+        playerViewModel.pitchValue.observe(this) { pitchValue ->
             binding.pitchControl.setNewProgress(pitchValue, false)
-        })
+        }
 
-        playerViewModel.jogwheelSensitivity.observe(this, Observer { jogwheelSensitivity ->
+        playerViewModel.jogwheelSensitivity.observe(this) { jogwheelSensitivity ->
             this.jogwheelSensitivity = jogwheelSensitivity
-        })
+        }
 
-        playerViewModel.pitchFactorIndex.observe(this, Observer { pitchFactorIndex ->
+        playerViewModel.pitchFactorIndex.observe(this) { pitchFactorIndex ->
             binding.pitchRangeSpinner.setSelection(pitchFactorIndex)
-        })
+        }
 
-        playerViewModel.cueActive.observe(this, Observer { cueActive ->
+        playerViewModel.cueActive.observe(this) { cueActive ->
             cueActive?.let {
                 isCueActive = cueActive
 
-                if (it){
+                if (it) {
                     binding.buttonCue.setTextColor(ContextCompat.getColor(this, R.color.q_orange))
                 } else {
                     binding.buttonCue.setTextColor(ContextCompat.getColor(this, R.color.white))
                 }
             }
-        })
+        }
 
-        queueViewModel.repeat.observe(this, Observer { repeatStatus ->
+        queueViewModel.repeat.observe(this) { repeatStatus ->
             repeatStatus?.let {
                 when (it) {
                     TrackRepeatStatus.NONE -> {
-                        binding.buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop))
+                        binding.buttonRepeat.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.button_loop
+                            )
+                        )
                     }
+
                     TrackRepeatStatus.ONE -> {
-                        binding.buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop1_selected))
+                        binding.buttonRepeat.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.button_loop1_selected
+                            )
+                        )
                     }
+
                     TrackRepeatStatus.ALL -> {
-                        binding.buttonRepeat.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_loop_selected))
+                        binding.buttonRepeat.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.button_loop_selected
+                            )
+                        )
                     }
                 }
             }
-        })
+        }
 
-        queueViewModel.shuffle.observe(this, Observer { shuffle ->
+        queueViewModel.shuffle.observe(this) { shuffle ->
             shuffle?.let {
                 if (it) {
-                    binding.buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle_selected))
+                    binding.buttonShuffle.setImageDrawable(
+                        ContextCompat.getDrawable(
+                            this,
+                            R.drawable.button_shuffle_selected
+                        )
+                    )
                 } else {
-                    binding.buttonShuffle.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.button_shuffle))
+                    binding.buttonShuffle.setImageDrawable(
+                        ContextCompat.getDrawable(
+                            this,
+                            R.drawable.button_shuffle
+                        )
+                    )
                 }
             }
-        })
+        }
     }
 
     //
@@ -593,18 +633,18 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
         startActivity(intent)
     }
 
-    private fun setupCrashlytics() {
-
-        if (!preferencesDataSource.isCrashreportingEnabledDialogShown()) {
-            preferencesDataSource.setCrashreportingEnabledDialogShown(true)
-            showEnableCrashReportDialog()
-            return
-        }
-
-        FirebaseCrashlytics
-                .getInstance()
-                .setCrashlyticsCollectionEnabled(preferencesDataSource.isCrashreportingEnabled())
-    }
+//    private fun setupCrashlytics() {
+//
+//        if (!preferencesDataSource.isCrashreportingEnabledDialogShown()) {
+//            preferencesDataSource.setCrashreportingEnabledDialogShown(true)
+//            showEnableCrashReportDialog()
+//            return
+//        }
+//
+//        FirebaseCrashlytics
+//                .getInstance()
+//                .setCrashlyticsCollectionEnabled(preferencesDataSource.isCrashreportingEnabled())
+//    }
 
     //
     // UI Control
@@ -688,6 +728,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
     private class ContentPagerAdapter(val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
+        @RequiresApi(Build.VERSION_CODES.R)
         override fun getItem(position: Int) =
                 when (position) {
                     0 -> QueueFragment.newInstance()
@@ -698,7 +739,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
 
         override fun getCount() = 3
 
-        override fun getPageTitle(position: Int): String? =
+        override fun getPageTitle(position: Int): String =
                 when (position) {
                     0 -> context.getString(R.string.queue_title)
                     1 -> context.getString(R.string.filebrowser_title)

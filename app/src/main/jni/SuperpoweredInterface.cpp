@@ -213,7 +213,7 @@ jclass jClassRef;
 jobject javaObjectRef;
 
 void SuperpoweredInterface::onPrepared() {
-    LOGD("onPrepared()");
+    LOGD("C++ onPrepared()");
     
     JNIEnv *env;
     jint getEnvStat = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -228,6 +228,7 @@ void SuperpoweredInterface::onPrepared() {
     if (getEnvStat == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
     }
+    LOGD("C++ onPrepared(): done");
 }
 
 void SuperpoweredInterface::onCompletion() {
