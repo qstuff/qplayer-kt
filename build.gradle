@@ -6,7 +6,7 @@ buildscript {
     ext.configuration = [
             applicationId       : "org.qstuff.qdeq",
             compileSdkVersion   : 34,
-            buildToolsVersion   : "30.0.2",
+            buildToolsVersion   : "33.0.1",
             minSdkVersion       : 24,
             targetSdkVersion    : 34,
             versionCode         : 230,
@@ -38,7 +38,6 @@ buildscript {
 
         mavenCentral()
         google()
-        mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://jitpack.io' }
     }
