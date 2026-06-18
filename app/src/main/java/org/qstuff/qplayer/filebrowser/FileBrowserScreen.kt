@@ -1,0 +1,293 @@
+package org.qstuff.qplayer.filebrowser
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AudioFile
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import org.qstuff.qplayer.R
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.playlists.M3uUtils
+import org.qstuff.qplayer.queue.QueueViewModel
+import org.qstuff.qplayer.player.PlayerViewModel
+import org.qstuff.qplayer.util.directoryContainsSupportedFiles
+import org.qstuff.qplayer.util.isM3UList
+import org.qstuff.qplayer.util.listTracksForAddDialog
+import java.io.File
+import java.io.FileInputStream
+
+@Composable
+fun FileBrowserScreen(
+    fileBrowserViewModel: FileBrowserViewModel,
+    queueViewModel: QueueViewModel,
+    playerViewModel: PlayerViewModel
+) {
+    val context = LocalContext.current
+
+    val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        Manifest.permission.READ_MEDIA_AUDIO
+    else
+        Manifest.permission.READ_EXTERNAL_STORAGE
+
+    var hasPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, storagePermission) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> hasPermission = granted }
+
+    LaunchedEffect(Unit) {
+        if (!hasPermission) permissionLauncher.launch(storagePermission)
+    }
+
+    if (!hasPermission) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = "Please grant storage permission to browse files",
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        return
+    }
+
+    val files by fileBrowserViewModel.fileList.observeAsState(emptyList())
+    val directoryName by fileBrowserViewModel.directoryName.observeAsState("")
+
+    var addTracksDialogFiles by remember { mutableStateOf<List<File>?>(null) }
+    var m3uDialogFile by remember { mutableStateOf<File?>(null) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Directory header + up button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { fileBrowserViewModel.navigateUp() }) {
+                Icon(
+                    Icons.Default.SubdirectoryArrowLeft,
+                    contentDescription = "Navigate up",
+                    tint = Color.White
+                )
+            }
+            Text(
+                text = directoryName,
+                color = Color(0xFF999999),
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        HorizontalDivider(color = Color(0xFF2A2A2A))
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(files, key = { it.absolutePath }) { file ->
+                FileListItem(
+                    file = file,
+                    onClick = {
+                        when {
+                            file.isM3UList() -> m3uDialogFile = file
+                            file.isFile -> queueViewModel.addFile(file)
+                            file.isDirectory -> fileBrowserViewModel.onFileItemClicked(file)
+                        }
+                    },
+                    onLongClick = {
+                        if (file.isDirectory && file.directoryContainsSupportedFiles()) {
+                            addTracksDialogFiles = file.listTracksForAddDialog()
+                        }
+                    },
+                    onPrelistenClick = {
+                        playerViewModel.loadTrack(Track(file, true))
+                    }
+                )
+                HorizontalDivider(color = Color(0xFF2A2A2A), thickness = 0.5.dp)
+            }
+        }
+    }
+
+    // Add directory tracks dialog
+    addTracksDialogFiles?.let { filesToAdd ->
+        AlertDialog(
+            onDismissRequest = { addTracksDialogFiles = null },
+            title = { Text(stringResource(R.string.filebrowser_dialog_add_tracks_to_queue_title)) },
+            text = {
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                    items(filesToAdd) { file ->
+                        Text(
+                            text = file.name,
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    queueViewModel.addFileList(filesToAdd)
+                    addTracksDialogFiles = null
+                }) { Text(stringResource(R.string.dialog_ok)) }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        queueViewModel.clearTrackList()
+                        queueViewModel.addFileList(filesToAdd)
+                        addTracksDialogFiles = null
+                    }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
+                    TextButton(onClick = { addTracksDialogFiles = null }) {
+                        Text(stringResource(R.string.dialog_cancel))
+                    }
+                }
+            }
+        )
+    }
+
+    // M3U open dialog
+    m3uDialogFile?.let { file ->
+        val parsed = remember(file) {
+            M3uUtils.m3UParserGetTracks(FileInputStream(file), file.parent ?: "")
+        }
+        val found = parsed.first
+        val notFound = parsed.second
+
+        AlertDialog(
+            onDismissRequest = { m3uDialogFile = null },
+            title = {
+                Text(
+                    if (found.isEmpty())
+                        stringResource(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, file.name)
+                    else
+                        stringResource(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, file.name)
+                )
+            },
+            text = {
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                    if (found.isNotEmpty()) {
+                        item { Text("Found:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
+                        items(found) { track ->
+                            Text(track.name, style = MaterialTheme.typography.bodySmall, color = Color.White, modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+                    if (notFound.isNotEmpty()) {
+                        item { Spacer(Modifier.height(8.dp)) }
+                        item { Text("Not found:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error) }
+                        items(notFound) { track ->
+                            Text(track.name, style = MaterialTheme.typography.bodySmall, color = Color(0xFF999999), modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (found.isNotEmpty()) {
+                    TextButton(onClick = {
+                        queueViewModel.addTrackList(found)
+                        m3uDialogFile = null
+                    }) { Text(stringResource(R.string.dialog_ok)) }
+                } else {
+                    TextButton(onClick = { m3uDialogFile = null }) { Text(stringResource(R.string.dialog_ok)) }
+                }
+            },
+            dismissButton = {
+                if (found.isNotEmpty()) {
+                    Row {
+                        TextButton(onClick = {
+                            queueViewModel.clearTrackList()
+                            queueViewModel.addTrackList(found)
+                            m3uDialogFile = null
+                        }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
+                        TextButton(onClick = { m3uDialogFile = null }) {
+                            Text(stringResource(R.string.dialog_cancel))
+                        }
+                    }
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FileListItem(
+    file: File,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onPrelistenClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            val icon = when {
+                file.isDirectory -> Icons.Default.Folder
+                file.isM3UList() -> Icons.Default.PlaylistPlay
+                else -> Icons.Default.AudioFile
+            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color(0xFF999999),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = file.name,
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (file.isFile && !file.isM3UList()) {
+            IconButton(
+                onClick = onPrelistenClick,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = "Pre-listen",
+                    tint = Color(0xFF999999),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
