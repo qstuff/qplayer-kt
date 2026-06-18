@@ -32,6 +32,7 @@ buildscript {
             preference              : '1.2.1',
             room                    : '2.6.1',
             timber                  : '5.0.1',
+        media3                  : '1.4.1',
     ]
 
     repositories {

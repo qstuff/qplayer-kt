@@ -6,12 +6,6 @@ plugins {
 //    id 'com.google.firebase.crashlytics'
 }
 
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-// path to the superpowered SDK
-def superpowered_sdk_path = properties.getProperty('superpowered.dir')
-
 // defs from the root level build.gradle
 def cfg  = rootProject.ext.configuration
 def libs = rootProject.ext.libs
@@ -34,37 +28,11 @@ android {
 
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
 
-        externalNativeBuild {
-            System.out.println("==============")
-
-            cmake {
-                arguments   '-DANDROID_PLATFORM=android-19',
-                            '-DANDROID_TOOLCHAIN=clang',
-                            '-DANDROID_ARM_NEON=TRUE',
-                            '-DANDROID_STL=c++_shared',
-                            "-DPATH_TO_SUPERPOWERED:STRING=${superpowered_sdk_path}"
-
-                cFlags '-O3', '-fsigned-char' // full optimization, char data type is signed
-                cppFlags '-fsigned-char', "-I${superpowered_sdk_path}"
-            }
-        }
     }
 
     android {
         lintOptions {
             abortOnError false
-        }
-    }
-
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['src/main/jni']
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path 'src/main/jni/CMakeLists.txt'
         }
     }
 
@@ -134,6 +102,10 @@ dependencies {
 
     // Koin module injection
     implementation "io.insert-koin:koin-android:$libs.koin"
+
+    // Media3 (ExoPlayer) — replaces Superpowered for playback + pitch/tempo
+    implementation "androidx.media3:media3-exoplayer:$libs.media3"
+    implementation "androidx.media3:media3-common:$libs.media3"
 
     // Logging
     implementation "com.jakewharton.timber:timber:$libs.timber"
