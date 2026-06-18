@@ -21,7 +21,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     // Observables
     var trackList = MutableLiveData<List<Track>>()
-    var onTrackSelectedIndex = MutableLiveData<Int?>()
+    var onTrackSelectedIndex = MutableLiveData<Int?>(-1)
     var onTrackSelected = MutableLiveData<Track>()
     val repeat = MutableLiveData<TrackRepeatStatus>()
     val shuffle = MutableLiveData<Boolean>()
