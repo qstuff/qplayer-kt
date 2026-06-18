@@ -33,7 +33,7 @@ fun PlaylistScreen(
     playlistViewModel: PlaylistViewModel,
     queueViewModel: QueueViewModel
 ) {
-    val playlists by playlistViewModel.playlistList.observeAsState(emptyList())
+    val playlists = playlistViewModel.playlistList.observeAsState(emptyList()).value.toList()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
