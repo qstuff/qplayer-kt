@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
@@ -90,7 +90,8 @@ fun QueueScreen(
                 state = listState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                itemsIndexed(tracks, key = { _, track -> track.uri }) { index, track ->
+                items(tracks, key = { track -> track.uri }) { track ->
+                    val index = tracks.indexOf(track)
                     val isSelected = index == selectedIndex
                     SwipeToRemoveItem(
                         onDismissed = {
