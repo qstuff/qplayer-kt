@@ -50,7 +50,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         }
 
         currentTrackList.add(track)
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
         if (shuffle.value == true) {
             addIndexToIndexMap(currentTrackList.size - 1)
         }
@@ -69,7 +69,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private fun addTrackAt(track: Track, position: Int) {
 
         currentTrackList.add(position, track)
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
         if (shuffle.value == true) {
             addIndexToIndexMap(position)
         }
@@ -120,7 +120,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 newSelectedIndex = -1
                 lastRemovedSelectedIndex = indexRemoved
             }
-            trackList.value = currentTrackList
+            trackList.value = ArrayList(currentTrackList)
             onTrackSelectedIndex.value = newSelectedIndex
             saveTrackList()
         }
@@ -129,7 +129,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun addTrackList(tracks: List<Track>) {
 
         currentTrackList.addAll(tracks)
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
         saveTrackList()
     }
 
@@ -140,7 +140,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 currentTrackList.add(Track(it))
             }
         }
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
         if (shuffle.value == true) {
             addIndexToIndexMap(currentTrackList.size - 1)
         }
@@ -151,7 +151,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         currentTrackList.clear()
         currentTrackList.addAll(tracks)
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
         shuffle.value = false
         repeat.value = TrackRepeatStatus.NONE
         shufflePlayedIndices.clear()
@@ -173,7 +173,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun clearTrackList() {
 
         currentTrackList.clear()
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
         onTrackSelectedIndex.value = -1
         onTrackSelected.value = null
         shuffle.value = false
@@ -435,6 +435,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
         } else {
             list
         }
-        trackList.value = currentTrackList
+        trackList.value = ArrayList(currentTrackList)
     }
 }
