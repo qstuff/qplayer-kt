@@ -6,14 +6,14 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
@@ -25,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
@@ -38,6 +40,8 @@ import org.qstuff.qplayer.util.isM3UList
 import org.qstuff.qplayer.util.listTracksForAddDialog
 import java.io.File
 import java.io.FileInputStream
+
+private val QOrangeDivider = Color(0x60FC7614)
 
 @Composable
 fun FileBrowserScreen(
@@ -67,11 +71,17 @@ fun FileBrowserScreen(
     }
 
     if (!hasPermission) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = "Please grant storage permission to browse files",
                 color = Color.White,
-                style = MaterialTheme.typography.bodyMedium
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
             )
         }
         return
@@ -83,32 +93,43 @@ fun FileBrowserScreen(
     var addTracksDialogFiles by remember { mutableStateOf<List<File>?>(null) }
     var m3uDialogFile by remember { mutableStateOf<File?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Directory header + up button
-        Row(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        Text(
+            text = directoryName,
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(horizontal = 10.dp, vertical = 5.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .height(28.dp)
+                .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { fileBrowserViewModel.navigateUp() }) {
+            IconButton(
+                onClick = { fileBrowserViewModel.navigateUp() },
+                modifier = Modifier.size(28.dp)
+            ) {
                 Icon(
                     Icons.Default.SubdirectoryArrowLeft,
                     contentDescription = "Navigate up",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
             }
-            Text(
-                text = directoryName,
-                color = Color(0xFF999999),
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
         }
 
-        HorizontalDivider(color = Color(0xFF2A2A2A))
+        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(files, key = { it.absolutePath }) { file ->
@@ -130,12 +151,11 @@ fun FileBrowserScreen(
                         playerViewModel.loadTrack(Track(file, true))
                     }
                 )
-                HorizontalDivider(color = Color(0xFF2A2A2A), thickness = 0.5.dp)
+                HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
             }
         }
     }
 
-    // Add directory tracks dialog
     addTracksDialogFiles?.let { filesToAdd ->
         AlertDialog(
             onDismissRequest = { addTracksDialogFiles = null },
@@ -146,7 +166,7 @@ fun FileBrowserScreen(
                         Text(
                             text = file.name,
                             modifier = Modifier.padding(vertical = 4.dp),
-                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 15.sp,
                             color = Color.White
                         )
                     }
@@ -173,7 +193,6 @@ fun FileBrowserScreen(
         )
     }
 
-    // M3U open dialog
     m3uDialogFile?.let { file ->
         val parsed = remember(file) {
             M3uUtils.m3UParserGetTracks(FileInputStream(file), file.parent ?: "")
@@ -196,14 +215,14 @@ fun FileBrowserScreen(
                     if (found.isNotEmpty()) {
                         item { Text("Found:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
                         items(found) { track ->
-                            Text(track.name, style = MaterialTheme.typography.bodySmall, color = Color.White, modifier = Modifier.padding(vertical = 2.dp))
+                            Text(track.name, fontSize = 15.sp, color = Color.White, modifier = Modifier.padding(vertical = 2.dp))
                         }
                     }
                     if (notFound.isNotEmpty()) {
                         item { Spacer(Modifier.height(8.dp)) }
                         item { Text("Not found:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error) }
                         items(notFound) { track ->
-                            Text(track.name, style = MaterialTheme.typography.bodySmall, color = Color(0xFF999999), modifier = Modifier.padding(vertical = 2.dp))
+                            Text(track.name, fontSize = 15.sp, color = Color(0xFF999999), modifier = Modifier.padding(vertical = 2.dp))
                         }
                     }
                 }
@@ -247,45 +266,43 @@ private fun FileListItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(28.dp)
+            .background(Color.Black)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
-            val icon = when {
-                file.isDirectory -> Icons.Default.Folder
-                file.isM3UList() -> Icons.Default.PlaylistPlay
-                else -> Icons.Default.AudioFile
-            }
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = Color(0xFF999999),
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = file.name,
-                color = Color.White,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+        val icon = when {
+            file.isDirectory -> Icons.Default.Folder
+            file.isM3UList() -> Icons.Default.PlaylistPlay
+            else -> Icons.Default.MusicNote
         }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = file.name,
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
         if (file.isFile && !file.isM3UList()) {
             IconButton(
                 onClick = onPrelistenClick,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(28.dp)
             ) {
                 Icon(
                     Icons.Default.PlayArrow,
                     contentDescription = "Pre-listen",
-                    tint = Color(0xFF999999),
-                    modifier = Modifier.size(20.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

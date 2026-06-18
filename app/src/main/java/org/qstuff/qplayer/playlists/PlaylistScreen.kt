@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -14,13 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.queue.QueueViewModel
+
+private val QOrangeDivider = Color(0x60FC7614)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,7 +40,10 @@ fun PlaylistScreen(
 
     var openPlaylist by remember { mutableStateOf<Playlist?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(Color.Black)
+    ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(playlists, key = { it.playlist_id }) { playlist ->
                 val index = playlists.indexOf(playlist)
@@ -59,7 +67,7 @@ fun PlaylistScreen(
                         onClick = { openPlaylist = playlist }
                     )
                 }
-                HorizontalDivider(color = Color(0xFF2A2A2A), thickness = 0.5.dp)
+                HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
             }
         }
 
@@ -109,7 +117,7 @@ private fun SwipeToDismissPlaylist(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.error)
+                    .background(Color(0xFFE60C00))
                     .padding(end = 16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
@@ -129,15 +137,24 @@ private fun PlaylistItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Transparent)
+            .height(28.dp)
+            .background(Color.Black)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Icon(
+            imageVector = Icons.Default.LibraryMusic,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
         Text(
             text = playlist.name,
             color = Color.White,
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -160,11 +177,11 @@ private fun OpenPlaylistDialog(
                 items(tracks) { track ->
                     Text(
                         text = track.name,
-                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 15.sp,
                         color = Color.White,
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
-                    HorizontalDivider(color = Color(0xFF2A2A2A), thickness = 0.5.dp)
+                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                 }
             }
         },

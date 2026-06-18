@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,13 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.theme.QOrange
+
+private val QOrangeDivider = Color(0x60FC7614)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,41 +48,41 @@ fun QueueScreen(
     var showClearDialog by remember { mutableStateOf(false) }
     var showSavePlaylistDialog by remember { mutableStateOf(false) }
 
-    // Scroll to selected track when it changes
     LaunchedEffect(selectedIndex) {
         selectedIndex?.let {
             if (it >= 0 && it < tracks.size) listState.animateScrollToItem(it)
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(Color.Black)
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Toolbar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(onClick = {
-                    if (queueViewModel.isShowClearQueueWarningEnabled) showClearDialog = true
-                    else queueViewModel.clearTrackList()
-                }) {
-                    Icon(
-                        Icons.Default.ClearAll,
-                        contentDescription = "Clear queue",
-                        tint = Color.White
-                    )
+                IconButton(
+                    onClick = {
+                        playlistViewModel.loadPlaylists()
+                        showSavePlaylistDialog = true
+                    },
+                    modifier = Modifier.size(30.dp)
+                ) {
+                    Icon(Icons.Default.PlaylistAdd, contentDescription = "Save as playlist", tint = Color.White)
                 }
-                IconButton(onClick = {
-                    playlistViewModel.loadPlaylists()
-                    showSavePlaylistDialog = true
-                }) {
-                    Icon(
-                        Icons.Default.PlaylistAdd,
-                        contentDescription = "Save as playlist",
-                        tint = Color.White
-                    )
+                Spacer(Modifier.width(4.dp))
+                IconButton(
+                    onClick = {
+                        if (queueViewModel.isShowClearQueueWarningEnabled) showClearDialog = true
+                        else queueViewModel.clearTrackList()
+                    },
+                    modifier = Modifier.size(30.dp)
+                ) {
+                    Icon(Icons.Default.ClearAll, contentDescription = "Clear queue", tint = Color.White)
                 }
             }
 
@@ -108,7 +113,7 @@ fun QueueScreen(
                             onClick = { queueViewModel.onTrackSelected(track) }
                         )
                     }
-                    HorizontalDivider(color = Color(0xFF2A2A2A), thickness = 0.5.dp)
+                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                 }
             }
         }
@@ -180,7 +185,7 @@ private fun SwipeToRemoveItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.error)
+                    .background(Color(0xFFE60C00))
                     .padding(end = 16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
@@ -198,21 +203,30 @@ private fun TrackListItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val bgColor = if (isSelected) Color(0xFF2A1800) else Color.Transparent
+    val bgColor = if (isSelected) Color(0xFF3A1E00) else Color.Black
     val textColor = if (isSelected) QOrange else Color.White
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(28.dp)
             .background(bgColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Icon(
+            imageVector = Icons.Default.MusicNote,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
         Text(
             text = track.name,
             color = textColor,
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -282,9 +296,11 @@ private fun SaveAsPlaylistDialog(
                                 .fillMaxWidth()
                                 .clickable { selectedPlaylist = playlist }
                                 .padding(vertical = 8.dp, horizontal = 4.dp),
-                            style = MaterialTheme.typography.bodyMedium
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
-                        HorizontalDivider(color = Color(0xFF2A2A2A), thickness = 0.5.dp)
+                        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                     }
                 }
             }
