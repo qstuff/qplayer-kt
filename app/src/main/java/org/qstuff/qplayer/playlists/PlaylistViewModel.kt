@@ -57,7 +57,7 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
         }
 
         currentPlaylistList.add(playlist)
-        playlistList.value = currentPlaylistList
+        playlistList.value = ArrayList(currentPlaylistList)
     }
 
     fun saveTracksToExistingPlaylist(tracks: List<Track>?, playlistName: String?, overwrite: Boolean) {
@@ -97,7 +97,7 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
             roomDataSource.removePlaylist(playlist)
         }
         currentPlaylistList.remove(playlist)
-        playlistList.value = currentPlaylistList
+        playlistList.value = ArrayList(currentPlaylistList)
     }
 
     fun restorePlaylistAt(playlist: Playlist, position: Int) {
@@ -114,7 +114,7 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
         }
 
         currentPlaylistList.add(position, playlist)
-        playlistList.value = currentPlaylistList
+        playlistList.value = ArrayList(currentPlaylistList)
 
     }
 
