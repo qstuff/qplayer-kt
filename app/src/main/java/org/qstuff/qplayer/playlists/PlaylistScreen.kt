@@ -102,15 +102,13 @@ private fun SwipeToDismissPlaylist(
     content: @Composable () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { it == SwipeToDismissBoxValue.EndToStart }
-    )
-
-    // Fire removal after the frame settles, not during layout/composition
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-            onDismissed()
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDismissed()
+                true
+            } else false
         }
-    }
+    )
 
     SwipeToDismissBox(
         state = dismissState,
