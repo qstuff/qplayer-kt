@@ -37,7 +37,9 @@ fun QueueScreen(
     queueViewModel: QueueViewModel,
     playlistViewModel: PlaylistViewModel
 ) {
-    val tracks by queueViewModel.trackList.observeAsState(emptyList())
+    // toList() snapshots the ArrayList — the ViewModel mutates the same object in place,
+    // which would crash LazyColumn's getContentType if we captured the mutable reference.
+    val tracks = queueViewModel.trackList.observeAsState(emptyList()).value.toList()
     val selectedIndex by queueViewModel.onTrackSelectedIndex.observeAsState()
     val playlists by playlistViewModel.playlistList.observeAsState(emptyList())
 
