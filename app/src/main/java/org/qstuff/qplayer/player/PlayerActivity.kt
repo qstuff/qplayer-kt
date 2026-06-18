@@ -26,8 +26,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.WarwickWestonWright.HGDialV2.HGDialInfo
 import com.WarwickWestonWright.HGDialV2.HGDialV2
 import com.WarwickWestonWright.HGDialV2.HGViewContainer
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.R
@@ -500,7 +500,7 @@ class PlayerActivity : AppCompatActivity(), KoinComponent {
                 e.printStackTrace()
             }
         }
-        binding.playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix")
+        binding.playerTitle.text = Html.fromHtml("<font color=#FC7614>q</font><font color=#ffffff>deq</font>$debugTitleSuffix", Html.FROM_HTML_MODE_LEGACY)
     }
 
     @Suppress("DEPRECATION")

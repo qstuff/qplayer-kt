@@ -3,8 +3,8 @@ package org.qstuff.qplayer.playlists
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.*
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.room.RoomDataSource

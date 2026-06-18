@@ -5,10 +5,11 @@ import android.app.Application
 import android.content.*
 import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.lifecycle.*
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
@@ -68,7 +69,7 @@ class  PlayerViewModel (application: Application):
     private var pendingTrack: Track? = null
 
     // Update Task
-    private var updateHandler = Handler()
+    private var updateHandler = Handler(Looper.getMainLooper())
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
 
@@ -400,7 +401,7 @@ class  PlayerViewModel (application: Application):
 
         if (isUpdatetaskRunning) return
 
-        updateHandler = Handler()
+        updateHandler = Handler(Looper.getMainLooper())
         updateRunnable = object : Runnable {
             override fun run() {
                 onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()

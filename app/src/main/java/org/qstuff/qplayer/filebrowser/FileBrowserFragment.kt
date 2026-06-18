@@ -258,7 +258,7 @@ class FileBrowserFragment:
     private fun showOpenM3uListDialog(file: File) {
         Timber.d("showOpenM3uListDialog(): ${file.name}")
 
-        val tracks = M3uUtils.m3UParserGetTracks(FileInputStream(file), file.parent)
+        val tracks = M3uUtils.m3UParserGetTracks(FileInputStream(file), file.parent ?: "")
 
         val tracksFound = tracks.first
         val tracksNotFound = tracks.second

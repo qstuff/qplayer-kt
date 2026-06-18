@@ -89,7 +89,7 @@ class QMediaPlayerService : LifecycleService() {
             }
 
             if (it.action == ACTION_SERVICE_FOREGROUND_STOP) {
-                stopForeground(true)
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
         }
@@ -283,7 +283,6 @@ class QMediaPlayerService : LifecycleService() {
                 .setAutoCancel(false)
                 .setDeleteIntent(pendingDismissIntent)
                 .setContentIntent(pendingContentIntent)
-                .setPriority(Notification.PRIORITY_MAX)
 
         return builder.build()
     }

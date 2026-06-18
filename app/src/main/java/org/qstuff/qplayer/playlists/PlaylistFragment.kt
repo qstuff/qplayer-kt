@@ -15,7 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import org.koin.standalone.KoinComponent
+import org.koin.core.component.KoinComponent
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.databinding.DialogShowTracksBinding
 import org.qstuff.qplayer.databinding.FragmentPlaylistBinding

@@ -3,8 +3,9 @@ package org.qstuff.qplayer
 import android.app.Application
 import android.util.DisplayMetrics
 import androidx.room.Room
-import org.koin.android.ext.android.startKoin
-import org.koin.dsl.module.module
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+import org.koin.dsl.module
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
@@ -22,11 +23,10 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        startKoin(this,
-                listOf(preferencesDataSource,
-                        roomDatabaseModule,
-                        roomDataSource
-        ))
+        startKoin {
+            androidContext(this@QDeqApplication)
+            modules(preferencesDataSource, roomDatabaseModule, roomDataSource)
+        }
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -37,24 +37,24 @@ class QDeqApplication : Application() {
     // Koin Modules
     //
 
-    private val preferencesDataSource = module (definition = {
+    private val preferencesDataSource = module {
         single {
             PreferencesDataSource(this@QDeqApplication)
         }
-    })
+    }
 
-    private val roomDatabaseModule = module ( definition = {
+    private val roomDatabaseModule = module {
         single {
             Room.databaseBuilder(this@QDeqApplication, QDeqDatabase::class.java, "qplayer")
                     .build()
         }
-    })
+    }
 
-    private val roomDataSource = module (definition = {
+    private val roomDataSource = module {
         single {
             RoomDataSource()
         }
-    })
+    }
 
     //
     // Debug

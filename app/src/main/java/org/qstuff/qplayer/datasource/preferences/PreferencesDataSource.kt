@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.koin.standalone.KoinComponent
+import org.koin.core.component.KoinComponent
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.TrackRepeatStatus

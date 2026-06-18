@@ -7,8 +7,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat.getExternalFilesDirs
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.isSupported

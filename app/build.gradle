@@ -133,8 +133,7 @@ dependencies {
     implementation "androidx.room:room-ktx:$libs.room"
 
     // Koin module injection
-    implementation "org.koin:koin-android:$libs.koin"
-    implementation "org.koin:koin-androidx-scope:$libs.koin"
+    implementation "io.insert-koin:koin-android:$libs.koin"
 
     // Logging
     implementation "com.jakewharton.timber:timber:$libs.timber"

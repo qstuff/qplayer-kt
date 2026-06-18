@@ -43,7 +43,7 @@ fun File.directoryContainsSupportedFiles(): Boolean {
 
 fun File.listTracks(): List<File> {
     val ret = arrayListOf<File>()
-    val files = this.listFiles()
+    val files = this.listFiles() ?: return ret
     files.forEach {
         if (it.isFile && it.isSupported()) {
             ret.add(it)
@@ -54,7 +54,7 @@ fun File.listTracks(): List<File> {
 
 fun File.listTracksForAddDialog(): List<File> {
     val ret = arrayListOf<File>()
-    val files = this.listFiles()
+    val files = this.listFiles() ?: return ret
     files.forEach {
         if (it.isFile && it.isSupported() && !it.name.endsWith(".m3u")) {
             ret.add(it)

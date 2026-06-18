@@ -9,8 +9,8 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource

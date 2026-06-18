@@ -3,8 +3,8 @@ package org.qstuff.qplayer.datasource.room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import kotlin.coroutines.CoroutineContext
