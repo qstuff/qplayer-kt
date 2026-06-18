@@ -36,7 +36,7 @@ class PlaylistViewModel: ViewModel(), KoinComponent, CoroutineScope {
                 currentPlaylistList = roomDataSource.getAllPlaylists() as ArrayList<Playlist>
             }
 
-            playlistList.value = currentPlaylistList
+            playlistList.value = ArrayList(currentPlaylistList)
         }
     }
 
