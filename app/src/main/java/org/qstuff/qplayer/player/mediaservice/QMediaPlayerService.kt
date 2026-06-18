@@ -76,7 +76,7 @@ class QMediaPlayerService : LifecycleService() {
         }
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        player = QDeqPlayerSuperpowered()
+        player = QDeqPlayerMedia3()
         player.create(this)
     }
 

@@ -7,7 +7,7 @@ import org.qstuff.qplayer.datasource.model.TrackData
 
 interface QDeqPlayer {
 
-    fun create(qctx: Context)
+    fun create(context: Context)
 
     fun loadTrackSync(track: Track)
     fun loadTrackASync(track: Track)
