@@ -6,7 +6,9 @@ import android.content.*
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -34,7 +36,7 @@ class  PlayerViewModel (application: Application):
     var mediaServiceStopMode: String
 
     // Observables
-    lateinit var onWaveformDataUpdate: LiveData<TrackData>
+    val onWaveformDataUpdate = MediatorLiveData<TrackData?>()
 
     val trackStatus = MutableLiveData<Track>()
     val trackStatusMediator = MediatorLiveData<Track>()
@@ -112,7 +114,9 @@ class  PlayerViewModel (application: Application):
                 trackStatus.value = track
             }
 
-            onWaveformDataUpdate = mediaService.getWaveFormDataObserver().map { it }
+            onWaveformDataUpdate.addSource(mediaService.getWaveFormDataObserver()) { data ->
+                onWaveformDataUpdate.value = data
+            }
 
             onMediaServiceConnected.value = true
             isMediaServiceRunning = true
@@ -132,6 +136,7 @@ class  PlayerViewModel (application: Application):
 
             onMediaServiceConnected.value = false
 
+            onWaveformDataUpdate.removeSource(mediaService.getWaveFormDataObserver())
             trackStatusMediator.removeSource(mediaService.getStatusObserver())
             trackStatusMediator.removeSource(trackStatus)
         }
