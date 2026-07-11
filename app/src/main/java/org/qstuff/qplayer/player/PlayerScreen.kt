@@ -1,7 +1,7 @@
 package org.qstuff.qplayer.player
 
+import android.annotation.SuppressLint
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.SeekBar
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -23,7 +23,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.DropdownMenu
@@ -34,12 +37,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -49,21 +55,26 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.viewpager.widget.ViewPager
+import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.getKoin
 import org.qstuff.qplayer.R
-import org.qstuff.qplayer.contentbrowser.SlidingTabLayout
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.filebrowser.FileBrowserScreen
+import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.player.jogwheel.JogWheel
 import org.qstuff.qplayer.player.pitchcontrol.PitchControlVerticalSeekBar
 import org.qstuff.qplayer.player.trackprogress.CuepointView
 import org.qstuff.qplayer.player.trackprogress.WaveformView
+import org.qstuff.qplayer.playlists.PlaylistScreen
+import org.qstuff.qplayer.playlists.PlaylistViewModel
+import org.qstuff.qplayer.queue.QueueScreen
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
@@ -71,15 +82,17 @@ import org.qstuff.qplayer.util.PlayerStatus
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import java.util.concurrent.TimeUnit
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     playerViewModel: PlayerViewModel,
     queueViewModel: QueueViewModel,
+    playlistViewModel: PlaylistViewModel,
+    fileBrowserViewModel: FileBrowserViewModel,
     titleSuffix: String,
     onOpenSettings: () -> Unit,
-    onOpenWebView: (url: String) -> Unit,
-    onSetupTabContent: (tabbar: SlidingTabLayout, pager: ViewPager) -> Unit
+    onOpenWebView: (url: String) -> Unit
 ) {
     val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
 
@@ -199,6 +212,7 @@ fun PlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
+            .statusBarsPadding()
     ) {
         val colHPadding = 4.dp
         val colWidth = maxWidth - colHPadding * 2
@@ -222,36 +236,54 @@ fun PlayerScreen(
         BottomSheetScaffold(
             scaffoldState = scaffoldState,
             sheetContent = {
-                Box(
+                val pagerState = rememberPagerState(pageCount = { 3 })
+                val tabScope = rememberCoroutineScope()
+                val tabTitles = listOf(
+                    stringResource(R.string.queue_title),
+                    stringResource(R.string.filebrowser_title),
+                    stringResource(R.string.playlists_title)
+                )
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(expandedHeight)
                 ) {
-                    AndroidView(
-                        factory = { ctx ->
-                            LinearLayout(ctx).apply {
-                                orientation = LinearLayout.VERTICAL
-                                val tabbarH = ctx.resources.getDimensionPixelSize(R.dimen.tabbar_height)
-                                val tabbar = SlidingTabLayout(ctx).apply {
-                                    layoutParams = LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.MATCH_PARENT,
-                                        tabbarH
-                                    )
-                                }
-                                val pager = ViewPager(ctx).apply {
-                                    id = View.generateViewId()
-                                    layoutParams = LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.MATCH_PARENT,
-                                        LinearLayout.LayoutParams.MATCH_PARENT
-                                    )
-                                }
-                                addView(tabbar)
-                                addView(pager)
-                                onSetupTabContent(tabbar, pager)
-                            }
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    TabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        containerColor = Color.Black,
+                        contentColor = QOrange
+                    ) {
+                        tabTitles.forEachIndexed { index, title ->
+                            Tab(
+                                selected = pagerState.currentPage == index,
+                                onClick = { tabScope.launch { pagerState.animateScrollToPage(index) } },
+                                text = { Text(title) },
+                                selectedContentColor = QOrange,
+                                unselectedContentColor = Color.White
+                            )
+                        }
+                    }
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.weight(1f),
+                        beyondBoundsPageCount = 1
+                    ) { page ->
+                        when (page) {
+                            0 -> QueueScreen(
+                                queueViewModel = queueViewModel,
+                                playlistViewModel = playlistViewModel
+                            )
+                            1 -> FileBrowserScreen(
+                                fileBrowserViewModel = fileBrowserViewModel,
+                                queueViewModel = queueViewModel,
+                                playerViewModel = playerViewModel
+                            )
+                            2 -> PlaylistScreen(
+                                playlistViewModel = playlistViewModel,
+                                queueViewModel = queueViewModel
+                            )
+                        }
+                    }
                 }
             },
             sheetPeekHeight = peekHeight,
@@ -316,6 +348,99 @@ fun PlayerScreen(
                             onClick = { showMoreMenu = false; onOpenWebView("licenses.html") }
                         )
                     }
+                }
+            }
+
+            // ─── Seekbar + Waveform ──────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.seekbar_height))
+                    .padding(vertical = 4.dp)
+            ) {
+                AndroidView(
+                    factory = { ctx ->
+                        WaveformView(ctx).apply { updateWaveform(null) }
+                    },
+                    update = { view ->
+                        val td = waveformData
+                        when {
+                            td != null && td.track == currentTrack -> view.updateWaveform(td)
+                            isWaveformLoading -> view.updateWaveform(null)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black, roundedShape)
+                        .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
+                )
+                if (isWaveformLoading) {
+                    Text(
+                        text = "calculating waveform data…",
+                        color = QOrange.copy(alpha = 0.67f),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                Slider(
+                    value = trackProgressBarPos,
+                    onValueChange = { trackProgressBarPos = it; isUserDraggingSlider = true },
+                    onValueChangeFinished = {
+                        currentTrack?.let { track ->
+                            playerViewModel.seekTo((trackProgressBarPos * track.duration).toDouble(), false)
+                        }
+                        isUserDraggingSlider = false
+                    },
+                    colors = SliderDefaults.colors(
+                        thumbColor = QOrange,
+                        activeTrackColor = QOrange
+                    ),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = dynamicTimeAlpha }
+                )
+                AndroidView(
+                    factory = { ctx -> CuepointView(ctx) },
+                    update = { view ->
+                        view.cuepointPosition = cueProgressPos
+                        view.visibility = if (cueActive == true) View.VISIBLE else View.INVISIBLE
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // ─── Track info ───────────────────────────────────────────────────
+            Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                Text(
+                    text = trackTitleText,
+                    color = QOrange,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black)
+                        .padding(start = dimensionResource(R.dimen.textview_padding_start))
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = totalDurationText,
+                        color = Color.White,
+                        modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
+                    )
+                    Text(
+                        text = dynamicTimeText,
+                        color = QOrange,
+                        modifier = Modifier
+                            .padding(end = dimensionResource(R.dimen.textview_padding_end))
+                            .graphicsLayer { alpha = dynamicTimeAlpha }
+                            .clickable { playerViewModel.toggleDynamicTrackLengthDisplay() }
+                    )
                 }
             }
 
@@ -409,42 +534,6 @@ fun PlayerScreen(
                 )
                 } // Row
             } // BoxWithConstraints
-
-            // ─── Track info ───────────────────────────────────────────────────
-            Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                Text(
-                    text = trackTitleText,
-                    color = QOrange,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black)
-                        .padding(start = dimensionResource(R.dimen.textview_padding_start))
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black, roundedShape),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = totalDurationText,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
-                    )
-                    Text(
-                        text = dynamicTimeText,
-                        color = QOrange,
-                        modifier = Modifier
-                            .padding(end = dimensionResource(R.dimen.textview_padding_end))
-                            .graphicsLayer { alpha = dynamicTimeAlpha }
-                            .clickable { playerViewModel.toggleDynamicTrackLengthDisplay() }
-                    )
-                }
-            }
 
             // ─── Button Row 1: prev | play | next | cue | mt | reset ─────────
             Row(
@@ -662,63 +751,6 @@ fun PlayerScreen(
                         tint = Color.White
                     )
                 }
-            }
-
-            // ─── Seekbar + Waveform ──────────────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.seekbar_height))
-                    .padding(vertical = 4.dp)
-            ) {
-                AndroidView(
-                    factory = { ctx ->
-                        WaveformView(ctx).apply { updateWaveform(null) }
-                    },
-                    update = { view ->
-                        val td = waveformData
-                        when {
-                            td != null && td.track == currentTrack -> view.updateWaveform(td)
-                            isWaveformLoading -> view.updateWaveform(null)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black, roundedShape)
-                        .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
-                )
-                if (isWaveformLoading) {
-                    Text(
-                        text = "calculating waveform data…",
-                        color = QOrange.copy(alpha = 0.67f),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                Slider(
-                    value = trackProgressBarPos,
-                    onValueChange = { trackProgressBarPos = it; isUserDraggingSlider = true },
-                    onValueChangeFinished = {
-                        currentTrack?.let { track ->
-                            playerViewModel.seekTo((trackProgressBarPos * track.duration).toDouble(), false)
-                        }
-                        isUserDraggingSlider = false
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = QOrange,
-                        activeTrackColor = QOrange
-                    ),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = dynamicTimeAlpha }
-                )
-                AndroidView(
-                    factory = { ctx -> CuepointView(ctx) },
-                    update = { view ->
-                        view.cuepointPosition = cueProgressPos
-                        view.visibility = if (cueActive == true) View.VISIBLE else View.INVISIBLE
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
             }
 
         }
