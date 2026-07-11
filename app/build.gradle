@@ -137,8 +137,6 @@ dependencies {
     androidTestImplementation "androidx.test:runner:$libs.espressoRunner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$libs.espresso"
 
-    debugImplementation project(':HGDialV2-debug')
-    releaseImplementation project(':HGDialV2-release')
 }
 
 // apply plugin: 'com.google.gms.google-services'

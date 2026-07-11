@@ -11,6 +11,7 @@
 
     <dimen name="jog_wheel_border_padding">20dp</dimen>
     <dimen name="jog_wheel_margin">10dp</dimen>
+    <dimen name="jog_wheel_margin_right">0dp</dimen>
 
     <dimen name="font_size_player_text">15sp</dimen>
     <dimen name="font_size_title_text">13sp</dimen>
@@ -31,6 +32,11 @@
     <dimen name="player_button_height">36dp</dimen>
     <dimen name="player_button_overshoot">110dp</dimen>
     <dimen name="player_button_padding">5dp</dimen>
+
+    <dimen name="tabbar_height">40dp</dimen>
+
+    <dimen name="textview_padding_start">8dp</dimen>
+    <dimen name="textview_padding_end">8dp</dimen>
 
     <dimen name="pitchbar_width">36dp</dimen>
     <dimen name="seekbar_height">36dp</dimen>
