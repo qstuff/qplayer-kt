@@ -410,7 +410,9 @@ class  PlayerViewModel (application: Application):
         updateRunnable = object : Runnable {
             override fun run() {
                 onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
-                updateHandler.postDelayed(this, 100)
+                // 250ms is plenty for the progress bar/time and keeps per-tick recomposition
+                // from starving touch dispatch (which made seeking laggy during playback).
+                updateHandler.postDelayed(this, 250)
             }
         }
         updateHandler.post(updateRunnable as Runnable)

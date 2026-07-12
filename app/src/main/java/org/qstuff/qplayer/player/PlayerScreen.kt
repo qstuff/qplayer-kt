@@ -121,8 +121,14 @@ fun PlayerScreen(
     var isTrackPrepared by remember { mutableStateOf(false) }
     var currentTrack by remember { mutableStateOf<Track?>(null) }
     var isBlinkActive by remember { mutableStateOf(false) }
-    var trackProgressBarPos by remember { mutableStateOf(0f) }
-    var isUserDraggingSlider by remember { mutableStateOf(false) }
+    // Progress uses two separate states so the position timer and the user's drag never
+    // fight over one value: `playbackProgress` is written only by the timer, `seekProgress`
+    // only by the drag. The Slider shows `seekProgress ?: playbackProgress`, so while
+    // dragging the timer's updates aren't even read (short-circuit) — no thumb jump, and
+    // no per-tick Slider recomposition to delay touch.
+    var playbackProgress by remember { mutableStateOf(0f) }
+    var seekProgress by remember { mutableStateOf<Float?>(null) }
+    val displayedProgress = seekProgress ?: playbackProgress
     var cueProgressPos by remember { mutableStateOf(0) }
     var showMoreMenu by remember { mutableStateOf(false) }
     var showPitchRangeMenu by remember { mutableStateOf(false) }
@@ -146,12 +152,14 @@ fun PlayerScreen(
             when (track.trackStatus) {
                 Track.TrackStatus.LOADING, Track.TrackStatus.UNDEFINED -> {
                     isBlinkActive = false
-                    trackProgressBarPos = 0f
+                    playbackProgress = 0f
+                    seekProgress = null
                 }
                 Track.TrackStatus.PREPARED -> {
                     isTrackPrepared = true
                     isBlinkActive = false
-                    trackProgressBarPos = 0f
+                    playbackProgress = 0f
+                    seekProgress = null
                     playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
                     if (track.isAutoplay) playerViewModel.playPause()
                 }
@@ -167,12 +175,10 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(trackPosition) {
-        if (!isUserDraggingSlider) {
-            currentTrack?.let { track ->
-                if (track.duration > 0) {
-                    trackProgressBarPos = (trackPosition ?: 0L).toFloat() / track.duration
-                    isBlinkActive = (track.duration - (trackPosition ?: 0L)) in 0L..30000L
-                }
+        currentTrack?.let { track ->
+            if (track.duration > 0) {
+                playbackProgress = (trackPosition ?: 0L).toFloat() / track.duration
+                isBlinkActive = (track.duration - (trackPosition ?: 0L)) in 0L..30000L
             }
         }
     }
@@ -186,7 +192,9 @@ fun PlayerScreen(
     )
     val dynamicTimeAlpha = if (isBlinkActive) blinkAlpha else 1.0f
 
-    val totalDurationText = remember(currentTrack) {
+    // Key on duration (not the Track reference): duration is mutated in place on the same
+    // Track object once the player is ready, so keying on `currentTrack` never recomputes.
+    val totalDurationText = remember(currentTrack?.duration) {
         currentTrack?.let { "total: ${getDurationHumanReadable(it.duration)}" } ?: ""
     }
     val dynamicTimeText = remember(trackPosition, currentTrack, showRemainingTime) {
@@ -340,13 +348,17 @@ fun PlayerScreen(
                     )
                 }
                 Slider(
-                    value = trackProgressBarPos,
-                    onValueChange = { trackProgressBarPos = it; isUserDraggingSlider = true },
+                    value = displayedProgress,
+                    onValueChange = { seekProgress = it },
                     onValueChangeFinished = {
-                        currentTrack?.let { track ->
-                            playerViewModel.seekTo((trackProgressBarPos * track.duration).toDouble(), false)
+                        val target = seekProgress
+                        if (target != null) {
+                            playbackProgress = target   // avoid a 1-frame jump back to the old position
+                            currentTrack?.let { track ->
+                                playerViewModel.seekTo((target * track.duration).toDouble(), false)
+                            }
+                            seekProgress = null
                         }
-                        isUserDraggingSlider = false
                     },
                     colors = SliderDefaults.colors(
                         thumbColor = QOrange,
@@ -548,7 +560,7 @@ fun PlayerScreen(
                                     playerViewModel.playFromCue(currentTrack)
                                 } else {
                                     currentTrack?.also {
-                                        cueProgressPos = (trackProgressBarPos * 1000).toInt()
+                                        cueProgressPos = (displayedProgress * 1000).toInt()
                                         playerViewModel.toggleCue(it, true)
                                     }
                                 }
