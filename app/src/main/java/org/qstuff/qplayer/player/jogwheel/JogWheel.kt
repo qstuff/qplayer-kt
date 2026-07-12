@@ -14,9 +14,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import org.qstuff.qplayer.R
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -24,6 +27,7 @@ import kotlin.math.atan2
 @Composable
 fun JogWheel(
     modifier: Modifier = Modifier,
+    borderWidth: Dp = 8.dp,
     onDown: () -> Unit,
     onMove: (textureAngle: Double) -> Unit,
     onUp: () -> Unit
@@ -76,5 +80,12 @@ fun JogWheel(
                 draw(size)
             }
         }
+        // White rim on top of the rimless ("ohne rand") wheel image.
+        val stroke = borderWidth.toPx()
+        drawCircle(
+            color = Color.White,
+            radius = size.minDimension / 2f - stroke / 2f,
+            style = Stroke(width = stroke)
+        )
     }
 }

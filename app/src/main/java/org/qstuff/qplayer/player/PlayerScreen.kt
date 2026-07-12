@@ -2,18 +2,20 @@ package org.qstuff.qplayer.player
 
 import android.annotation.SuppressLint
 import android.view.View
-import android.widget.SeekBar
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
@@ -37,8 +39,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -52,6 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -67,6 +70,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import org.koin.java.KoinJavaComponent.getKoin
 import org.qstuff.qplayer.R
@@ -75,7 +79,6 @@ import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.filebrowser.FileBrowserScreen
 import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.player.jogwheel.JogWheel
-import org.qstuff.qplayer.player.pitchcontrol.PitchControlVerticalSeekBar
 import org.qstuff.qplayer.player.trackprogress.CuepointView
 import org.qstuff.qplayer.player.trackprogress.WaveformView
 import org.qstuff.qplayer.playlists.PlaylistScreen
@@ -347,27 +350,47 @@ fun PlayerScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                Slider(
-                    value = displayedProgress,
-                    onValueChange = { seekProgress = it },
-                    onValueChangeFinished = {
-                        val target = seekProgress
-                        if (target != null) {
-                            playbackProgress = target   // avoid a 1-frame jump back to the old position
-                            currentTrack?.let { track ->
-                                playerViewModel.seekTo((target * track.duration).toDouble(), false)
-                            }
-                            seekProgress = null
-                        }
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = QOrange,
-                        activeTrackColor = QOrange
-                    ),
+                // Progress: translucent orange fill over the played portion + a full-height
+                // white playhead line. Drag/tap to seek. seekProgress (drag) short-circuits
+                // playbackProgress (timer) so the two never fight — see the state decl above.
+                Canvas(
                     modifier = Modifier
                         .fillMaxSize()
+                        .clip(roundedShape)
                         .graphicsLayer { alpha = dynamicTimeAlpha }
-                )
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                seekProgress = (down.position.x / size.width).coerceIn(0f, 1f)
+                                down.consume()
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.first()
+                                    seekProgress = (change.position.x / size.width).coerceIn(0f, 1f)
+                                    change.consume()
+                                } while (event.changes.any { it.pressed })
+                                seekProgress?.let { target ->
+                                    playbackProgress = target // avoid a 1-frame jump back
+                                    currentTrack?.let { track ->
+                                        playerViewModel.seekTo((target * track.duration).toDouble(), false)
+                                    }
+                                }
+                                seekProgress = null
+                            }
+                        }
+                ) {
+                    val x = displayedProgress.coerceIn(0f, 1f) * size.width
+                    drawRect(
+                        color = QOrange.copy(alpha = 0.35f),
+                        size = Size(x, size.height)
+                    )
+                    drawLine(
+                        color = QOrange,
+                        start = Offset(x, 0f),
+                        end = Offset(x, size.height),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
                 AndroidView(
                     factory = { ctx -> CuepointView(ctx) },
                     update = { view ->
@@ -436,25 +459,46 @@ fun PlayerScreen(
                         .padding(vertical = 10.dp)
                         .background(Color.Black, roundedShape)
                 ) {
-                    AndroidView(
-                        factory = { ctx ->
-                            PitchControlVerticalSeekBar(ctx).apply {
-                                max = 1000
-                                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                                    override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) {
-                                        if (fromUser) {
-                                            pitchProgressState.value = p
-                                            playerViewModel.onPitchChanged(p)
-                                        }
+                    // Vertical pitch fader: opaque orange fill from the centre (0%) out to the
+                    // thumb + a QOrange playhead line. Top = max (+range), bottom = min (-range).
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(roundedShape)
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    fun emit(y: Float) {
+                                        val v = ((1f - y / size.height) * 1000f).toInt().coerceIn(0, 1000)
+                                        pitchProgressState.value = v
+                                        playerViewModel.onPitchChanged(v)
                                     }
-                                    override fun onStartTrackingTouch(s: SeekBar?) {}
-                                    override fun onStopTrackingTouch(s: SeekBar?) {}
-                                })
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    emit(down.position.y)
+                                    down.consume()
+                                    do {
+                                        val event = awaitPointerEvent()
+                                        val change = event.changes.first()
+                                        emit(change.position.y)
+                                        change.consume()
+                                    } while (event.changes.any { it.pressed })
+                                }
                             }
-                        },
-                        update = { view -> view.setNewProgress(pitchProgress, false) },
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    ) {
+                        val fraction = (pitchProgress / 1000f).coerceIn(0f, 1f)
+                        val thumbY = (1f - fraction) * size.height
+                        val centerY = size.height / 2f
+                        drawRect(
+                            color = QOrange,
+                            topLeft = Offset(0f, minOf(thumbY, centerY)),
+                            size = Size(size.width, abs(thumbY - centerY))
+                        )
+                        drawLine(
+                            color = QOrange,
+                            start = Offset(0f, thumbY),
+                            end = Offset(size.width, thumbY),
+                            strokeWidth = 2.dp.toPx()
+                        )
+                    }
                 }
 
                 // Jog wheel — fills remaining width, square via aspectRatio inside
