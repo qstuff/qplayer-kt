@@ -3,6 +3,7 @@ package org.qstuff.qplayer.player
 import android.annotation.SuppressLint
 import android.view.View
 import android.widget.SeekBar
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -12,6 +13,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,13 +32,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Tab
@@ -52,6 +54,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -62,6 +67,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import org.koin.java.KoinJavaComponent.getKoin
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
@@ -231,70 +237,22 @@ fun PlayerScreen(
         val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowHeight * 2 - seekbarHeight).coerceAtLeast(48.dp)
         val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
-        val scaffoldState = rememberBottomSheetScaffoldState()
+        // Two-state sheet. `sheetOffset` measures how far it is collapsed:
+        // 0 = expanded (top below the jog wheel), maxSheetOffset = collapsed (top below
+        // the seekbar). The sheet's *height* is expandedHeight - sheetOffset, i.e. it
+        // grows/shrinks rather than translating — so the tab content's LazyColumn viewport
+        // always matches the visible area and short lists overflow & scroll when collapsed.
+        // Dragging is bound ONLY to the TabRow (see below), so the lists scroll freely.
+        val density = LocalDensity.current
+        val expandedHeightPx = with(density) { expandedHeight.toPx() }
+        val maxSheetOffsetPx = with(density) { (expandedHeight - peekHeight).toPx() }
+        val sheetOffset = remember { Animatable(maxSheetOffsetPx) }
+        val sheetScope = rememberCoroutineScope()
 
-        BottomSheetScaffold(
-            scaffoldState = scaffoldState,
-            sheetContent = {
-                val pagerState = rememberPagerState(pageCount = { 3 })
-                val tabScope = rememberCoroutineScope()
-                val tabTitles = listOf(
-                    stringResource(R.string.queue_title),
-                    stringResource(R.string.filebrowser_title),
-                    stringResource(R.string.playlists_title)
-                )
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(expandedHeight)
-                ) {
-                    TabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        containerColor = Color.Black,
-                        contentColor = QOrange
-                    ) {
-                        tabTitles.forEachIndexed { index, title ->
-                            Tab(
-                                selected = pagerState.currentPage == index,
-                                onClick = { tabScope.launch { pagerState.animateScrollToPage(index) } },
-                                text = { Text(title) },
-                                selectedContentColor = QOrange,
-                                unselectedContentColor = Color.White
-                            )
-                        }
-                    }
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.weight(1f),
-                        beyondBoundsPageCount = 1
-                    ) { page ->
-                        when (page) {
-                            0 -> QueueScreen(
-                                queueViewModel = queueViewModel,
-                                playlistViewModel = playlistViewModel
-                            )
-                            1 -> FileBrowserScreen(
-                                fileBrowserViewModel = fileBrowserViewModel,
-                                queueViewModel = queueViewModel,
-                                playerViewModel = playerViewModel
-                            )
-                            2 -> PlaylistScreen(
-                                playlistViewModel = playlistViewModel,
-                                queueViewModel = queueViewModel
-                            )
-                        }
-                    }
-                }
-            },
-            sheetPeekHeight = peekHeight,
-            sheetDragHandle = null,
-            sheetContainerColor = Color.Black,
-            containerColor = Color.Black,
-        ) { paddingValues ->
+        // ─── Main player content ─────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
                 .padding(horizontal = colHPadding)
         ) {
 
@@ -754,6 +712,96 @@ fun PlayerScreen(
             }
 
         }
+
+        // ─── Bottom sheet (tabs) — draggable ONLY via the TabRow ─────────────
+        val pagerState = rememberPagerState(pageCount = { 3 })
+        val tabTitles = listOf(
+            stringResource(R.string.queue_title),
+            stringResource(R.string.filebrowser_title),
+            stringResource(R.string.playlists_title)
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                // Height = expandedHeight - sheetOffset, forced in the layout phase so the
+                // drag only re-lays-out (no recomposition). Reading sheetOffset here makes
+                // the list viewport track the visible height → short lists scroll too.
+                .layout { measurable, constraints ->
+                    val h = (expandedHeightPx - sheetOffset.value).roundToInt().coerceAtLeast(0)
+                    val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+                    layout(placeable.width, h) { placeable.place(0, 0) }
+                }
+                .background(Color.Black)
+                // Block taps from reaching the buttons/content behind the sheet when
+                // it's expanded (mirrors Material Surface's pointerInput(Unit) {}).
+                .pointerInput(Unit) {}
+        ) {
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color.Black,
+                contentColor = QOrange,
+                modifier = Modifier.draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        sheetScope.launch {
+                            sheetOffset.snapTo(
+                                (sheetOffset.value + delta).coerceIn(0f, maxSheetOffsetPx)
+                            )
+                        }
+                    },
+                    onDragStopped = { velocity ->
+                        val target = when {
+                            velocity > 800f -> maxSheetOffsetPx   // fling down → collapse
+                            velocity < -800f -> 0f                // fling up → expand
+                            sheetOffset.value > maxSheetOffsetPx / 2 -> maxSheetOffsetPx
+                            else -> 0f
+                        }
+                        sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
+                    }
+                )
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            if (pagerState.currentPage == index) {
+                                // tap on the already-selected tab → toggle the sheet
+                                val target =
+                                    if (sheetOffset.value < maxSheetOffsetPx / 2) maxSheetOffsetPx
+                                    else 0f
+                                sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
+                            } else {
+                                sheetScope.launch { pagerState.animateScrollToPage(index) }
+                            }
+                        },
+                        text = { Text(title) },
+                        selectedContentColor = QOrange,
+                        unselectedContentColor = Color.White
+                    )
+                }
+            }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                beyondBoundsPageCount = 1
+            ) { page ->
+                when (page) {
+                    0 -> QueueScreen(
+                        queueViewModel = queueViewModel,
+                        playlistViewModel = playlistViewModel
+                    )
+                    1 -> FileBrowserScreen(
+                        fileBrowserViewModel = fileBrowserViewModel,
+                        queueViewModel = queueViewModel,
+                        playerViewModel = playerViewModel
+                    )
+                    2 -> PlaylistScreen(
+                        playlistViewModel = playlistViewModel,
+                        queueViewModel = queueViewModel
+                    )
+                }
+            }
         }
     }
 }

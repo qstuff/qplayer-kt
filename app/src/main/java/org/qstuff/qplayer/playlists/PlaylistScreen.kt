@@ -24,6 +24,7 @@ import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.queue.QueueViewModel
+import org.qstuff.qplayer.ui.SwipeToRemove
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -47,7 +48,7 @@ fun PlaylistScreen(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(playlists, key = { it.playlist_id }) { playlist ->
                 val index = playlists.indexOf(playlist)
-                SwipeToDismissPlaylist(
+                SwipeToRemove(
                     onDismissed = {
                         playlistViewModel.removePlaylist(playlist)
                         scope.launch {
@@ -92,40 +93,6 @@ fun PlaylistScreen(
             },
             onDismiss = { openPlaylist = null }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SwipeToDismissPlaylist(
-    onDismissed: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onDismissed()
-                true
-            } else false
-        }
-    )
-
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFE60C00))
-                    .padding(end = 16.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
-            }
-        }
-    ) {
-        content()
     }
 }
 
