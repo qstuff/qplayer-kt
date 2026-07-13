@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
@@ -228,7 +229,7 @@ fun PlayerScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.White)
             .statusBarsPadding()
     ) {
         val colHPadding = 4.dp
@@ -272,7 +273,8 @@ fun PlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.title_textview_height))
-                    .background(Color.Black, roundedShape),
+                    .background(Color.Black, roundedShape)
+                    .border(1.dp, Color.White, roundedShape),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -320,6 +322,47 @@ fun PlayerScreen(
                 }
             }
 
+            // ─── Track info ───────────────────────────────────────────────────
+            Column(
+                modifier = Modifier.padding(vertical = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = trackTitleText,
+                    color = QOrange,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .border(1.dp, Color.White, roundedShape)
+                        .padding(start = dimensionResource(R.dimen.textview_padding_start))
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .border(1.dp, Color.White, roundedShape),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = totalDurationText,
+                        color = Color.White,
+                        modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
+                    )
+                    Text(
+                        text = dynamicTimeText,
+                        color = QOrange,
+                        modifier = Modifier
+                            .padding(end = dimensionResource(R.dimen.textview_padding_end))
+                            .graphicsLayer { alpha = dynamicTimeAlpha }
+                            .clickable { playerViewModel.toggleDynamicTrackLengthDisplay() }
+                    )
+                }
+            }
+
             // ─── Seekbar + Waveform ──────────────────────────────────────────
             Box(
                 modifier = Modifier
@@ -341,6 +384,7 @@ fun PlayerScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black, roundedShape)
+                        .border(1.dp, Color.White, roundedShape)
                         .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
                 )
                 if (isWaveformLoading) {
@@ -401,42 +445,6 @@ fun PlayerScreen(
                 )
             }
 
-            // ─── Track info ───────────────────────────────────────────────────
-            Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                Text(
-                    text = trackTitleText,
-                    color = QOrange,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black)
-                        .padding(start = dimensionResource(R.dimen.textview_padding_start))
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black, roundedShape),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = totalDurationText,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
-                    )
-                    Text(
-                        text = dynamicTimeText,
-                        color = QOrange,
-                        modifier = Modifier
-                            .padding(end = dimensionResource(R.dimen.textview_padding_end))
-                            .graphicsLayer { alpha = dynamicTimeAlpha }
-                            .clickable { playerViewModel.toggleDynamicTrackLengthDisplay() }
-                    )
-                }
-            }
-
             // ─── Upper section: pitch fader + jog wheel ──────────────────────
             // BoxWithConstraints lets us derive Row height from the wheel's square size:
             // rowHeight = (availableWidth - pitchbarWidth - paddingStart - paddingEnd) + paddingBottom
@@ -456,7 +464,7 @@ fun PlayerScreen(
                     modifier = Modifier
                         .width(pitchbarWidth)
                         .fillMaxHeight()
-                        .padding(vertical = 10.dp)
+                        .padding(end = 4.dp)
                         .background(Color.Black, roundedShape)
                 ) {
                     // Vertical pitch fader: opaque orange fill from the centre (0%) out to the
@@ -505,11 +513,7 @@ fun PlayerScreen(
                 JogWheel(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(
-                            start = jogPaddingStart,
-                            end = jogPaddingEnd,
-                            bottom = jogPaddingBottom
-                        ),
+                        .background(Color.Black),
                     onDown = {
                         jogState.capturedPitchProgress = pitchProgressState.value
                         jogState.onMoveTime = System.currentTimeMillis()
