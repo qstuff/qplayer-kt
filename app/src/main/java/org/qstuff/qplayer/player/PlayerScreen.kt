@@ -11,7 +11,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
@@ -274,8 +273,7 @@ fun PlayerScreen(
                     .padding(top = 4.dp)
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.title_textview_height))
-                    .background(Color.Black, roundedShape)
-                    .border(1.dp, Color.White, roundedShape),
+                    .background(Color.Black, roundedShape),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -325,16 +323,18 @@ fun PlayerScreen(
 
             // ─── Track info ───────────────────────────────────────────────────
             Column(
-                modifier = Modifier.padding(vertical = 2.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                modifier = Modifier.padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(dimensionResource(R.dimen.textview_height))
                         .background(Color.Black, roundedShape)
-                        .border(1.dp, Color.White, roundedShape)
-                        .padding(start = dimensionResource(R.dimen.textview_padding_start)),
+                        .padding(
+                            start = dimensionResource(R.dimen.textview_padding_start),
+                            top = 4.dp
+                        ),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
@@ -347,8 +347,7 @@ fun PlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black, roundedShape)
-                        .border(1.dp, Color.White, roundedShape),
+                        .background(Color.Black, roundedShape),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -388,7 +387,6 @@ fun PlayerScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black, roundedShape)
-                        .border(1.dp, Color.White, roundedShape)
                         .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
                 )
                 if (isWaveformLoading) {
