@@ -271,6 +271,7 @@ fun PlayerScreen(
             // ─── Title bar ───────────────────────────────────────────────────
             Row(
                 modifier = Modifier
+                    .padding(top = 4.dp)
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.title_textview_height))
                     .background(Color.Black, roundedShape)
@@ -327,17 +328,21 @@ fun PlayerScreen(
                 modifier = Modifier.padding(vertical = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                Text(
-                    text = trackTitleText,
-                    color = QOrange,
-                    maxLines = 1,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(dimensionResource(R.dimen.textview_height))
                         .background(Color.Black, roundedShape)
                         .border(1.dp, Color.White, roundedShape)
-                        .padding(start = dimensionResource(R.dimen.textview_padding_start))
-                )
+                        .padding(start = dimensionResource(R.dimen.textview_padding_start)),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = trackTitleText,
+                        color = QOrange,
+                        maxLines = 1
+                    )
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -368,7 +373,6 @@ fun PlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.seekbar_height))
-                    .padding(vertical = 4.dp)
             ) {
                 AndroidView(
                     factory = { ctx ->
