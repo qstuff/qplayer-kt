@@ -10,8 +10,8 @@
     <dimen name="jog_wheel_border">8dp</dimen>
     <dimen name="jog_wheel_margin_right">4dp</dimen>
 
-    <dimen name="pitchbar_width">42dp</dimen>
-    <dimen name="seekbar_height">42dp</dimen>
+    <dimen name="pitchbar_width">62dp</dimen>
+    <dimen name="seekbar_height">62dp</dimen>
 
     <dimen name="textview_height">31dp</dimen>
     <dimen name="title_textview_height">25dp</dimen>
