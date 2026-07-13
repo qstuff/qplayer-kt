@@ -233,16 +233,15 @@ fun PlayerScreen(
     ) {
         val colHPadding = 4.dp
         val colWidth = maxWidth - colHPadding * 2
-        val jogBorder = dimensionResource(R.dimen.jog_wheel_border)
         val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
-        val jogMarginRight = dimensionResource(R.dimen.jog_wheel_margin_right)
         val titleBarHeight = dimensionResource(R.dimen.title_textview_height)
         val textviewHeight = dimensionResource(R.dimen.textview_height)
         val seekbarHeight = dimensionResource(R.dimen.seekbar_height)
 
-        // rowHeight mirrors the inner BoxWithConstraints formula for the jog+pitch row
-        val rowHeight = colWidth - pitchbarWidth - colHPadding - jogMarginRight + jogBorder
-        val jogSectionHeight = jogBorder + rowHeight
+        // Jog+pitch row: the jog wheel is a square filling the width to the right of the
+        // pitch fader, so its height = that width. +4.dp gap below the duration row.
+        // Mirrors the inner BoxWithConstraints below.
+        val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
         val trackInfoHeight = textviewHeight * 2 + 4.dp
         val btnRowHeight = maxOf(48.dp, textviewHeight) + 4.dp
         val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowHeight * 2 - seekbarHeight).coerceAtLeast(48.dp)
@@ -448,19 +447,22 @@ fun PlayerScreen(
             }
 
             // ─── Upper section: pitch fader + jog wheel ──────────────────────
-            // BoxWithConstraints lets us derive Row height from the wheel's square size:
-            // rowHeight = (availableWidth - pitchbarWidth - paddingStart - paddingEnd) + paddingBottom
+            // Row height = the jog wheel's square size (the width left of the pitch fader),
+            // so the fader (fillMaxHeight) and the wheel share the same top edge.
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = dimensionResource(R.dimen.jog_wheel_border))
+                    .padding(top = 4.dp)   // 4dp below the duration row
             ) {
                 val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
-                val jogPaddingStart = 4.dp
-                val jogPaddingEnd = dimensionResource(R.dimen.jog_wheel_margin_right)
-                val jogPaddingBottom = dimensionResource(R.dimen.jog_wheel_border)
-                val rowHeight = maxWidth - pitchbarWidth - jogPaddingStart - jogPaddingEnd + jogPaddingBottom
-                Row(modifier = Modifier.fillMaxWidth().height(rowHeight)) {
+                // The jog wheel is square and fills the width to the right of the pitch
+                // fader, so the row height = that width. The pitch fader uses fillMaxHeight,
+                // giving both the same top edge and height.
+                val jogSize = maxWidth - pitchbarWidth
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(jogSize),
+                    verticalAlignment = Alignment.Top
+                ) {
                 // Pitch fader
                 Box(
                     modifier = Modifier
@@ -511,10 +513,10 @@ fun PlayerScreen(
                     }
                 }
 
-                // Jog wheel — fills remaining width, square via aspectRatio inside
+                // Jog wheel — square (aspectRatio inside), same height/top as the pitch fader
                 JogWheel(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxHeight()
                         .background(Color.Black),
                     onDown = {
                         jogState.capturedPitchProgress = pitchProgressState.value
