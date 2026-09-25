@@ -232,8 +232,9 @@ fun PlayerScreen(
             "remain: 00:00:00"
         }
     }
-    val isWaveformLoading = currentTrack?.trackStatus == Track.TrackStatus.LOADING
-            || currentTrack?.trackStatus == Track.TrackStatus.UNDEFINED
+    // The overview waveform is generated asynchronously; it's "ready" only once data for the
+    // current track has arrived. Until then we show the calculating indicator.
+    val waveformReady = waveformData?.let { it.bytes != null && it.track == currentTrack } == true
     val trackTitleText = when {
         currentTrack == null -> ""
         currentTrack!!.trackStatus == Track.TrackStatus.LOADING
@@ -397,18 +398,17 @@ fun PlayerScreen(
                         WaveformView(ctx).apply { updateWaveform(null) }
                     },
                     update = { view ->
-                        val td = waveformData
-                        when {
-                            td != null && td.track == currentTrack -> view.updateWaveform(td)
-                            isWaveformLoading -> view.updateWaveform(null)
-                        }
+                        // Show the current track's overview, or clear it (on track change or while
+                        // it's still being generated) so a previous track's waveform never lingers.
+                        if (waveformReady) view.updateWaveform(waveformData)
+                        else view.updateWaveform(null)
                     },
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black, roundedShape)
                         .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
                 )
-                if (isWaveformLoading) {
+                if (currentTrack != null && !waveformReady) {
                     Text(
                         text = "calculating waveform data…",
                         color = QOrange.copy(alpha = 0.67f),

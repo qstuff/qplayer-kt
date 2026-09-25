@@ -6,10 +6,16 @@ import android.content.*
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.qstuff.qplayer.QDeqApplication
@@ -17,11 +23,16 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.player.mediaservice.QMediaPlayerService
+import org.qstuff.qplayer.player.mediaservice.WaveformAnalyzer
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
+import kotlin.coroutines.CoroutineContext
 
 class  PlayerViewModel (application: Application):
-        AndroidViewModel(application), KoinComponent {
+        AndroidViewModel(application), KoinComponent, CoroutineScope {
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main
 
     companion object {
         const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
@@ -74,6 +85,10 @@ class  PlayerViewModel (application: Application):
     private var updateHandler = Handler(Looper.getMainLooper())
     private var updateRunnable: Runnable? = null
     private var isUpdatetaskRunning = false
+
+    // Waveform overview generation (native MediaExtractor+MediaCodec, off the main thread)
+    private val waveformCache = LruCache<String, ByteArray>(32)
+    private var waveformJob: Job? = null
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
@@ -314,6 +329,11 @@ class  PlayerViewModel (application: Application):
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        waveformJob?.cancel()
+    }
+
     //
     // Track handling
     //
@@ -348,6 +368,37 @@ class  PlayerViewModel (application: Application):
             mediaService.loadTrackASync(track)
             track.trackStatus = Track.TrackStatus.LOADING
             trackStatusMediator.value = track
+        }
+
+        generateWaveform(track)
+    }
+
+    /**
+     * Generate (or serve from cache) the overview waveform for [track] and publish it via
+     * [onWaveformDataUpdate]. Decoding runs on a background dispatcher; the previous job is
+     * cancelled when a new track is loaded, and stale results for an already-changed track are
+     * discarded.
+     */
+    private fun generateWaveform(track: Track) {
+        val uri = track.uri
+
+        waveformCache.get(uri)?.let { cached ->
+            onWaveformDataUpdate.value = TrackData(track, cached)
+            return
+        }
+
+        // Clear any previous waveform while the new one is decoding.
+        onWaveformDataUpdate.value = null
+        waveformJob?.cancel()
+        waveformJob = launch {
+            val bytes = WaveformAnalyzer.analyze(getApplication(), uri)
+            if (bytes != null && isActive) {
+                waveformCache.put(uri, bytes)
+                // Only publish if this is still the current track.
+                if (trackStatusMediator.value?.uri == uri) {
+                    onWaveformDataUpdate.value = TrackData(track, bytes)
+                }
+            }
         }
     }
 

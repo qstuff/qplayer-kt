@@ -107,27 +107,7 @@ class WaveformView : View {
     }
 
     fun updateWaveform(data: TrackData?) {
-        Timber.d("updateWaveform():")
-
-        if (data?.bytes == null) {
-            waveformData = null
-            stretchFactor = 1.0f
-            invalidate()
-            return
-        }
-
-        Timber.d("updateWaveform(): num samples:  ${data.bytes?.size}")
-        Timber.d("updateWaveform(): width pixels: $waveFormWidth")
-
-        waveformData = data
-
-        stretchFactor = if (waveFormWidth > data.bytes!!.size) {
-            waveFormWidth / data.bytes!!.size
-        } else {
-            data.bytes!!.size.toFloat() / waveFormWidth
-        }
-
-        Timber.v("updateWaveform(): stretchFactor: %f", stretchFactor)
+        waveformData = if (data?.bytes == null) null else data
         invalidate()
     }
 
@@ -141,70 +121,23 @@ class WaveformView : View {
                 waveFormCenterY,
                 centerLine)
 
+        // Overview waveform: one byte per point, 0..127 = peak amplitude. Draw a vertical bar
+        // per point, symmetric around the center line, spread across the available width.
+        val bytes = waveformData?.bytes ?: return
+        val n = bytes.size
+        if (n == 0 || waveFormWidth <= 0f) return
 
-        // DEBUG or maybe feature: the 0db lines
+        val barWidth = waveFormWidth / n
+        val halfMax = (viewHeight - 2 * topMargin) / 2f
+        waveFormUpper.strokeWidth = if (barWidth > 1f) barWidth else 1f
 
-        /*
-        canvas.drawLine(sideMargin,
-                        zeroDBOffset,
-                        sideMargin + waveFormWidth,
-                        zeroDBOffset,
-                        zeroDBLine);
-
-        canvas.drawLine(sideMargin,
-                        viewHeight - zeroDBOffset,
-                        sideMargin + waveFormWidth,
-                        viewHeight - zeroDBOffset,
-                        zeroDBLine);
-*/
-
-        if (waveformData != null) {
-            var dbValue: Float
-
-            for (i in 0 until waveformData!!.bytes!!.size) {
-
-                dbValue = waveformData!!.bytes!![i].toFloat() *-3.5f
-
-                if (dbValue > waveFormCenterY - zeroDBOffset) {
-                    dbValue = waveFormCenterY
-                }
-
-                if (i < waveFormWidth) {
-
-                    canvas.drawLine(sideMargin + i * stretchFactor,
-                            zeroDBOffset + dbValue,
-                            sideMargin + i * stretchFactor,
-                            waveFormCenterY,
-                            waveFormUpper)
-
-                    canvas.drawLine(sideMargin + i * stretchFactor,
-                            waveFormCenterY,
-                            sideMargin + i * stretchFactor,
-                            viewHeight - zeroDBOffset - dbValue,
-                            waveFormLower)
-                }
-            }
-
-        } else {
-
-            var i = 0
-            while (i < waveFormWidth / stretchFactor) {
-
-                canvas.drawLine(
-                        sideMargin + i * stretchFactor,
-                        zeroDBOffset,
-                        sideMargin + i * stretchFactor,
-                        waveFormCenterY,
-                        waveFormUpperDefault)
-
-                canvas.drawLine(
-                        sideMargin + i * stretchFactor,
-                        waveFormCenterY,
-                        sideMargin + i * stretchFactor,
-                        viewHeight - zeroDBOffset,
-                        waveFormLowerDefault)
-                i++
-            }
+        var i = 0
+        while (i < n) {
+            val amp = bytes[i].toInt().coerceIn(0, 127) / 127f
+            val barHalf = amp * halfMax
+            val x = sideMargin + i * barWidth + barWidth / 2f
+            canvas.drawLine(x, waveFormCenterY - barHalf, x, waveFormCenterY + barHalf, waveFormUpper)
+            i++
         }
     }
 }
