@@ -262,8 +262,9 @@ fun PlayerScreen(
         // Mirrors the inner BoxWithConstraints below.
         val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
         val trackInfoHeight = textviewHeight * 2 + 4.dp
-        val btnRowHeight = maxOf(48.dp, textviewHeight) + 4.dp
-        val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowHeight * 2 - seekbarHeight).coerceAtLeast(48.dp)
+        // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
+        val btnRowsHeight = textviewHeight * 2 + 24.dp
+        val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight).coerceAtLeast(48.dp)
         val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
         // Two-state sheet. `sheetOffset` measures how far it is collapsed:
@@ -580,23 +581,31 @@ fun PlayerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { queueViewModel.previousTrack(currentTrack) },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { queueViewModel.previousTrack(currentTrack) },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.button_previous),
                         contentDescription = "Previous",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
-                IconButton(
-                    onClick = { playerViewModel.playPause() },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { playerViewModel.playPause() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(
@@ -606,17 +615,21 @@ fun PlayerScreen(
                                 R.drawable.button_play_selected
                         ),
                         contentDescription = "Play/Pause",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
-                IconButton(
-                    onClick = { queueViewModel.nextTrack(currentTrack) },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { queueViewModel.nextTrack(currentTrack) },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.button_next),
                         contentDescription = "Next",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
                 // Cue
@@ -688,24 +701,28 @@ fun PlayerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(top = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Pitch decrease
-                IconButton(
-                    onClick = {
-                        val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-                        val new = pitchProgress - delta
-                        pitchProgressState.value = new
-                        playerViewModel.onPitchChanged(new)
-                    },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable {
+                            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+                            val new = pitchProgress - delta
+                            pitchProgressState.value = new
+                            playerViewModel.onPitchChanged(new)
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_keyboard_arrow_left_white_24px),
                         contentDescription = "Pitch decrease",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
                 // Pitch value
@@ -719,19 +736,23 @@ fun PlayerScreen(
                     Text(text = pitchValueText ?: "0,0%", color = Color.White)
                 }
                 // Pitch increase
-                IconButton(
-                    onClick = {
-                        val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-                        val new = pitchProgress + delta
-                        pitchProgressState.value = new
-                        playerViewModel.onPitchChanged(new)
-                    },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable {
+                            val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+                            val new = pitchProgress + delta
+                            pitchProgressState.value = new
+                            playerViewModel.onPitchChanged(new)
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_keyboard_arrow_right_white_24px),
                         contentDescription = "Pitch increase",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
                 // Pitch range
@@ -763,9 +784,13 @@ fun PlayerScreen(
                     }
                 }
                 // Repeat
-                IconButton(
-                    onClick = { queueViewModel.toggleRepeat() },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { queueViewModel.toggleRepeat() },
+                    contentAlignment = Alignment.Center
                 ) {
                     val repeatIcon = when (repeat) {
                         TrackRepeatStatus.ONE -> R.drawable.button_loop1_selected
@@ -775,13 +800,17 @@ fun PlayerScreen(
                     Icon(
                         painter = painterResource(repeatIcon),
                         contentDescription = "Repeat",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
                 // Shuffle
-                IconButton(
-                    onClick = { queueViewModel.toggleShuffle() },
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { queueViewModel.toggleShuffle() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(
@@ -789,7 +818,7 @@ fun PlayerScreen(
                             else R.drawable.button_shuffle
                         ),
                         contentDescription = "Shuffle",
-                        tint = Color.White
+                        tint = QOrange
                     )
                 }
             }
