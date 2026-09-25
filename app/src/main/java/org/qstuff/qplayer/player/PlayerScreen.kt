@@ -43,6 +43,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +61,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -69,6 +71,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Observer
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -106,7 +109,23 @@ fun PlayerScreen(
     val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
 
     val playerStatus by playerViewModel.playerStatus.observeAsState()
-    val trackStatus by playerViewModel.trackStatusMediator.observeAsState()
+    // trackStatus is observed manually (not observeAsState): Track.trackStatus is @Ignore, so
+    // it's excluded from the data class's equals()/copy(), and the media layer mutates the same
+    // Track instance in place across LOADING → PREPARED → COMPLETED. observeAsState's structural-
+    // equality dedup would drop those transitions (the title would stay "lade…"). A version
+    // counter bumped on every emission forces recomposition and re-runs the status effect.
+    val trackStatusState = remember { mutableStateOf(playerViewModel.trackStatusMediator.value) }
+    var trackStatusVersion by remember { mutableStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(playerViewModel, lifecycleOwner) {
+        val observer = Observer<Track?> { t ->
+            trackStatusState.value = t
+            trackStatusVersion++
+        }
+        playerViewModel.trackStatusMediator.observe(lifecycleOwner, observer)
+        onDispose { playerViewModel.trackStatusMediator.removeObserver(observer) }
+    }
+    val trackStatus = trackStatusState.value
     val trackPosition by playerViewModel.onTrackPositionUpdate.observeAsState()
     val waveformData by playerViewModel.onWaveformDataUpdate.observeAsState()
     val masterTempo by playerViewModel.masterTempo.observeAsState()
@@ -148,7 +167,7 @@ fun PlayerScreen(
 
     LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue ?: 500 }
 
-    LaunchedEffect(trackStatus) {
+    LaunchedEffect(trackStatusVersion) {
         trackStatus?.let { track ->
             isTrackPrepared = false
             currentTrack = track
