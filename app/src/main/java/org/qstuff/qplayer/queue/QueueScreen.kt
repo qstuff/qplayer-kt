@@ -27,6 +27,7 @@ import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.playlists.PlaylistViewModel
+import org.qstuff.qplayer.ui.SwipeToRemove
 import org.qstuff.qplayer.ui.theme.QOrange
 
 private val QOrangeDivider = Color(0x60FC7614)
@@ -95,7 +96,7 @@ fun QueueScreen(
                 items(tracks, key = { track -> track.uri }) { track ->
                     val index = tracks.indexOf(track)
                     val isSelected = index == selectedIndex
-                    SwipeToRemoveItem(
+                    SwipeToRemove(
                         onDismissed = {
                             queueViewModel.removeTrack(track)
                             scope.launch {
@@ -163,40 +164,6 @@ fun QueueScreen(
             },
             onDismiss = { showSavePlaylistDialog = false }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SwipeToRemoveItem(
-    onDismissed: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onDismissed()
-                true
-            } else false
-        }
-    )
-
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFE60C00))
-                    .padding(end = 16.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
-            }
-        }
-    ) {
-        content()
     }
 }
 

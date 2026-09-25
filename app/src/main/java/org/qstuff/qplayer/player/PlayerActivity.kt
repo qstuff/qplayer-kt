@@ -1,21 +1,16 @@
 package org.qstuff.qplayer.player
 
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.content.pm.PackageManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.ViewModelProvider
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
-import org.qstuff.qplayer.R
-import org.qstuff.qplayer.filebrowser.FileBrowserFragment
-import org.qstuff.qplayer.playlists.PlaylistFragment
-import org.qstuff.qplayer.queue.QueueFragment
+import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.playlists.PlaylistViewModel
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.settings.SettingsActivity
 import org.qstuff.qplayer.settings.WebViewActivity
@@ -33,6 +28,8 @@ class PlayerActivity : AppCompatActivity() {
 
     private lateinit var playerViewModel: PlayerViewModel
     private lateinit var queueViewModel: QueueViewModel
+    private lateinit var playlistViewModel: PlaylistViewModel
+    private lateinit var fileBrowserViewModel: FileBrowserViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +38,18 @@ class PlayerActivity : AppCompatActivity() {
         playerViewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
         queueViewModel = ViewModelProvider(this).get(QueueViewModel::class.java)
+        playlistViewModel = ViewModelProvider(this).get(PlaylistViewModel::class.java)
+        fileBrowserViewModel = ViewModelProvider(this).get(FileBrowserViewModel::class.java)
+
+        // Cross-ViewModel wiring: queue track selection → player load
+        // (formerly in QueueFragment.onViewCreated)
+        queueViewModel.onTrackSelected.observe(this) { track ->
+            track?.let { playerViewModel.loadTrack(it) }
+        }
+        queueViewModel.readTrackList()
+        queueViewModel.readSelectedTrack()
+        queueViewModel.loadStates()
+        playlistViewModel.loadPlaylists()
 
         val titleSuffix = if (BuildConfig.DEBUG) {
             try {
@@ -54,14 +63,11 @@ class PlayerActivity : AppCompatActivity() {
                 PlayerScreen(
                     playerViewModel = playerViewModel,
                     queueViewModel = queueViewModel,
+                    playlistViewModel = playlistViewModel,
+                    fileBrowserViewModel = fileBrowserViewModel,
                     titleSuffix = titleSuffix,
                     onOpenSettings = ::startSettingsActivity,
-                    onOpenWebView = ::startWebViewActivity,
-                    onSetupTabContent = { tabbar, pager ->
-                        pager.adapter = ContentPagerAdapter(applicationContext, supportFragmentManager)
-                        pager.offscreenPageLimit = 2
-                        tabbar.setViewPager(pager)
-                    }
+                    onOpenWebView = ::startWebViewActivity
                 )
             }
         }
@@ -78,8 +84,16 @@ class PlayerActivity : AppCompatActivity() {
         playerViewModel.saveState()
     }
 
+    override fun onStop() {
+        super.onStop()
+        // formerly in FileBrowserFragment.onStop
+        fileBrowserViewModel.saveLastBrowsedDir()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        // formerly in QueueFragment.onDestroyView
+        queueViewModel.saveStates()
         playerViewModel.stopMediaService()
     }
 
@@ -100,28 +114,4 @@ class PlayerActivity : AppCompatActivity() {
         } else {
             packageManager.getPackageInfo(packageName, 0).versionCode.toLong()
         }
-
-    private class ContentPagerAdapter(
-        val context: Context,
-        fragmentManager: FragmentManager
-    ) : FragmentPagerAdapter(fragmentManager) {
-
-        override fun getItem(position: Int) =
-            when (position) {
-                0 -> QueueFragment.newInstance()
-                1 -> FileBrowserFragment.newInstance()
-                2 -> PlaylistFragment.newInstance()
-                else -> null!!
-            }
-
-        override fun getCount() = 3
-
-        override fun getPageTitle(position: Int): String =
-            when (position) {
-                0 -> context.getString(R.string.queue_title)
-                1 -> context.getString(R.string.filebrowser_title)
-                2 -> context.getString(R.string.playlists_title)
-                else -> ""
-            }
-    }
 }

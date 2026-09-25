@@ -1,17 +1,23 @@
 package org.qstuff.qplayer.player
 
+import android.annotation.SuppressLint
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.SeekBar
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -23,47 +29,64 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.viewpager.widget.ViewPager
+import androidx.lifecycle.Observer
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import org.koin.java.KoinJavaComponent.getKoin
 import org.qstuff.qplayer.R
-import org.qstuff.qplayer.contentbrowser.SlidingTabLayout
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.filebrowser.FileBrowserScreen
+import org.qstuff.qplayer.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.player.jogwheel.JogWheel
-import org.qstuff.qplayer.player.pitchcontrol.PitchControlVerticalSeekBar
 import org.qstuff.qplayer.player.trackprogress.CuepointView
 import org.qstuff.qplayer.player.trackprogress.WaveformView
+import org.qstuff.qplayer.playlists.PlaylistScreen
+import org.qstuff.qplayer.playlists.PlaylistViewModel
+import org.qstuff.qplayer.queue.QueueScreen
 import org.qstuff.qplayer.queue.QueueViewModel
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
@@ -71,20 +94,38 @@ import org.qstuff.qplayer.util.PlayerStatus
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import java.util.concurrent.TimeUnit
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     playerViewModel: PlayerViewModel,
     queueViewModel: QueueViewModel,
+    playlistViewModel: PlaylistViewModel,
+    fileBrowserViewModel: FileBrowserViewModel,
     titleSuffix: String,
     onOpenSettings: () -> Unit,
-    onOpenWebView: (url: String) -> Unit,
-    onSetupTabContent: (tabbar: SlidingTabLayout, pager: ViewPager) -> Unit
+    onOpenWebView: (url: String) -> Unit
 ) {
     val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
 
     val playerStatus by playerViewModel.playerStatus.observeAsState()
-    val trackStatus by playerViewModel.trackStatusMediator.observeAsState()
+    // trackStatus is observed manually (not observeAsState): Track.trackStatus is @Ignore, so
+    // it's excluded from the data class's equals()/copy(), and the media layer mutates the same
+    // Track instance in place across LOADING → PREPARED → COMPLETED. observeAsState's structural-
+    // equality dedup would drop those transitions (the title would stay "lade…"). A version
+    // counter bumped on every emission forces recomposition and re-runs the status effect.
+    val trackStatusState = remember { mutableStateOf(playerViewModel.trackStatusMediator.value) }
+    var trackStatusVersion by remember { mutableStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(playerViewModel, lifecycleOwner) {
+        val observer = Observer<Track?> { t ->
+            trackStatusState.value = t
+            trackStatusVersion++
+        }
+        playerViewModel.trackStatusMediator.observe(lifecycleOwner, observer)
+        onDispose { playerViewModel.trackStatusMediator.removeObserver(observer) }
+    }
+    val trackStatus = trackStatusState.value
     val trackPosition by playerViewModel.onTrackPositionUpdate.observeAsState()
     val waveformData by playerViewModel.onWaveformDataUpdate.observeAsState()
     val masterTempo by playerViewModel.masterTempo.observeAsState()
@@ -102,8 +143,14 @@ fun PlayerScreen(
     var isTrackPrepared by remember { mutableStateOf(false) }
     var currentTrack by remember { mutableStateOf<Track?>(null) }
     var isBlinkActive by remember { mutableStateOf(false) }
-    var trackProgressBarPos by remember { mutableStateOf(0f) }
-    var isUserDraggingSlider by remember { mutableStateOf(false) }
+    // Progress uses two separate states so the position timer and the user's drag never
+    // fight over one value: `playbackProgress` is written only by the timer, `seekProgress`
+    // only by the drag. The Slider shows `seekProgress ?: playbackProgress`, so while
+    // dragging the timer's updates aren't even read (short-circuit) — no thumb jump, and
+    // no per-tick Slider recomposition to delay touch.
+    var playbackProgress by remember { mutableStateOf(0f) }
+    var seekProgress by remember { mutableStateOf<Float?>(null) }
+    val displayedProgress = seekProgress ?: playbackProgress
     var cueProgressPos by remember { mutableStateOf(0) }
     var showMoreMenu by remember { mutableStateOf(false) }
     var showPitchRangeMenu by remember { mutableStateOf(false) }
@@ -120,19 +167,21 @@ fun PlayerScreen(
 
     LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue ?: 500 }
 
-    LaunchedEffect(trackStatus) {
+    LaunchedEffect(trackStatusVersion) {
         trackStatus?.let { track ->
             isTrackPrepared = false
             currentTrack = track
             when (track.trackStatus) {
                 Track.TrackStatus.LOADING, Track.TrackStatus.UNDEFINED -> {
                     isBlinkActive = false
-                    trackProgressBarPos = 0f
+                    playbackProgress = 0f
+                    seekProgress = null
                 }
                 Track.TrackStatus.PREPARED -> {
                     isTrackPrepared = true
                     isBlinkActive = false
-                    trackProgressBarPos = 0f
+                    playbackProgress = 0f
+                    seekProgress = null
                     playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
                     if (track.isAutoplay) playerViewModel.playPause()
                 }
@@ -148,12 +197,10 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(trackPosition) {
-        if (!isUserDraggingSlider) {
-            currentTrack?.let { track ->
-                if (track.duration > 0) {
-                    trackProgressBarPos = (trackPosition ?: 0L).toFloat() / track.duration
-                    isBlinkActive = (track.duration - (trackPosition ?: 0L)) in 0L..30000L
-                }
+        currentTrack?.let { track ->
+            if (track.duration > 0) {
+                playbackProgress = (trackPosition ?: 0L).toFloat() / track.duration
+                isBlinkActive = (track.duration - (trackPosition ?: 0L)) in 0L..30000L
             }
         }
     }
@@ -167,7 +214,9 @@ fun PlayerScreen(
     )
     val dynamicTimeAlpha = if (isBlinkActive) blinkAlpha else 1.0f
 
-    val totalDurationText = remember(currentTrack) {
+    // Key on duration (not the Track reference): duration is mutated in place on the same
+    // Track object once the player is ready, so keying on `currentTrack` never recomputes.
+    val totalDurationText = remember(currentTrack?.duration) {
         currentTrack?.let { "total: ${getDurationHumanReadable(it.duration)}" } ?: ""
     }
     val dynamicTimeText = remember(trackPosition, currentTrack, showRemainingTime) {
@@ -198,77 +247,48 @@ fun PlayerScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.White)
+            .statusBarsPadding()
     ) {
         val colHPadding = 4.dp
         val colWidth = maxWidth - colHPadding * 2
-        val jogBorder = dimensionResource(R.dimen.jog_wheel_border)
         val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
-        val jogMarginRight = dimensionResource(R.dimen.jog_wheel_margin_right)
         val titleBarHeight = dimensionResource(R.dimen.title_textview_height)
         val textviewHeight = dimensionResource(R.dimen.textview_height)
         val seekbarHeight = dimensionResource(R.dimen.seekbar_height)
 
-        // rowHeight mirrors the inner BoxWithConstraints formula for the jog+pitch row
-        val rowHeight = colWidth - pitchbarWidth - colHPadding - jogMarginRight + jogBorder
-        val jogSectionHeight = jogBorder + rowHeight
+        // Jog+pitch row: the jog wheel is a square filling the width to the right of the
+        // pitch fader, so its height = that width. +4.dp gap below the duration row.
+        // Mirrors the inner BoxWithConstraints below.
+        val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
         val trackInfoHeight = textviewHeight * 2 + 4.dp
         val btnRowHeight = maxOf(48.dp, textviewHeight) + 4.dp
         val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowHeight * 2 - seekbarHeight).coerceAtLeast(48.dp)
         val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
-        val scaffoldState = rememberBottomSheetScaffoldState()
+        // Two-state sheet. `sheetOffset` measures how far it is collapsed:
+        // 0 = expanded (top below the jog wheel), maxSheetOffset = collapsed (top below
+        // the seekbar). The sheet's *height* is expandedHeight - sheetOffset, i.e. it
+        // grows/shrinks rather than translating — so the tab content's LazyColumn viewport
+        // always matches the visible area and short lists overflow & scroll when collapsed.
+        // Dragging is bound ONLY to the TabRow (see below), so the lists scroll freely.
+        val density = LocalDensity.current
+        val expandedHeightPx = with(density) { expandedHeight.toPx() }
+        val maxSheetOffsetPx = with(density) { (expandedHeight - peekHeight).toPx() }
+        val sheetOffset = remember { Animatable(maxSheetOffsetPx) }
+        val sheetScope = rememberCoroutineScope()
 
-        BottomSheetScaffold(
-            scaffoldState = scaffoldState,
-            sheetContent = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(expandedHeight)
-                ) {
-                    AndroidView(
-                        factory = { ctx ->
-                            LinearLayout(ctx).apply {
-                                orientation = LinearLayout.VERTICAL
-                                val tabbarH = ctx.resources.getDimensionPixelSize(R.dimen.tabbar_height)
-                                val tabbar = SlidingTabLayout(ctx).apply {
-                                    layoutParams = LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.MATCH_PARENT,
-                                        tabbarH
-                                    )
-                                }
-                                val pager = ViewPager(ctx).apply {
-                                    id = View.generateViewId()
-                                    layoutParams = LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.MATCH_PARENT,
-                                        LinearLayout.LayoutParams.MATCH_PARENT
-                                    )
-                                }
-                                addView(tabbar)
-                                addView(pager)
-                                onSetupTabContent(tabbar, pager)
-                            }
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            },
-            sheetPeekHeight = peekHeight,
-            sheetDragHandle = null,
-            sheetContainerColor = Color.Black,
-            containerColor = Color.Black,
-        ) { paddingValues ->
+        // ─── Main player content ─────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
                 .padding(horizontal = colHPadding)
         ) {
 
             // ─── Title bar ───────────────────────────────────────────────────
             Row(
                 modifier = Modifier
+                    .padding(top = 4.dp)
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.title_textview_height))
                     .background(Color.Black, roundedShape),
@@ -319,58 +339,204 @@ fun PlayerScreen(
                 }
             }
 
+            // ─── Track info ───────────────────────────────────────────────────
+            Column(
+                modifier = Modifier.padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .padding(
+                            start = dimensionResource(R.dimen.textview_padding_start),
+                            top = 4.dp
+                        ),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = trackTitleText,
+                        color = QOrange,
+                        maxLines = 1
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = totalDurationText,
+                        color = Color.White,
+                        modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
+                    )
+                    Text(
+                        text = dynamicTimeText,
+                        color = QOrange,
+                        modifier = Modifier
+                            .padding(end = dimensionResource(R.dimen.textview_padding_end))
+                            .graphicsLayer { alpha = dynamicTimeAlpha }
+                            .clickable { playerViewModel.toggleDynamicTrackLengthDisplay() }
+                    )
+                }
+            }
+
+            // ─── Seekbar + Waveform ──────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.seekbar_height))
+            ) {
+                AndroidView(
+                    factory = { ctx ->
+                        WaveformView(ctx).apply { updateWaveform(null) }
+                    },
+                    update = { view ->
+                        val td = waveformData
+                        when {
+                            td != null && td.track == currentTrack -> view.updateWaveform(td)
+                            isWaveformLoading -> view.updateWaveform(null)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black, roundedShape)
+                        .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
+                )
+                if (isWaveformLoading) {
+                    Text(
+                        text = "calculating waveform data…",
+                        color = QOrange.copy(alpha = 0.67f),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                // Progress: translucent orange fill over the played portion + a full-height
+                // white playhead line. Drag/tap to seek. seekProgress (drag) short-circuits
+                // playbackProgress (timer) so the two never fight — see the state decl above.
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(roundedShape)
+                        .graphicsLayer { alpha = dynamicTimeAlpha }
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                seekProgress = (down.position.x / size.width).coerceIn(0f, 1f)
+                                down.consume()
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.first()
+                                    seekProgress = (change.position.x / size.width).coerceIn(0f, 1f)
+                                    change.consume()
+                                } while (event.changes.any { it.pressed })
+                                seekProgress?.let { target ->
+                                    playbackProgress = target // avoid a 1-frame jump back
+                                    currentTrack?.let { track ->
+                                        playerViewModel.seekTo((target * track.duration).toDouble(), false)
+                                    }
+                                }
+                                seekProgress = null
+                            }
+                        }
+                ) {
+                    val x = displayedProgress.coerceIn(0f, 1f) * size.width
+                    drawRect(
+                        color = QOrange.copy(alpha = 0.35f),
+                        size = Size(x, size.height)
+                    )
+                    drawLine(
+                        color = QOrange,
+                        start = Offset(x, 0f),
+                        end = Offset(x, size.height),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
+                AndroidView(
+                    factory = { ctx -> CuepointView(ctx) },
+                    update = { view ->
+                        view.cuepointPosition = cueProgressPos
+                        view.visibility = if (cueActive == true) View.VISIBLE else View.INVISIBLE
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
             // ─── Upper section: pitch fader + jog wheel ──────────────────────
-            // BoxWithConstraints lets us derive Row height from the wheel's square size:
-            // rowHeight = (availableWidth - pitchbarWidth - paddingStart - paddingEnd) + paddingBottom
+            // Row height = the jog wheel's square size (the width left of the pitch fader),
+            // so the fader (fillMaxHeight) and the wheel share the same top edge.
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = dimensionResource(R.dimen.jog_wheel_border))
+                    .padding(top = 4.dp)   // 4dp below the duration row
             ) {
                 val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
-                val jogPaddingStart = 4.dp
-                val jogPaddingEnd = dimensionResource(R.dimen.jog_wheel_margin_right)
-                val jogPaddingBottom = dimensionResource(R.dimen.jog_wheel_border)
-                val rowHeight = maxWidth - pitchbarWidth - jogPaddingStart - jogPaddingEnd + jogPaddingBottom
-                Row(modifier = Modifier.fillMaxWidth().height(rowHeight)) {
+                // The jog wheel is square and fills the width to the right of the pitch
+                // fader, so the row height = that width. The pitch fader uses fillMaxHeight,
+                // giving both the same top edge and height.
+                val jogSize = maxWidth - pitchbarWidth
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(jogSize),
+                    verticalAlignment = Alignment.Top
+                ) {
                 // Pitch fader
                 Box(
                     modifier = Modifier
                         .width(pitchbarWidth)
                         .fillMaxHeight()
-                        .padding(vertical = 10.dp)
+                        .padding(end = 4.dp)
                         .background(Color.Black, roundedShape)
                 ) {
-                    AndroidView(
-                        factory = { ctx ->
-                            PitchControlVerticalSeekBar(ctx).apply {
-                                max = 1000
-                                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                                    override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) {
-                                        if (fromUser) {
-                                            pitchProgressState.value = p
-                                            playerViewModel.onPitchChanged(p)
-                                        }
+                    // Vertical pitch fader: opaque orange fill from the centre (0%) out to the
+                    // thumb + a QOrange playhead line. Top = max (+range), bottom = min (-range).
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(roundedShape)
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    fun emit(y: Float) {
+                                        val v = ((1f - y / size.height) * 1000f).toInt().coerceIn(0, 1000)
+                                        pitchProgressState.value = v
+                                        playerViewModel.onPitchChanged(v)
                                     }
-                                    override fun onStartTrackingTouch(s: SeekBar?) {}
-                                    override fun onStopTrackingTouch(s: SeekBar?) {}
-                                })
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    emit(down.position.y)
+                                    down.consume()
+                                    do {
+                                        val event = awaitPointerEvent()
+                                        val change = event.changes.first()
+                                        emit(change.position.y)
+                                        change.consume()
+                                    } while (event.changes.any { it.pressed })
+                                }
                             }
-                        },
-                        update = { view -> view.setNewProgress(pitchProgress, false) },
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    ) {
+                        val fraction = (pitchProgress / 1000f).coerceIn(0f, 1f)
+                        val thumbY = (1f - fraction) * size.height
+                        val centerY = size.height / 2f
+                        drawRect(
+                            color = QOrange,
+                            topLeft = Offset(0f, minOf(thumbY, centerY)),
+                            size = Size(size.width, abs(thumbY - centerY))
+                        )
+                        drawLine(
+                            color = QOrange,
+                            start = Offset(0f, thumbY),
+                            end = Offset(size.width, thumbY),
+                            strokeWidth = 2.dp.toPx()
+                        )
+                    }
                 }
 
-                // Jog wheel — fills remaining width, square via aspectRatio inside
+                // Jog wheel — square (aspectRatio inside), same height/top as the pitch fader
                 JogWheel(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(
-                            start = jogPaddingStart,
-                            end = jogPaddingEnd,
-                            bottom = jogPaddingBottom
-                        ),
+                        .fillMaxHeight()
+                        .background(Color.Black),
                     onDown = {
                         jogState.capturedPitchProgress = pitchProgressState.value
                         jogState.onMoveTime = System.currentTimeMillis()
@@ -409,42 +575,6 @@ fun PlayerScreen(
                 )
                 } // Row
             } // BoxWithConstraints
-
-            // ─── Track info ───────────────────────────────────────────────────
-            Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                Text(
-                    text = trackTitleText,
-                    color = QOrange,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black)
-                        .padding(start = dimensionResource(R.dimen.textview_padding_start))
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black, roundedShape),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = totalDurationText,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
-                    )
-                    Text(
-                        text = dynamicTimeText,
-                        color = QOrange,
-                        modifier = Modifier
-                            .padding(end = dimensionResource(R.dimen.textview_padding_end))
-                            .graphicsLayer { alpha = dynamicTimeAlpha }
-                            .clickable { playerViewModel.toggleDynamicTrackLengthDisplay() }
-                    )
-                }
-            }
 
             // ─── Button Row 1: prev | play | next | cue | mt | reset ─────────
             Row(
@@ -501,7 +631,7 @@ fun PlayerScreen(
                                     playerViewModel.playFromCue(currentTrack)
                                 } else {
                                     currentTrack?.also {
-                                        cueProgressPos = (trackProgressBarPos * 1000).toInt()
+                                        cueProgressPos = (displayedProgress * 1000).toInt()
                                         playerViewModel.toggleCue(it, true)
                                     }
                                 }
@@ -664,64 +794,97 @@ fun PlayerScreen(
                 }
             }
 
-            // ─── Seekbar + Waveform ──────────────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.seekbar_height))
-                    .padding(vertical = 4.dp)
-            ) {
-                AndroidView(
-                    factory = { ctx ->
-                        WaveformView(ctx).apply { updateWaveform(null) }
-                    },
-                    update = { view ->
-                        val td = waveformData
-                        when {
-                            td != null && td.track == currentTrack -> view.updateWaveform(td)
-                            isWaveformLoading -> view.updateWaveform(null)
+        }
+
+        // ─── Bottom sheet (tabs) — draggable ONLY via the TabRow ─────────────
+        val pagerState = rememberPagerState(pageCount = { 3 })
+        val tabTitles = listOf(
+            stringResource(R.string.queue_title),
+            stringResource(R.string.filebrowser_title),
+            stringResource(R.string.playlists_title)
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                // Height = expandedHeight - sheetOffset, forced in the layout phase so the
+                // drag only re-lays-out (no recomposition). Reading sheetOffset here makes
+                // the list viewport track the visible height → short lists scroll too.
+                .layout { measurable, constraints ->
+                    val h = (expandedHeightPx - sheetOffset.value).roundToInt().coerceAtLeast(0)
+                    val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+                    layout(placeable.width, h) { placeable.place(0, 0) }
+                }
+                .background(Color.Black)
+                // Block taps from reaching the buttons/content behind the sheet when
+                // it's expanded (mirrors Material Surface's pointerInput(Unit) {}).
+                .pointerInput(Unit) {}
+        ) {
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color.Black,
+                contentColor = QOrange,
+                modifier = Modifier.draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        sheetScope.launch {
+                            sheetOffset.snapTo(
+                                (sheetOffset.value + delta).coerceIn(0f, maxSheetOffsetPx)
+                            )
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black, roundedShape)
-                        .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
+                    onDragStopped = { velocity ->
+                        val target = when {
+                            velocity > 800f -> maxSheetOffsetPx   // fling down → collapse
+                            velocity < -800f -> 0f                // fling up → expand
+                            sheetOffset.value > maxSheetOffsetPx / 2 -> maxSheetOffsetPx
+                            else -> 0f
+                        }
+                        sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
+                    }
                 )
-                if (isWaveformLoading) {
-                    Text(
-                        text = "calculating waveform data…",
-                        color = QOrange.copy(alpha = 0.67f),
-                        modifier = Modifier.align(Alignment.Center)
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            if (pagerState.currentPage == index) {
+                                // tap on the already-selected tab → toggle the sheet
+                                val target =
+                                    if (sheetOffset.value < maxSheetOffsetPx / 2) maxSheetOffsetPx
+                                    else 0f
+                                sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
+                            } else {
+                                sheetScope.launch { pagerState.animateScrollToPage(index) }
+                            }
+                        },
+                        text = { Text(title) },
+                        selectedContentColor = QOrange,
+                        unselectedContentColor = Color.White
                     )
                 }
-                Slider(
-                    value = trackProgressBarPos,
-                    onValueChange = { trackProgressBarPos = it; isUserDraggingSlider = true },
-                    onValueChangeFinished = {
-                        currentTrack?.let { track ->
-                            playerViewModel.seekTo((trackProgressBarPos * track.duration).toDouble(), false)
-                        }
-                        isUserDraggingSlider = false
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = QOrange,
-                        activeTrackColor = QOrange
-                    ),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = dynamicTimeAlpha }
-                )
-                AndroidView(
-                    factory = { ctx -> CuepointView(ctx) },
-                    update = { view ->
-                        view.cuepointPosition = cueProgressPos
-                        view.visibility = if (cueActive == true) View.VISIBLE else View.INVISIBLE
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
             }
-
-        }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                beyondBoundsPageCount = 1
+            ) { page ->
+                when (page) {
+                    0 -> QueueScreen(
+                        queueViewModel = queueViewModel,
+                        playlistViewModel = playlistViewModel
+                    )
+                    1 -> FileBrowserScreen(
+                        fileBrowserViewModel = fileBrowserViewModel,
+                        queueViewModel = queueViewModel,
+                        playerViewModel = playerViewModel
+                    )
+                    2 -> PlaylistScreen(
+                        playlistViewModel = playlistViewModel,
+                        queueViewModel = queueViewModel
+                    )
+                }
+            }
         }
     }
 }
