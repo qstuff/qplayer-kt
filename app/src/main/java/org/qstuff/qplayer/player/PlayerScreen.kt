@@ -265,7 +265,8 @@ fun PlayerScreen(
         val trackInfoHeight = textviewHeight * 2 + 4.dp
         // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
         val btnRowsHeight = textviewHeight * 2 + 24.dp
-        val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight).coerceAtLeast(48.dp)
+        // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
+        val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
         val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
         // Two-state sheet. `sheetOffset` measures how far it is collapsed:
@@ -825,12 +826,32 @@ fun PlayerScreen(
 
         }
 
-        // ─── Bottom sheet (tabs) — draggable ONLY via the TabRow ─────────────
+        // ─── Bottom sheet (tabs) — draggable via the notch handle and the TabRow ──
         val pagerState = rememberPagerState(pageCount = { 3 })
         val tabTitles = listOf(
             stringResource(R.string.queue_title),
             stringResource(R.string.filebrowser_title),
             stringResource(R.string.playlists_title)
+        )
+        // Shared drag behavior for the collapse/expand handle areas (notch row + TabRow).
+        val sheetDragModifier = Modifier.draggable(
+            orientation = Orientation.Vertical,
+            state = rememberDraggableState { delta ->
+                sheetScope.launch {
+                    sheetOffset.snapTo(
+                        (sheetOffset.value + delta).coerceIn(0f, maxSheetOffsetPx)
+                    )
+                }
+            },
+            onDragStopped = { velocity ->
+                val target = when {
+                    velocity > 800f -> maxSheetOffsetPx   // fling down → collapse
+                    velocity < -800f -> 0f                // fling up → expand
+                    sheetOffset.value > maxSheetOffsetPx / 2 -> maxSheetOffsetPx
+                    else -> 0f
+                }
+                sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
+            }
         )
         Column(
             modifier = Modifier
@@ -849,29 +870,27 @@ fun PlayerScreen(
                 // it's expanded (mirrors Material Surface's pointerInput(Unit) {}).
                 .pointerInput(Unit) {}
         ) {
+            // Grab handle: a white rounded bar, ~half a tab wide, at the very top of the panel.
+            // The full-width row is draggable to collapse/expand the sheet.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(sheetDragModifier)
+                    .padding(vertical = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(1f / 6f)
+                        .height(6.dp)
+                        .background(Color.White, RoundedCornerShape(3.dp))
+                )
+            }
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
                 containerColor = Color.Black,
                 contentColor = QOrange,
-                modifier = Modifier.draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        sheetScope.launch {
-                            sheetOffset.snapTo(
-                                (sheetOffset.value + delta).coerceIn(0f, maxSheetOffsetPx)
-                            )
-                        }
-                    },
-                    onDragStopped = { velocity ->
-                        val target = when {
-                            velocity > 800f -> maxSheetOffsetPx   // fling down → collapse
-                            velocity < -800f -> 0f                // fling up → expand
-                            sheetOffset.value > maxSheetOffsetPx / 2 -> maxSheetOffsetPx
-                            else -> 0f
-                        }
-                        sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
-                    }
-                )
+                modifier = sheetDragModifier
             ) {
                 tabTitles.forEachIndexed { index, title ->
                     Tab(
