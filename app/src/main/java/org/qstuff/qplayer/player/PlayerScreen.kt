@@ -3,6 +3,7 @@ package org.qstuff.qplayer.player
 import android.annotation.SuppressLint
 import android.view.View
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -21,6 +22,8 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -52,6 +55,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -74,6 +81,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Observer
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlin.math.roundToInt
 import org.koin.java.KoinJavaComponent.getKoin
 import org.qstuff.qplayer.R
@@ -301,7 +310,9 @@ fun PlayerScreen(
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(color = QOrange)) { append("q") }
                         withStyle(SpanStyle(color = Color.White)) { append("deq") }
-                        if (titleSuffix.isNotEmpty()) append(titleSuffix)
+                        if (titleSuffix.isNotEmpty()) {
+                            withStyle(SpanStyle(color = Color.White)) { append(titleSuffix) }
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -358,10 +369,10 @@ fun PlayerScreen(
                         ),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(
+                    MarqueeText(
                         text = trackTitleText,
                         color = QOrange,
-                        maxLines = 1
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
                 Row(
@@ -578,7 +589,7 @@ fun PlayerScreen(
                 } // Row
             } // BoxWithConstraints
 
-            // ─── Button Row 1: prev | play | next | cue | mt | reset ─────────
+            // ─── Button Row 1: prev | play | next | repeat | shuffle | cue ───
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -586,6 +597,7 @@ fun PlayerScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Previous
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -600,6 +612,7 @@ fun PlayerScreen(
                         tint = QOrange
                     )
                 }
+                // Play/Pause
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -619,6 +632,7 @@ fun PlayerScreen(
                         tint = QOrange
                     )
                 }
+                // Next
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -630,6 +644,44 @@ fun PlayerScreen(
                     Icon(
                         painter = painterResource(R.drawable.button_next),
                         contentDescription = "Next",
+                        tint = QOrange
+                    )
+                }
+                // Repeat
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { queueViewModel.toggleRepeat() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    val repeatIcon = when (repeat) {
+                        TrackRepeatStatus.ONE -> R.drawable.button_loop1_selected
+                        TrackRepeatStatus.ALL -> R.drawable.button_loop_selected
+                        else -> R.drawable.button_loop
+                    }
+                    Icon(
+                        painter = painterResource(repeatIcon),
+                        contentDescription = "Repeat",
+                        tint = QOrange
+                    )
+                }
+                // Shuffle
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.textview_height))
+                        .background(Color.Black, roundedShape)
+                        .clickable { queueViewModel.toggleShuffle() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (shuffle == true) R.drawable.button_shuffle_selected
+                            else R.drawable.button_shuffle
+                        ),
+                        contentDescription = "Shuffle",
                         tint = QOrange
                     )
                 }
@@ -665,40 +717,9 @@ fun PlayerScreen(
                         color = if (cueActive == true) QOrange else Color.White
                     )
                 }
-                // Master tempo
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black, roundedShape)
-                        .clickable {
-                            playerViewModel.toggleMasterTempo()
-                            playerViewModel.onPitchChanged(pitchProgress)
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "mt",
-                        color = if (masterTempo == true) QOrange else Color.White
-                    )
-                }
-                // Reset pitch
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(dimensionResource(R.dimen.textview_height))
-                        .background(Color.Black, roundedShape)
-                        .clickable {
-                            pitchProgressState.value = 500
-                            playerViewModel.onPitchChanged(500)
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "reset", color = Color.White)
-                }
             }
 
-            // ─── Button Row 2: pitch- | value | pitch+ | range | repeat | shuffle
+            // ─── Button Row 2: pitch- | value | pitch+ | range | reset | mt ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -784,42 +805,35 @@ fun PlayerScreen(
                         }
                     }
                 }
-                // Repeat
+                // Reset pitch
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(dimensionResource(R.dimen.textview_height))
                         .background(Color.Black, roundedShape)
-                        .clickable { queueViewModel.toggleRepeat() },
+                        .clickable {
+                            pitchProgressState.value = 500
+                            playerViewModel.onPitchChanged(500)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    val repeatIcon = when (repeat) {
-                        TrackRepeatStatus.ONE -> R.drawable.button_loop1_selected
-                        TrackRepeatStatus.ALL -> R.drawable.button_loop_selected
-                        else -> R.drawable.button_loop
-                    }
-                    Icon(
-                        painter = painterResource(repeatIcon),
-                        contentDescription = "Repeat",
-                        tint = QOrange
-                    )
+                    Text(text = "reset", color = Color.White)
                 }
-                // Shuffle
+                // Master tempo
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(dimensionResource(R.dimen.textview_height))
                         .background(Color.Black, roundedShape)
-                        .clickable { queueViewModel.toggleShuffle() },
+                        .clickable {
+                            playerViewModel.toggleMasterTempo()
+                            playerViewModel.onPitchChanged(pitchProgress)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(
-                            if (shuffle == true) R.drawable.button_shuffle_selected
-                            else R.drawable.button_shuffle
-                        ),
-                        contentDescription = "Shuffle",
-                        tint = QOrange
+                    Text(
+                        text = "mt",
+                        color = if (masterTempo == true) QOrange else Color.White
                     )
                 }
             }
@@ -934,6 +948,61 @@ fun PlayerScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Single-line text that, when it's wider than the available space, animates back and forth:
+ * scrolls to the end, pauses, scrolls back to the start, pauses, repeat. Text that fits is
+ * left static.
+ */
+@Composable
+private fun MarqueeText(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    startDelayMillis: Long = 1500,
+    edgeDelayMillis: Long = 1200,
+    velocityPxPerSec: Float = 45f
+) {
+    val offsetX = remember { Animatable(0f) }
+    var containerWidth by remember { mutableStateOf(0) }
+    var textWidth by remember { mutableStateOf(0) }
+
+    LaunchedEffect(text, textWidth, containerWidth) {
+        val overflow = textWidth - containerWidth
+        if (overflow <= 0) {
+            offsetX.snapTo(0f)
+            return@LaunchedEffect
+        }
+        val duration = (overflow / velocityPxPerSec * 1000f).toInt().coerceAtLeast(1)
+        offsetX.snapTo(0f)
+        delay(startDelayMillis)
+        while (isActive) {
+            offsetX.animateTo(-overflow.toFloat(), tween(duration, easing = LinearEasing))
+            delay(edgeDelayMillis)
+            offsetX.animateTo(0f, tween(duration, easing = LinearEasing))
+            delay(edgeDelayMillis)
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .clipToBounds()
+            .onSizeChanged { containerWidth = it.width },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = text,
+            color = color,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Visible,
+            modifier = Modifier
+                .wrapContentWidth(align = Alignment.Start, unbounded = true)
+                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .onSizeChanged { textWidth = it.width }
+        )
     }
 }
 

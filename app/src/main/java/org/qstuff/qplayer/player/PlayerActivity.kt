@@ -51,12 +51,15 @@ class PlayerActivity : AppCompatActivity() {
         queueViewModel.loadStates()
         playlistViewModel.loadPlaylists()
 
+        val versionName = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (e: PackageManager.NameNotFoundException) { BuildConfig.VERSION_NAME }
+
         val titleSuffix = if (BuildConfig.DEBUG) {
-            try {
-                val pi = packageManager.getPackageInfo(packageName, 0)
-                "-α ${pi.versionName} (${getVersionCode()}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}"
-            } catch (e: PackageManager.NameNotFoundException) { "" }
-        } else ""
+            "-dev $versionName (${getVersionCode()}) | API-${Build.VERSION.SDK_INT} | ${(application as QDeqApplication).getDPI()}"
+        } else {
+            " v$versionName"
+        }
 
         setContent {
             QDeqTheme {
