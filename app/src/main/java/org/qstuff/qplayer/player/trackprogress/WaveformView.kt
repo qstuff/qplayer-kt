@@ -74,7 +74,9 @@ class WaveformView : View {
         zeroDBLine.color = ContextCompat.getColor(context, R.color.white)
         zeroDBLine.strokeWidth = 1f
 
-        sideMargin = resources.getDimension(R.dimen.rounded_shape_radius)
+        // No horizontal inset: the waveform spans the full width of its container. Rounded
+        // corners are handled by the composable clipping the view.
+        sideMargin = 0.0f
         topMargin = resources.getDimension(R.dimen.waveform_top_margin)
         zeroDBOffset = topMargin + 10
 

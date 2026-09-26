@@ -23,7 +23,7 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.player.mediaservice.QMediaPlayerService
-import org.qstuff.qplayer.player.mediaservice.WaveformAnalyzer
+import org.qstuff.qplayer.player.waveform.WaveformAnalyzer
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 import kotlin.coroutines.CoroutineContext

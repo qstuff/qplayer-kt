@@ -1,4 +1,4 @@
-package org.qstuff.qplayer.player.mediaservice
+package org.qstuff.qplayer.player.waveform
 
 import android.content.Context
 import android.media.MediaCodec

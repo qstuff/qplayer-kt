@@ -405,8 +405,8 @@ fun PlayerScreen(
                     },
                     modifier = Modifier
                         .fillMaxSize()
+                        .clip(roundedShape)
                         .background(Color.Black, roundedShape)
-                        .padding(horizontal = dimensionResource(R.dimen.rounded_shape_radius))
                 )
                 if (currentTrack != null && !waveformReady) {
                     Text(
