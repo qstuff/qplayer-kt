@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,11 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Observer
 import org.koin.java.KoinJavaComponent.getKoin
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
@@ -69,23 +66,12 @@ fun PlayerScreen(
     val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
 
     val playerStatus by playerViewModel.playerStatus.collectAsStateWithLifecycle()
-    // trackStatus is observed manually (not collected): Track.trackStatus is @Ignore, so
-    // it's excluded from the data class's equals()/copy(), and the media layer mutates the same
-    // Track instance in place across LOADING → PREPARED → COMPLETED. observeAsState's structural-
-    // equality dedup would drop those transitions (the title would stay "lade…"). A version
-    // counter bumped on every emission forces recomposition and re-runs the status effect.
-    val trackStatusState = remember { mutableStateOf(playerViewModel.trackStatusMediator.value) }
-    var trackStatusVersion by remember { mutableStateOf(0) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(playerViewModel, lifecycleOwner) {
-        val observer = Observer<Track?> { t ->
-            trackStatusState.value = t
-            trackStatusVersion++
-        }
-        playerViewModel.trackStatusMediator.observe(lifecycleOwner, observer)
-        onDispose { playerViewModel.trackStatusMediator.removeObserver(observer) }
-    }
-    val trackStatus = trackStatusState.value
+    // Current track + status as an immutable snapshot. Its `revision` makes every emission
+    // distinct, so re-selecting the same track still recomposes and re-runs the status effect —
+    // Track.trackStatus is @Ignore and the media layer mutates the same Track in place, which
+    // plain equality dedup would otherwise swallow. See PlayerTrackState.
+    val playerTrackState by playerViewModel.playerTrackState.collectAsStateWithLifecycle()
+    val currentTrack = playerTrackState?.track
     val trackPosition by playerViewModel.onTrackPositionUpdate.collectAsStateWithLifecycle()
     // onWaveformDataUpdate is still LiveData (bridged from the media service) — Phase 2.
     val waveformData by playerViewModel.onWaveformDataUpdate.observeAsState()
@@ -102,7 +88,6 @@ fun PlayerScreen(
     var pitchProgress by pitchProgressState
 
     var isTrackPrepared by remember { mutableStateOf(false) }
-    var currentTrack by remember { mutableStateOf<Track?>(null) }
     var isBlinkActive by remember { mutableStateOf(false) }
     // Progress uses two separate states so the position timer and the user's drag never
     // fight over one value: `playbackProgress` is written only by the timer, `seekProgress`
@@ -115,11 +100,11 @@ fun PlayerScreen(
 
     LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue }
 
-    LaunchedEffect(trackStatusVersion) {
-        trackStatus?.let { track ->
+    LaunchedEffect(playerTrackState) {
+        playerTrackState?.let { state ->
+            val track = state.track
             isTrackPrepared = false
-            currentTrack = track
-            when (track.trackStatus) {
+            when (state.status) {
                 Track.TrackStatus.LOADING, Track.TrackStatus.UNDEFINED -> {
                     isBlinkActive = false
                     playbackProgress = 0f
@@ -185,9 +170,9 @@ fun PlayerScreen(
     val waveformReady = waveformData?.let { it.bytes != null && it.track == currentTrack } == true
     val trackTitleText = when {
         currentTrack == null -> ""
-        currentTrack!!.trackStatus == Track.TrackStatus.LOADING
-                || currentTrack!!.trackStatus == Track.TrackStatus.UNDEFINED -> "lade…"
-        else -> currentTrack!!.name
+        playerTrackState?.status == Track.TrackStatus.LOADING
+                || playerTrackState?.status == Track.TrackStatus.UNDEFINED -> "lade…"
+        else -> currentTrack.name
     }
 
     val pitchRangeValues = stringArrayResource(R.array.pitch_range_values)

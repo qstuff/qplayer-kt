@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +53,11 @@ fun WaveformSeekbar(
     modifier: Modifier = Modifier
 ) {
     val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
+    // The seek gesture runs in pointerInput(Unit), which is launched once and captures these
+    // lambdas from the first composition — so route through rememberUpdatedState to always call
+    // the latest ones (they close over the current track/duration).
+    val currentOnSeekChange by rememberUpdatedState(onSeekChange)
+    val currentOnSeekCommit by rememberUpdatedState(onSeekCommit)
 
     Box(
         modifier = modifier
@@ -90,16 +97,16 @@ fun WaveformSeekbar(
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         var fraction = (down.position.x / size.width).coerceIn(0f, 1f)
-                        onSeekChange(fraction)
+                        currentOnSeekChange(fraction)
                         down.consume()
                         do {
                             val event = awaitPointerEvent()
                             val change = event.changes.first()
                             fraction = (change.position.x / size.width).coerceIn(0f, 1f)
-                            onSeekChange(fraction)
+                            currentOnSeekChange(fraction)
                             change.consume()
                         } while (event.changes.any { it.pressed })
-                        onSeekCommit(fraction)
+                        currentOnSeekCommit(fraction)
                     }
                 }
         ) {
