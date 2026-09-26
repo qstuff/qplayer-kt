@@ -10,10 +10,12 @@ import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -26,13 +28,9 @@ import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
-import kotlin.coroutines.CoroutineContext
 
 class  PlayerViewModel (application: Application):
-        AndroidViewModel(application), KoinComponent, CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main
+        AndroidViewModel(application), KoinComponent {
 
     companion object {
         const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
@@ -46,21 +44,40 @@ class  PlayerViewModel (application: Application):
     var mediaServiceStartMode: String
     var mediaServiceStopMode: String
 
-    // Observables
+    // Observables — the media-service-bridged ones stay LiveData for now (Phase 2):
+    // trackStatusMediator relies on the media layer mutating the same Track in place, which
+    // StateFlow's equality dedup would swallow. See PlayerScreen's version-counter observer.
     val onWaveformDataUpdate = MediatorLiveData<TrackData?>()
-
     val trackStatus = MutableLiveData<Track>()
     val trackStatusMediator = MediatorLiveData<Track>()
-    val playerStatus = MutableLiveData<PlayerStatus>()
-    val onMediaServiceConnected = MediatorLiveData<Boolean>()
-    val onTrackPositionUpdate = MutableLiveData<Long>()
-    val pitchValueText = MutableLiveData<String>()
-    val pitchValue = MutableLiveData<Int>()
-    val jogwheelSensitivity = MutableLiveData<Int>()
-    val pitchFactorIndex = MutableLiveData<Int>()
-    val masterTempo = MutableLiveData<Boolean>()
-    val cueActive = MutableLiveData<Boolean>()
-    val showRemainingTime = MutableLiveData<Boolean>()
+
+    // Observables — plain UI state, exposed as read-only StateFlow.
+    private val _playerStatus = MutableStateFlow(PlayerStatus.PAUSED)
+    val playerStatus: StateFlow<PlayerStatus> = _playerStatus.asStateFlow()
+
+    private val _onTrackPositionUpdate = MutableStateFlow(0L)
+    val onTrackPositionUpdate: StateFlow<Long> = _onTrackPositionUpdate.asStateFlow()
+
+    private val _pitchValueText = MutableStateFlow("0,0%")
+    val pitchValueText: StateFlow<String> = _pitchValueText.asStateFlow()
+
+    private val _pitchValue = MutableStateFlow(500)
+    val pitchValue: StateFlow<Int> = _pitchValue.asStateFlow()
+
+    private val _jogwheelSensitivity = MutableStateFlow(10)
+    val jogwheelSensitivity: StateFlow<Int> = _jogwheelSensitivity.asStateFlow()
+
+    private val _pitchFactorIndex = MutableStateFlow(0)
+    val pitchFactorIndex: StateFlow<Int> = _pitchFactorIndex.asStateFlow()
+
+    private val _masterTempo = MutableStateFlow(false)
+    val masterTempo: StateFlow<Boolean> = _masterTempo.asStateFlow()
+
+    private val _cueActive = MutableStateFlow(false)
+    val cueActive: StateFlow<Boolean> = _cueActive.asStateFlow()
+
+    private val _showRemainingTime = MutableStateFlow(true)
+    val showRemainingTime: StateFlow<Boolean> = _showRemainingTime.asStateFlow()
 
     // States
     var pitchFactor = PITCH_RANGE_FACTORS[0]
@@ -133,7 +150,6 @@ class  PlayerViewModel (application: Application):
                 onWaveformDataUpdate.value = data
             }
 
-            onMediaServiceConnected.value = true
             isMediaServiceRunning = true
             isMediaServiceBound = true
 
@@ -148,8 +164,6 @@ class  PlayerViewModel (application: Application):
 
             mediaService.stop()
             mediaService.player.destroy()
-
-            onMediaServiceConnected.value = false
 
             onWaveformDataUpdate.removeSource(mediaService.getWaveFormDataObserver())
             trackStatusMediator.removeSource(mediaService.getStatusObserver())
@@ -166,17 +180,12 @@ class  PlayerViewModel (application: Application):
             mediaServiceStopMode = ACTION_SERVICE_BACKGROUND_STOP
         }
 
-        playerStatus.value = PlayerStatus.PAUSED
-
         LocalBroadcastManager.getInstance(application)
                 .registerReceiver(notificationBroadcastReceiver,
                         IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
         LocalBroadcastManager.getInstance(application)
                 .registerReceiver(notificationBroadcastReceiver,
                         IntentFilter(QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED))
-
-        pitchValueText.value = "0,0%"
-        cueActive.value = false
 
         loadStates()
         loadSettings()
@@ -191,19 +200,19 @@ class  PlayerViewModel (application: Application):
         if (!isMediaServiceBound) return
 
         when {
-            playerStatus.value == PlayerStatus.PLAYING -> {
+            _playerStatus.value == PlayerStatus.PLAYING -> {
 
                 mediaService.pause()
-                playerStatus.value = PlayerStatus.PAUSED
+                _playerStatus.value = PlayerStatus.PAUSED
                 resetUpdateTimer()
             }
-            playerStatus.value == PlayerStatus.PAUSED -> {
+            _playerStatus.value == PlayerStatus.PAUSED -> {
 
                 mediaService.play()
-                playerStatus.value = PlayerStatus.PLAYING
+                _playerStatus.value = PlayerStatus.PLAYING
                 startUpdateTimer()
             }
-            else -> Timber.w("playPause(): invalid player status: ${playerStatus.value}")
+            else -> Timber.w("playPause(): invalid player status: ${_playerStatus.value}")
         }
     }
 
@@ -214,24 +223,24 @@ class  PlayerViewModel (application: Application):
 
         mediaService.seekTo(track.cuePosition.toDouble(), true)
         mediaService.play()
-        playerStatus.value = PlayerStatus.PLAYING
+        _playerStatus.value = PlayerStatus.PLAYING
         resetUpdateTimer()
         startUpdateTimer()
     }
 
     fun toggleMasterTempo() {
-        masterTempo.value = !(masterTempo.value ?: true)
-        preferencesDataSource.saveMasterTempoMode(masterTempo.value ?: false)
+        _masterTempo.value = !_masterTempo.value
+        preferencesDataSource.saveMasterTempoMode(_masterTempo.value)
     }
 
     fun onPitchRangeSelected(index: Int) {
 
         pitchFactor = PITCH_RANGE_FACTORS[index]
-        pitchFactorIndex.value = index
+        _pitchFactorIndex.value = index
         preferencesDataSource.savePitchFactorIndex(index)
 
         val progress = ((currentTrackSpeed -1) * 100 * pitchFactor + 500)
-        pitchValue.value = progress.toInt()
+        _pitchValue.value = progress.toInt()
         onPitchChanged(progress.toInt())
     }
 
@@ -254,9 +263,9 @@ class  PlayerViewModel (application: Application):
         val pitch = String.format("$pre%02.01f", diff)
 
         if (diff in -99.0..99.0) {
-            pitchValueText.value = "$pitch%"
+            _pitchValueText.value = "$pitch%"
         } else {
-            pitchValueText.value = pitch
+            _pitchValueText.value = pitch
         }
 
         if (1.0f + diff / 100 < 0) {
@@ -266,12 +275,12 @@ class  PlayerViewModel (application: Application):
         currentTrackSpeed = 1.0f + diff / 100
 
         if (isMediaServiceRunning) {
-            mediaService.setTrackSpeed(currentTrackSpeed, masterTempo.value ?: false)
+            mediaService.setTrackSpeed(currentTrackSpeed, _masterTempo.value)
         }
     }
 
     fun toggleCue(track: Track, enable: Boolean) {
-        cueActive.value = enable
+        _cueActive.value = enable
 
         if (isMediaServiceRunning) {
             if (enable) {
@@ -287,12 +296,9 @@ class  PlayerViewModel (application: Application):
 
     fun toggleDynamicTrackLengthDisplay() {
         showRemainingTrackTime = !showRemainingTrackTime
-        showRemainingTime.value = showRemainingTrackTime
-
-        if (!mediaService.isPlaying()) {
-            val trackPosition = onTrackPositionUpdate.value
-            onTrackPositionUpdate.value = trackPosition
-        }
+        _showRemainingTime.value = showRemainingTrackTime
+        // The displayed time recomputes in the UI off showRemainingTime, so no position re-post
+        // is needed here.
         preferencesDataSource.saveRemainingTimeMode(showRemainingTrackTime)
     }
 
@@ -329,11 +335,6 @@ class  PlayerViewModel (application: Application):
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        waveformJob?.cancel()
-    }
-
     //
     // Track handling
     //
@@ -353,7 +354,7 @@ class  PlayerViewModel (application: Application):
         val currentTrack = trackStatusMediator.value
 
         mediaService.pause()
-        playerStatus.value = PlayerStatus.PAUSED
+        _playerStatus.value = PlayerStatus.PAUSED
 
         if (currentTrack?.uri == track.uri) {
             Timber.d("loadTrack(): same track: $track")
@@ -377,7 +378,7 @@ class  PlayerViewModel (application: Application):
      * Generate (or serve from cache) the overview waveform for [track] and publish it via
      * [onWaveformDataUpdate]. Decoding runs on a background dispatcher; the previous job is
      * cancelled when a new track is loaded, and stale results for an already-changed track are
-     * discarded.
+     * discarded. viewModelScope cancels any in-flight job when the ViewModel is cleared.
      */
     private fun generateWaveform(track: Track) {
         val uri = track.uri
@@ -390,7 +391,7 @@ class  PlayerViewModel (application: Application):
         // Clear any previous waveform while the new one is decoding.
         onWaveformDataUpdate.value = null
         waveformJob?.cancel()
-        waveformJob = launch {
+        waveformJob = viewModelScope.launch {
             val bytes = WaveformAnalyzer.analyze(getApplication(), uri)
             if (bytes != null && isActive) {
                 waveformCache.put(uri, bytes)
@@ -406,7 +407,7 @@ class  PlayerViewModel (application: Application):
         if (!isMediaServiceBound) return
 
         mediaService.seekTo(position, andStop)
-        onTrackPositionUpdate.value = position.toLong()
+        _onTrackPositionUpdate.value = position.toLong()
     }
 
     fun onTrackCompleted(track: Track) {
@@ -430,26 +431,26 @@ class  PlayerViewModel (application: Application):
     //
 
     fun saveState() {
-        preferencesDataSource.savePitchFactorIndex(pitchFactorIndex.value ?: 0)
+        preferencesDataSource.savePitchFactorIndex(_pitchFactorIndex.value)
         preferencesDataSource.savePitchValue(currentPitchProgress)
     }
 
     private fun loadStates() {
-        pitchFactorIndex.value = preferencesDataSource.readPitchFactorIndex()
-        pitchFactor = PITCH_RANGE_FACTORS[pitchFactorIndex.value ?: 0]
-        pitchValue.value = preferencesDataSource.readPitchValue()
-        onPitchChanged(pitchValue.value!!)
+        _pitchFactorIndex.value = preferencesDataSource.readPitchFactorIndex()
+        pitchFactor = PITCH_RANGE_FACTORS[_pitchFactorIndex.value]
+        _pitchValue.value = preferencesDataSource.readPitchValue()
+        onPitchChanged(_pitchValue.value)
         showRemainingTrackTime = preferencesDataSource.readRemainingTimeMode()
-        showRemainingTime.value = showRemainingTrackTime
+        _showRemainingTime.value = showRemainingTrackTime
     }
 
     fun loadSettings() {
         autoStart = preferencesDataSource.isAutostartEnabled()
         isProceedToNextTrackEnabled = preferencesDataSource.isProceedToNextTrackEnabled()
-        masterTempo.value = preferencesDataSource.readMasterTempoMode()
+        _masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
-        jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
+        _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
     }
 
     private fun startUpdateTimer() {
@@ -460,7 +461,7 @@ class  PlayerViewModel (application: Application):
         updateHandler = Handler(Looper.getMainLooper())
         updateRunnable = object : Runnable {
             override fun run() {
-                onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
+                _onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
                 // 250ms is plenty for the progress bar/time and keeps per-tick recomposition
                 // from starving touch dispatch (which made seeking laggy during playback).
                 updateHandler.postDelayed(this, 250)

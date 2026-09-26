@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -67,8 +68,8 @@ fun PlayerScreen(
 ) {
     val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
 
-    val playerStatus by playerViewModel.playerStatus.observeAsState()
-    // trackStatus is observed manually (not observeAsState): Track.trackStatus is @Ignore, so
+    val playerStatus by playerViewModel.playerStatus.collectAsStateWithLifecycle()
+    // trackStatus is observed manually (not collected): Track.trackStatus is @Ignore, so
     // it's excluded from the data class's equals()/copy(), and the media layer mutates the same
     // Track instance in place across LOADING → PREPARED → COMPLETED. observeAsState's structural-
     // equality dedup would drop those transitions (the title would stay "lade…"). A version
@@ -85,18 +86,19 @@ fun PlayerScreen(
         onDispose { playerViewModel.trackStatusMediator.removeObserver(observer) }
     }
     val trackStatus = trackStatusState.value
-    val trackPosition by playerViewModel.onTrackPositionUpdate.observeAsState()
+    val trackPosition by playerViewModel.onTrackPositionUpdate.collectAsStateWithLifecycle()
+    // onWaveformDataUpdate is still LiveData (bridged from the media service) — Phase 2.
     val waveformData by playerViewModel.onWaveformDataUpdate.observeAsState()
-    val masterTempo by playerViewModel.masterTempo.observeAsState()
-    val pitchValueText by playerViewModel.pitchValueText.observeAsState()
-    val pitchValue by playerViewModel.pitchValue.observeAsState()
-    val pitchFactorIndex by playerViewModel.pitchFactorIndex.observeAsState()
-    val cueActive by playerViewModel.cueActive.observeAsState()
-    val showRemainingTime by playerViewModel.showRemainingTime.observeAsState()
+    val masterTempo by playerViewModel.masterTempo.collectAsStateWithLifecycle()
+    val pitchValueText by playerViewModel.pitchValueText.collectAsStateWithLifecycle()
+    val pitchValue by playerViewModel.pitchValue.collectAsStateWithLifecycle()
+    val pitchFactorIndex by playerViewModel.pitchFactorIndex.collectAsStateWithLifecycle()
+    val cueActive by playerViewModel.cueActive.collectAsStateWithLifecycle()
+    val showRemainingTime by playerViewModel.showRemainingTime.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.observeAsState()
     val shuffle by queueViewModel.shuffle.observeAsState()
 
-    val pitchProgressState = remember { mutableStateOf(pitchValue ?: 500) }
+    val pitchProgressState = remember { mutableStateOf(pitchValue) }
     var pitchProgress by pitchProgressState
 
     var isTrackPrepared by remember { mutableStateOf(false) }
@@ -111,7 +113,7 @@ fun PlayerScreen(
     val displayedProgress = seekProgress ?: playbackProgress
     var cueProgressPos by remember { mutableStateOf(0) }
 
-    LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue ?: 500 }
+    LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue }
 
     LaunchedEffect(trackStatusVersion) {
         trackStatus?.let { track ->
@@ -145,8 +147,8 @@ fun PlayerScreen(
     LaunchedEffect(trackPosition) {
         currentTrack?.let { track ->
             if (track.duration > 0) {
-                playbackProgress = (trackPosition ?: 0L).toFloat() / track.duration
-                isBlinkActive = (track.duration - (trackPosition ?: 0L)) in 0L..30000L
+                playbackProgress = trackPosition.toFloat() / track.duration
+                isBlinkActive = (track.duration - trackPosition) in 0L..30000L
             }
         }
     }
@@ -166,7 +168,7 @@ fun PlayerScreen(
         currentTrack?.let { "total: ${getDurationHumanReadable(it.duration)}" } ?: ""
     }
     val dynamicTimeText = remember(trackPosition, currentTrack, showRemainingTime) {
-        val pos = trackPosition ?: 0L
+        val pos = trackPosition
         val track = currentTrack
         if (track != null && track.duration > 0) {
             if (showRemainingTime != false) {
@@ -263,7 +265,7 @@ fun PlayerScreen(
                     pitchProgressState.value = v
                     playerViewModel.onPitchChanged(v)
                 },
-                getSensitivity = { playerViewModel.jogwheelSensitivity.value ?: 10 },
+                getSensitivity = { playerViewModel.jogwheelSensitivity.value },
                 getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() }
             )
 
@@ -273,9 +275,9 @@ fun PlayerScreen(
                 shuffle = shuffle == true,
                 cueActive = cueActive == true,
                 masterTempo = masterTempo == true,
-                pitchValueText = pitchValueText ?: "0,0%",
+                pitchValueText = pitchValueText,
                 pitchRangeValues = pitchRangeValues,
-                pitchFactorIndex = pitchFactorIndex ?: 0,
+                pitchFactorIndex = pitchFactorIndex,
                 onPrevious = { queueViewModel.previousTrack(currentTrack) },
                 onPlayPause = { playerViewModel.playPause() },
                 onNext = { queueViewModel.nextTrack(currentTrack) },

@@ -97,7 +97,10 @@ dependencies {
     implementation "androidx.core:core-ktx:$libs.ktx"
     implementation "androidx.appcompat:appcompat:$libs.appcompat"
     implementation "androidx.constraintlayout:constraintlayout:$libs.constraintLayout"
-    implementation "androidx.lifecycle:lifecycle-extensions:$libs.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$libs.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$libs.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$libs.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$libs.lifecycle"
     implementation "androidx.preference:preference-ktx:$libs.preference"
 
     // Room
