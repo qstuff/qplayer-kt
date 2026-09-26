@@ -9,7 +9,7 @@ import android.os.Looper
 import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Job
@@ -44,12 +44,15 @@ class  PlayerViewModel (application: Application):
     var mediaServiceStartMode: String
     var mediaServiceStopMode: String
 
-    // Observables — the media-service-bridged ones stay LiveData for now (Phase 2):
-    // trackStatusMediator relies on the media layer mutating the same Track in place, which
-    // StateFlow's equality dedup would swallow. See PlayerScreen's version-counter observer.
+    // onWaveformDataUpdate stays LiveData for now — it's bridged from the media service (Phase 3).
     val onWaveformDataUpdate = MediatorLiveData<TrackData?>()
-    val trackStatus = MutableLiveData<Track>()
-    val trackStatusMediator = MediatorLiveData<Track>()
+
+    // Current track + status as an immutable snapshot; see PlayerTrackState. The revision makes
+    // each emission distinct so re-selecting the same track still propagates through the equality
+    // dedup of StateFlow / Compose State — no more version-counter observer in the UI.
+    private val _playerTrackState = MutableStateFlow<PlayerTrackState?>(null)
+    val playerTrackState: StateFlow<PlayerTrackState?> = _playerTrackState.asStateFlow()
+    private var trackStateRevision = 0
 
     // Observables — plain UI state, exposed as read-only StateFlow.
     private val _playerStatus = MutableStateFlow(PlayerStatus.PAUSED)
@@ -107,6 +110,9 @@ class  PlayerViewModel (application: Application):
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
 
+    // Bridges the media service's status LiveData → immutable PlayerTrackState.
+    private var statusBridgeJob: Job? = null
+
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
@@ -139,11 +145,10 @@ class  PlayerViewModel (application: Application):
 
             mediaService = (binder as QMediaPlayerService.MyBinder).service
 
-            trackStatusMediator.addSource(mediaService.getStatusObserver()) { track ->
-                trackStatusMediator.value = track
-            }
-            trackStatusMediator.addSource(trackStatus) { track ->
-                trackStatus.value = track
+            statusBridgeJob = viewModelScope.launch {
+                mediaService.getStatusObserver().asFlow().collect { track ->
+                    emitTrackState(track, track.trackStatus)
+                }
             }
 
             onWaveformDataUpdate.addSource(mediaService.getWaveFormDataObserver()) { data ->
@@ -166,8 +171,7 @@ class  PlayerViewModel (application: Application):
             mediaService.player.destroy()
 
             onWaveformDataUpdate.removeSource(mediaService.getWaveFormDataObserver())
-            trackStatusMediator.removeSource(mediaService.getStatusObserver())
-            trackStatusMediator.removeSource(trackStatus)
+            statusBridgeJob?.cancel()
         }
     }
 
@@ -351,7 +355,7 @@ class  PlayerViewModel (application: Application):
             return
         }
 
-        val currentTrack = trackStatusMediator.value
+        val currentTrack = _playerTrackState.value?.track
 
         mediaService.pause()
         _playerStatus.value = PlayerStatus.PAUSED
@@ -359,19 +363,23 @@ class  PlayerViewModel (application: Application):
         if (currentTrack?.uri == track.uri) {
             Timber.d("loadTrack(): same track: $track")
 
-            currentTrack.trackStatus = Track.TrackStatus.PREPARED
             currentTrack.playPosition = 0
             currentTrack.isAutoplay = autoStart
-            trackStatusMediator.value = currentTrack
+            emitTrackState(currentTrack, Track.TrackStatus.PREPARED)
 
         } else {
             Timber.d("loadTrack(): new track: $track")
             mediaService.loadTrackASync(track)
-            track.trackStatus = Track.TrackStatus.LOADING
-            trackStatusMediator.value = track
+            emitTrackState(track, Track.TrackStatus.LOADING)
         }
 
         generateWaveform(track)
+    }
+
+    /** Publish an immutable [PlayerTrackState] snapshot (distinct on every call via revision). */
+    private fun emitTrackState(track: Track, status: Track.TrackStatus) {
+        track.trackStatus = status
+        _playerTrackState.value = PlayerTrackState(track, status, ++trackStateRevision)
     }
 
     /**
@@ -396,7 +404,7 @@ class  PlayerViewModel (application: Application):
             if (bytes != null && isActive) {
                 waveformCache.put(uri, bytes)
                 // Only publish if this is still the current track.
-                if (trackStatusMediator.value?.uri == uri) {
+                if (_playerTrackState.value?.track?.uri == uri) {
                     onWaveformDataUpdate.value = TrackData(track, bytes)
                 }
             }
