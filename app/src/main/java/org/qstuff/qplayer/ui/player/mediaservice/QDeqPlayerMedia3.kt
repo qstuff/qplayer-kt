@@ -2,22 +2,31 @@ package org.qstuff.qplayer.ui.player.mediaservice
 
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.datasource.model.TrackData
 import timber.log.Timber
 import java.io.File
 
 class QDeqPlayerMedia3 : QDeqPlayer {
 
     private lateinit var exoPlayer: ExoPlayer
-    private val statusObserver = MutableLiveData<Track>()
-    private val waveformObserver = MutableLiveData<TrackData>()
+    // Status transitions are events — a SharedFlow delivers every emission (no equality dedup) and
+    // replays the latest to a new/reconnecting collector. tryEmit is safe from the ExoPlayer
+    // listener (main thread) and never drops thanks to the buffer + DROP_OLDEST.
+    private val _trackStatus = MutableSharedFlow<Track>(
+        replay = 1,
+        extraBufferCapacity = 8,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    override val trackStatus: SharedFlow<Track> = _trackStatus.asSharedFlow()
     private lateinit var currentTrack: Track
     private var preparedNotified = false
 
@@ -35,14 +44,14 @@ class QDeqPlayerMedia3 : QDeqPlayer {
                         preparedNotified = true
                         currentTrack.trackStatus = Track.TrackStatus.PREPARED
                         currentTrack.duration = exoPlayer.duration
-                        statusObserver.postValue(currentTrack)
+                        _trackStatus.tryEmit(currentTrack)
                     }
                 }
                 Player.STATE_ENDED -> {
                     if (::currentTrack.isInitialized) {
                         currentTrack.trackStatus = Track.TrackStatus.COMPLETED
                         currentTrack.playPosition = 0
-                        statusObserver.postValue(currentTrack)
+                        _trackStatus.tryEmit(currentTrack)
                     }
                 }
                 else -> {}
@@ -53,7 +62,7 @@ class QDeqPlayerMedia3 : QDeqPlayer {
             Timber.e(error, "onPlayerError()")
             if (::currentTrack.isInitialized) {
                 currentTrack.trackStatus = Track.TrackStatus.ERROR
-                statusObserver.postValue(currentTrack)
+                _trackStatus.tryEmit(currentTrack)
             }
         }
     }
@@ -94,9 +103,4 @@ class QDeqPlayerMedia3 : QDeqPlayer {
 
     override fun getCurrentPositionMillis() = exoPlayer.currentPosition
     override fun getDurationMillis() = exoPlayer.duration
-
-    override fun getStatusObserver() = statusObserver
-
-    // Waveform analysis not yet implemented — stubbed until a follow-up step
-    override fun getWaveFormDataObserver() = waveformObserver
 }
