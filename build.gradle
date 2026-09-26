@@ -9,9 +9,9 @@ buildscript {
             buildToolsVersion   : "33.0.1",
             minSdkVersion       : 24,
             targetSdkVersion    : 34,
-            versionCode         : 230,
-            versionName         : "2.3.0",
-            versionCommitCount  : 230 + "git rev-list HEAD --count".execute([], project.rootDir).text.trim().toInteger()
+            versionCode         : 300,
+            versionName         : "3.0.0",
+            versionCommitCount  : 300 + "git rev-list HEAD --count".execute([], project.rootDir).text.trim().toInteger()
     ]
 
     ext.libs = [
