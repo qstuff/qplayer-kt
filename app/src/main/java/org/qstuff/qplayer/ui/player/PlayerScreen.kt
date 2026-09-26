@@ -73,8 +73,7 @@ fun PlayerScreen(
     val playerTrackState by playerViewModel.playerTrackState.collectAsStateWithLifecycle()
     val currentTrack = playerTrackState?.track
     val trackPosition by playerViewModel.onTrackPositionUpdate.collectAsStateWithLifecycle()
-    // onWaveformDataUpdate is still LiveData (bridged from the media service) — Phase 2.
-    val waveformData by playerViewModel.onWaveformDataUpdate.observeAsState()
+    val waveformData by playerViewModel.onWaveformDataUpdate.collectAsStateWithLifecycle()
     val masterTempo by playerViewModel.masterTempo.collectAsStateWithLifecycle()
     val pitchValueText by playerViewModel.pitchValueText.collectAsStateWithLifecycle()
     val pitchValue by playerViewModel.pitchValue.collectAsStateWithLifecycle()

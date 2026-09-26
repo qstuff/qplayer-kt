@@ -1,9 +1,8 @@
 package org.qstuff.qplayer.ui.player.mediaservice
 
 import android.content.Context
-import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.SharedFlow
 import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.datasource.model.TrackData
 
 interface QDeqPlayer {
 
@@ -26,6 +25,6 @@ interface QDeqPlayer {
     fun getCurrentPositionMillis(): Long
     fun getDurationMillis(): Long
 
-    fun getStatusObserver(): MutableLiveData<Track>
-    fun getWaveFormDataObserver(): MutableLiveData<TrackData>
+    /** Emits the current Track on each status transition (PREPARED / COMPLETED / ERROR). */
+    val trackStatus: SharedFlow<Track>
 }
