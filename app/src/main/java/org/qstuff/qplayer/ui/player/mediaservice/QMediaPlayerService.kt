@@ -15,11 +15,10 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import kotlinx.coroutines.flow.SharedFlow
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.ui.player.PlayerActivity
 import timber.log.Timber
 
@@ -154,7 +153,7 @@ class QMediaPlayerService : LifecycleService() {
     }
 
     fun getCurrentPositionMillis(): Long {
-        Timber.v("getCurrentPositionMillis():")
+//        Timber.v("getCurrentPositionMillis():")
         return player.getCurrentPositionMillis()
     }
 
@@ -177,8 +176,7 @@ class QMediaPlayerService : LifecycleService() {
         player.loadTrackASync(track)
     }
 
-    fun getStatusObserver(): MutableLiveData<Track> = player.getStatusObserver()
-    fun getWaveFormDataObserver(): MutableLiveData<TrackData> = player.getWaveFormDataObserver()
+    val trackStatus: SharedFlow<Track> get() = player.trackStatus
 
     //
     // Private

@@ -21,7 +21,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     // Observables
     var trackList = MutableLiveData<List<Track>>()
-    var onTrackSelectedIndex = MutableLiveData<Int?>(-1)
+    var onTrackSelectedIndex = MutableLiveData(-1)
     var onTrackSelected = MutableLiveData<Track>()
     val repeat = MutableLiveData<TrackRepeatStatus>()
     val shuffle = MutableLiveData<Boolean>()
@@ -191,7 +191,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         saveSelectedTrack()
     }
 
-    fun previousTrack(current: Track?) {
+    fun previousTrack(current: Track?, manual: Boolean = false) {
 
         if (currentTrackList.isNotEmpty()) {
             current?.let {
@@ -199,7 +199,12 @@ class QueueViewModel: ViewModel(), KoinComponent {
                 if (currentTrackList.contains(current)) {
                     index = currentTrackList.indexOf(current)
 
-                    when (repeat.value) {
+                    // Repeat-one only repeats on track completion; a manual Prev must still
+                    // navigate, so treat ONE as NONE here.
+                    val effectiveRepeat =
+                        if (manual && repeat.value == TrackRepeatStatus.ONE) TrackRepeatStatus.NONE
+                        else repeat.value
+                    when (effectiveRepeat) {
                         TrackRepeatStatus.ALL -> {
                             if (!isSkipBackToStartEnabled) {
                                 if (shuffle.value == true) {
@@ -243,15 +248,27 @@ class QueueViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun nextTrack(current: Track?) {
-        Timber.d("nextTrack(): current: $current")
+    fun nextTrack(
+        current: Track?,
+        manual: Boolean = false
+    ) {
+        Timber.d("nextTrack(): tracks: $currentTrackList")
+        Timber.d("nextTrack(): current: $current, manual: $manual, repeat: ${repeat.value}, shuffle: ${shuffle.value}")
 
         if (currentTrackList.isNotEmpty()) {
             current?.let {
                 var index = 0
                 if (currentTrackList.contains(it)) {
 
-                    when (repeat.value) {
+                    // Repeat-one only repeats when a track *finishes*; a manual Next must still
+                    // advance, so treat ONE as NONE for manual navigation.
+                    val effectiveRepeat =
+                        if (manual && repeat.value == TrackRepeatStatus.ONE) TrackRepeatStatus.NONE
+                        else repeat.value
+
+                    Timber.d("nextTrack(): effectiveRepeat: $effectiveRepeat")
+
+                    when (effectiveRepeat) {
                         TrackRepeatStatus.ONE -> {
                             index = currentTrackList.indexOf(current)
                             current.trackStatus = Track.TrackStatus.PREPARED
@@ -287,10 +304,15 @@ class QueueViewModel: ViewModel(), KoinComponent {
                         }
                     }
                 }
+
                 val next = currentTrackList[index]
                 next.isAutoplay = preferencesDataSource.isAutostartEnabled()
+
                 onTrackSelected.value = next
                 onTrackSelectedIndex.value = index
+
+                Timber.d("nextTrack(): next: $next")
+
             }
             saveSelectedTrack()
         }
@@ -355,7 +377,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         shufflePlayedIndices.clear()
         repeat(currentTrackList.size) {
-            shufflePlayedIndices.put(it, false)
+            shufflePlayedIndices[it] = false
         }
     }
 
@@ -387,8 +409,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun loadStates() {
-        repeat.value = TrackRepeatStatus.values()[preferencesDataSource.readRepeatMode()]
-        shuffle.value = preferencesDataSource.readShuffleMode()
+        repeat.value = TrackRepeatStatus.entries.toTypedArray()[preferencesDataSource.readRepeatMode()]
+        shuffle.value = false //preferencesDataSource.readShuffleMode()
         if (shuffle.value == true) {
             createIndexMap()
         }
@@ -419,6 +441,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
             var index = 0
             currentTrackList.forEach {
                 if (it.uri == track.uri) {
+                    // Restoring a track on app start must never auto-play (isAutoplay could be a
+                    // stale `true` persisted from an earlier next/prev while autostart was on).
+                    it.isAutoplay = false
                     onTrackSelectedIndex.value = index
                     onTrackSelected.value = it
                 }
@@ -430,11 +455,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     fun readTrackList() {
 
         val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
-        currentTrackList = if (list == null) {
-            arrayListOf()
-        } else {
-            list
-        }
+        currentTrackList = list ?: arrayListOf()
         trackList.value = ArrayList(currentTrackList)
     }
 }

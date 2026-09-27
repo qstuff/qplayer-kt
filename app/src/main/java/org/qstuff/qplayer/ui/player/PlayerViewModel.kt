@@ -8,8 +8,6 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Job
@@ -44,8 +42,9 @@ class  PlayerViewModel (application: Application):
     var mediaServiceStartMode: String
     var mediaServiceStopMode: String
 
-    // onWaveformDataUpdate stays LiveData for now — it's bridged from the media service (Phase 3).
-    val onWaveformDataUpdate = MediatorLiveData<TrackData?>()
+    // Overview waveform for the current track (generated in-VM; null while decoding / on change).
+    private val _onWaveformDataUpdate = MutableStateFlow<TrackData?>(null)
+    val onWaveformDataUpdate: StateFlow<TrackData?> = _onWaveformDataUpdate.asStateFlow()
 
     // Current track + status as an immutable snapshot; see PlayerTrackState. The revision makes
     // each emission distinct so re-selecting the same track still propagates through the equality
@@ -146,13 +145,9 @@ class  PlayerViewModel (application: Application):
             mediaService = (binder as QMediaPlayerService.MyBinder).service
 
             statusBridgeJob = viewModelScope.launch {
-                mediaService.getStatusObserver().asFlow().collect { track ->
+                mediaService.trackStatus.collect { track ->
                     emitTrackState(track, track.trackStatus)
                 }
-            }
-
-            onWaveformDataUpdate.addSource(mediaService.getWaveFormDataObserver()) { data ->
-                onWaveformDataUpdate.value = data
             }
 
             isMediaServiceRunning = true
@@ -170,7 +165,6 @@ class  PlayerViewModel (application: Application):
             mediaService.stop()
             mediaService.player.destroy()
 
-            onWaveformDataUpdate.removeSource(mediaService.getWaveFormDataObserver())
             statusBridgeJob?.cancel()
         }
     }
@@ -392,12 +386,12 @@ class  PlayerViewModel (application: Application):
         val uri = track.uri
 
         waveformCache.get(uri)?.let { cached ->
-            onWaveformDataUpdate.value = TrackData(track, cached)
+            _onWaveformDataUpdate.value = TrackData(track, cached)
             return
         }
 
         // Clear any previous waveform while the new one is decoding.
-        onWaveformDataUpdate.value = null
+        _onWaveformDataUpdate.value = null
         waveformJob?.cancel()
         waveformJob = viewModelScope.launch {
             val bytes = WaveformAnalyzer.analyze(getApplication(), uri)
@@ -405,7 +399,7 @@ class  PlayerViewModel (application: Application):
                 waveformCache.put(uri, bytes)
                 // Only publish if this is still the current track.
                 if (_playerTrackState.value?.track?.uri == uri) {
-                    onWaveformDataUpdate.value = TrackData(track, bytes)
+                    _onWaveformDataUpdate.value = TrackData(track, bytes)
                 }
             }
         }

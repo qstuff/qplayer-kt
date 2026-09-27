@@ -73,8 +73,7 @@ fun PlayerScreen(
     val playerTrackState by playerViewModel.playerTrackState.collectAsStateWithLifecycle()
     val currentTrack = playerTrackState?.track
     val trackPosition by playerViewModel.onTrackPositionUpdate.collectAsStateWithLifecycle()
-    // onWaveformDataUpdate is still LiveData (bridged from the media service) — Phase 2.
-    val waveformData by playerViewModel.onWaveformDataUpdate.observeAsState()
+    val waveformData by playerViewModel.onWaveformDataUpdate.collectAsStateWithLifecycle()
     val masterTempo by playerViewModel.masterTempo.collectAsStateWithLifecycle()
     val pitchValueText by playerViewModel.pitchValueText.collectAsStateWithLifecycle()
     val pitchValue by playerViewModel.pitchValue.collectAsStateWithLifecycle()
@@ -263,9 +262,9 @@ fun PlayerScreen(
                 pitchValueText = pitchValueText,
                 pitchRangeValues = pitchRangeValues,
                 pitchFactorIndex = pitchFactorIndex,
-                onPrevious = { queueViewModel.previousTrack(currentTrack) },
+                onPrevious = { queueViewModel.previousTrack(currentTrack, manual = true) },
                 onPlayPause = { playerViewModel.playPause() },
-                onNext = { queueViewModel.nextTrack(currentTrack) },
+                onNext = { queueViewModel.nextTrack(currentTrack, manual = true) },
                 onToggleRepeat = { queueViewModel.toggleRepeat() },
                 onToggleShuffle = { queueViewModel.toggleShuffle() },
                 onCueClick = {
