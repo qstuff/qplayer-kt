@@ -20,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,8 +79,8 @@ fun PlayerScreen(
     val pitchFactorIndex by playerViewModel.pitchFactorIndex.collectAsStateWithLifecycle()
     val cueActive by playerViewModel.cueActive.collectAsStateWithLifecycle()
     val showRemainingTime by playerViewModel.showRemainingTime.collectAsStateWithLifecycle()
-    val repeat by queueViewModel.repeat.observeAsState()
-    val shuffle by queueViewModel.shuffle.observeAsState()
+    val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
+    val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
     val pitchProgressState = remember { mutableStateOf(pitchValue) }
     var pitchProgress by pitchProgressState
@@ -256,7 +255,7 @@ fun PlayerScreen(
             PlayerControls(
                 isPlaying = playerStatus == PlayerStatus.PLAYING,
                 repeat = repeat,
-                shuffle = shuffle == true,
+                shuffle = shuffle,
                 cueActive = cueActive,
                 masterTempo = masterTempo,
                 pitchValueText = pitchValueText,
