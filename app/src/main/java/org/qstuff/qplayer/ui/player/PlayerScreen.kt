@@ -262,9 +262,9 @@ fun PlayerScreen(
                 pitchValueText = pitchValueText,
                 pitchRangeValues = pitchRangeValues,
                 pitchFactorIndex = pitchFactorIndex,
-                onPrevious = { queueViewModel.previousTrack(currentTrack) },
+                onPrevious = { queueViewModel.previousTrack(currentTrack, manual = true) },
                 onPlayPause = { playerViewModel.playPause() },
-                onNext = { queueViewModel.nextTrack(currentTrack) },
+                onNext = { queueViewModel.nextTrack(currentTrack, manual = true) },
                 onToggleRepeat = { queueViewModel.toggleRepeat() },
                 onToggleShuffle = { queueViewModel.toggleShuffle() },
                 onCueClick = {

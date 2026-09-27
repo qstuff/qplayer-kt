@@ -153,7 +153,7 @@ class QMediaPlayerService : LifecycleService() {
     }
 
     fun getCurrentPositionMillis(): Long {
-        Timber.v("getCurrentPositionMillis():")
+//        Timber.v("getCurrentPositionMillis():")
         return player.getCurrentPositionMillis()
     }
 
