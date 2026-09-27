@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import org.qstuff.qplayer.R
-import org.qstuff.qplayer.ui.theme.QOrange
 
 /**
  * The shared player control chip: a full-height black rounded box that takes an equal share of
@@ -54,13 +53,18 @@ fun RowScope.ControlChip(
     )
 }
 
-/** Icon variant of [ControlChip]. */
+/**
+ * Icon variant of [ControlChip]. By default the icon keeps the drawable's own colors
+ * ([Color.Unspecified]) — pass an explicit [tint] only for single-color drawables that need
+ * coloring. (A blanket tint would silently override state-encoding drawables like the repeat/
+ * shuffle icons, where white = off and orange = on.)
+ */
 @Composable
 fun RowScope.IconControlChip(
     iconRes: Int,
     contentDescription: String,
     onClick: () -> Unit,
-    tint: Color = QOrange
+    tint: Color = Color.Unspecified
 ) = ControlChip(onClick = onClick) {
     Icon(
         painter = painterResource(iconRes),

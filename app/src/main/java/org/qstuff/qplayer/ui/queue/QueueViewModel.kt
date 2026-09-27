@@ -252,8 +252,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         current: Track?,
         manual: Boolean = false
     ) {
-        Timber.d("nextTrack(): tracks: $currentTrackList")
-        Timber.d("nextTrack(): current: $current, manual: $manual, repeat: ${repeat.value}, shuffle: ${shuffle.value}")
+        Timber.d("nextTrack(): current: $current, manual: $manual")
 
         if (currentTrackList.isNotEmpty()) {
             current?.let {
@@ -265,8 +264,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
                     val effectiveRepeat =
                         if (manual && repeat.value == TrackRepeatStatus.ONE) TrackRepeatStatus.NONE
                         else repeat.value
-
-                    Timber.d("nextTrack(): effectiveRepeat: $effectiveRepeat")
 
                     when (effectiveRepeat) {
                         TrackRepeatStatus.ONE -> {
@@ -310,9 +307,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
                 onTrackSelected.value = next
                 onTrackSelectedIndex.value = index
-
-                Timber.d("nextTrack(): next: $next")
-
             }
             saveSelectedTrack()
         }
@@ -360,7 +354,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
     fun toggleRepeat() {
         repeat.value = (repeat.value as TrackRepeatStatus).next()
-        preferencesDataSource.saveRepeatMode(repeat.value!!.ordinal)
+        repeat.value?.ordinal?.let {
+            preferencesDataSource.saveRepeatMode(it)
+        }
     }
 
     fun toggleShuffle() {
@@ -369,7 +365,6 @@ class QueueViewModel: ViewModel(), KoinComponent {
         if (shuffle.value == true) {
             createIndexMap()
         }
-
         preferencesDataSource.saveShuffleMode(shuffle.value ?: false)
     }
 
