@@ -60,16 +60,29 @@ fun PlayerControls(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconControlChip(R.drawable.button_previous, "Previous", onPrevious)
+            IconControlChip(
+                R.drawable.button_previous,
+                "Previous",
+                onPrevious,
+                tint = QOrange   // white drawable → tint to the accent
+            )
             IconControlChip(
                 iconRes = if (isPlaying) R.drawable.button_pause_selected
                 else R.drawable.button_play_selected,
                 contentDescription = "Play/Pause",
-                onClick = onPlayPause
+                onClick = onPlayPause   // drawable is already QOrange
             )
-            IconControlChip(R.drawable.button_next, "Next", onNext)
             IconControlChip(
+                R.drawable.button_next,
+                "Next",
+                onNext,
+                tint = QOrange   // white drawable → tint to the accent
+            )
+            IconControlChip(
+                // Repeat icons encode state via their own color (white = off, orange = on) and the
+                // "1" glyph, so no tint — see IconControlChip's default.
                 iconRes = when (repeat) {
+                    TrackRepeatStatus.NONE -> R.drawable.button_loop
                     TrackRepeatStatus.ONE -> R.drawable.button_loop1_selected
                     TrackRepeatStatus.ALL -> R.drawable.button_loop_selected
                     else -> R.drawable.button_loop
@@ -78,8 +91,10 @@ fun PlayerControls(
                 onClick = onToggleRepeat
             )
             IconControlChip(
-                iconRes = if (shuffle) R.drawable.button_shuffle_selected
-                else R.drawable.button_shuffle,
+                // Shuffle drawables also carry their own on/off colors — no tint.
+                iconRes =
+                    if (shuffle) R.drawable.button_shuffle_selected
+                    else R.drawable.button_shuffle,
                 contentDescription = "Shuffle",
                 onClick = onToggleShuffle
             )
@@ -100,11 +115,13 @@ fun PlayerControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconControlChip(
-                R.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease
+                R.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
+                tint = QOrange   // white drawable → tint to the accent
             )
             TextControlChip(text = pitchValueText)
             IconControlChip(
-                R.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease
+                R.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
+                tint = QOrange   // white drawable → tint to the accent
             )
             // Pitch range chip hosts its own dropdown menu.
             var showPitchRangeMenu by remember { mutableStateOf(false) }

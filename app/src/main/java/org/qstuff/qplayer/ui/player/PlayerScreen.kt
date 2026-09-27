@@ -155,7 +155,7 @@ fun PlayerScreen(
         val pos = trackPosition
         val track = currentTrack
         if (track != null && track.duration > 0) {
-            if (showRemainingTime != false) {
+            if (showRemainingTime) {
                 "remain: ${getDurationHumanReadable(track.duration - pos)}"
             } else {
                 "current: ${getDurationHumanReadable(pos)}"
@@ -231,7 +231,7 @@ fun PlayerScreen(
                 showCalculating = currentTrack != null && !waveformReady,
                 displayedProgress = displayedProgress,
                 dynamicTimeAlpha = dynamicTimeAlpha,
-                cueActive = cueActive == true,
+                cueActive = cueActive,
                 cueProgressPos = cueProgressPos,
                 onSeekChange = { seekProgress = it },
                 onSeekCommit = { target ->
@@ -257,8 +257,8 @@ fun PlayerScreen(
                 isPlaying = playerStatus == PlayerStatus.PLAYING,
                 repeat = repeat,
                 shuffle = shuffle == true,
-                cueActive = cueActive == true,
-                masterTempo = masterTempo == true,
+                cueActive = cueActive,
+                masterTempo = masterTempo,
                 pitchValueText = pitchValueText,
                 pitchRangeValues = pitchRangeValues,
                 pitchFactorIndex = pitchFactorIndex,
@@ -268,7 +268,7 @@ fun PlayerScreen(
                 onToggleRepeat = { queueViewModel.toggleRepeat() },
                 onToggleShuffle = { queueViewModel.toggleShuffle() },
                 onCueClick = {
-                    if (cueActive == true) {
+                    if (cueActive) {
                         playerViewModel.playFromCue(currentTrack)
                     } else {
                         currentTrack?.also {
@@ -278,7 +278,7 @@ fun PlayerScreen(
                     }
                 },
                 onCueLongClick = {
-                    if (cueActive == true) {
+                    if (cueActive) {
                         currentTrack?.also { playerViewModel.toggleCue(it, false) }
                     }
                 },
