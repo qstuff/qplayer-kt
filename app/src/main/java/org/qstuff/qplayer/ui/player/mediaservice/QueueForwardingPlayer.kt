@@ -15,6 +15,7 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
 import androidx.media3.common.text.CueGroup
+import androidx.media3.common.util.UnstableApi
 
 /**
  * The player handed to the MediaSession. Adds Next/Prev for system media controls (notification,
@@ -26,6 +27,7 @@ import androidx.media3.common.text.CueGroup
  * which would drop the added skip commands on every track load. The wrapper forwards every
  * callback explicitly and only augments that one.
  */
+@UnstableApi
 class QueueForwardingPlayer(
     player: Player,
     private val onNext: () -> Unit,
@@ -57,10 +59,10 @@ class QueueForwardingPlayer(
     private fun withQueueCommands(commands: Player.Commands): Player.Commands =
         commands.buildUpon()
             .addAll(
-                Player.COMMAND_SEEK_TO_NEXT,
-                Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
-                Player.COMMAND_SEEK_TO_PREVIOUS,
-                Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM
+                COMMAND_SEEK_TO_NEXT,
+                COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                COMMAND_SEEK_TO_PREVIOUS,
+                COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM
             )
             .build()
 
