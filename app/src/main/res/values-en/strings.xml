@@ -81,8 +81,6 @@
     <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
     <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
 
-    <string name="settings_start_foreground_title">Start as Foreground-Service?</string>
-    <string name="settings_start_foreground_summary">As a Foreground-Service the player keeps running when the app goes to background and the device enters doze!\nYou need to restart the app to make this setting effective.\nBe aware that activating this may result in more battery usage!</string>
 
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">DJ Settings</string>

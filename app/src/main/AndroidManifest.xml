@@ -71,20 +71,13 @@
 
         <service
             android:name=".ui.player.mediaservice.QMediaPlayerService"
-            android:exported="false"
+            android:exported="true"
             android:foregroundServiceType="mediaPlayback"
             android:enabled="true">
-        </service>
-
-        <receiver
-            android:name=".ui.player.mediaservice.QMediaPlayerService$NotificationBroadcastReceiver"
-            android:exported="true">
             <intent-filter>
-                <action android:name="org.qstuff.qplayer.player.service.ACTION_PLAYER_TOGGLED" />
-                <action android:name="org.qstuff.qplayer.player.service.ACTION_NOTIFICATION_CLICKED" />
-                <action android:name="org.qstuff.qplayer.player.service.ACTION_NOTIFICATION_DISMISSED" />
+                <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
-        </receiver>
+        </service>
 
     </application>
 

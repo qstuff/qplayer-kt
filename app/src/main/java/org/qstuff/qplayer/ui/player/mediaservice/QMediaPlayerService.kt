@@ -1,150 +1,176 @@
 package org.qstuff.qplayer.ui.player.mediaservice
 
-import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
-import android.widget.RemoteViews
-import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
-import androidx.lifecycle.LifecycleService
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.annotation.OptIn
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.DefaultMediaNotificationProvider
+import androidx.media3.session.MediaSession
+import androidx.media3.session.MediaSessionService
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.player.PlayerActivity
 import timber.log.Timber
 
 /**
+ * Playback service, a Media3 [MediaSessionService]: the system shows a media-style notification
+ * (also on the lock screen / in quick settings), routes headset and Bluetooth buttons to the
+ * session, and keeps the service in the foreground while playback is ongoing. Media-session
+ * notifications don't need the POST_NOTIFICATIONS runtime permission.
+ *
+ * The app talks to it in-process via [MyBinder] (bind with [ACTION_BIND_LOCAL]); Media3
+ * controllers bind through the session intent and get the session binder.
+ *
  * Created by Claus Chierici ( 3/2/17 )
  * Copyright (C) 2017
  * All rights reserved.
  */
-class QMediaPlayerService : LifecycleService() {
+@OptIn(UnstableApi::class)
+class QMediaPlayerService : MediaSessionService() {
 
     companion object {
-        const val MEDIA_SERVICE_NOTIFICATION_ID = 1
-        const val MEDIA_SERVICE_NOTIFICATION_PLAY = 2
-        const val MEDIA_SERVICE_NOTIFICATION_PAUSE = 3
-
-        const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
-        const val ACTION_SERVICE_FOREGROUND_STOP = "ACTION_SERVICE_FOREGROUND_STOP"
-
-        const val ACTION_PLAYER_TOGGLED = "ACTION_PLAYER_TOGGLED"
-        const val ACTION_NOTIFICATION_DISMISSED = "ACTION_NOTIFICATION_DISMISSED"
-        const val ACTION_NOTIFICATION_CLICKED = "ACTION_NOTIFICATION_CLICKED"
-
-        const val NOT_ACTION_PLAYER_TOGGLED = "NOT_ACTION_PLAYER_TOGGLED"
-        const val NOT_ACTION_NOTIFICATION_DISMISSED = "NOT_ACTION_NOTIFICATION_DISMISSED"
-
-        const val EXTRA_NOTIFICATION_REQUESTCODE = "EXTRA_NOTIFICATION_REQUESTCODE"
+        /** Bind action for the app's own in-process binder; other bind intents go to Media3. */
+        const val ACTION_BIND_LOCAL = "org.qstuff.qplayer.action.BIND_LOCAL_PLAYER_SERVICE"
     }
+
+    /** Skip commands from system media controls, to be routed to the app's queue. */
+    enum class TransportCommand { NEXT, PREVIOUS }
 
     lateinit var player: QDeqPlayer
     private val binder = MyBinder()
-    private var notificationManager: NotificationManager? = null
+    private var mediaSession: MediaSession? = null
 
     private var currentTrack: Track? = null
 
-    val isPrepared: Boolean
-        get() = currentTrack?.trackStatus == Track.TrackStatus.PREPARED
+    private val _transportCommands = MutableSharedFlow<TransportCommand>(extraBufferCapacity = 4)
+    val transportCommands: SharedFlow<TransportCommand> = _transportCommands.asSharedFlow()
+
+    /**
+     * Keeps the service in the foreground across an auto-advance. Media3 drops the foreground
+     * state when a track ENDS, and on Android 12+ a service can't re-enter the foreground from the
+     * background when the next track then starts. So the hold is set the moment a track ends and
+     * cleared once Media3 itself requires the foreground again (playback resumed), or via
+     * [releaseForegroundHold] when playback doesn't continue.
+     *
+     * Note: Media3 applies async notification updates (artwork loading) without going through
+     * [onUpdateNotification], i.e. without the hold. The track metadata deliberately has no
+     * artwork — revisit this before adding any.
+     */
+    private var holdForeground = false
 
     //
     // Service Lifecycle
     //
 
-    override fun onBind(intent: Intent): IBinder {
-        super.onBind(intent)
-        Timber.d("onBind")
-        return binder
-    }
-
     override fun onCreate() {
         super.onCreate()
         Timber.d("onCreate()")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel()
-        }
-
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         player = QDeqPlayerMedia3()
         player.create(this)
+
+        // Registered before the session exists (so before the session's own listener): the hold
+        // is in place before Media3 evaluates the ENDED state for its foreground decision.
+        player.media3Player.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_ENDED) holdForeground = true
+            }
+        })
+
+        setMediaNotificationProvider(
+            DefaultMediaNotificationProvider.Builder(this)
+                .setChannelId(getString(R.string.notification_channel_id))
+                .setChannelName(R.string.notification_channel_name)
+                .build()
+                .apply { setSmallIcon(R.drawable.qpl_status_bar_icon) }
+        )
+
+        val queuePlayer = QueueForwardingPlayer(
+            player.media3Player,
+            onNext = { _transportCommands.tryEmit(TransportCommand.NEXT) },
+            onPrevious = { _transportCommands.tryEmit(TransportCommand.PREVIOUS) }
+        )
+        mediaSession = MediaSession.Builder(this, queuePlayer)
+            .setSessionActivity(
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    Intent(this, PlayerActivity::class.java),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+            )
+            .build()
+            // Register the session with the service's notification manager. Media3 only does this
+            // automatically when a MediaController connects through the session interface — the
+            // app uses the in-process binder instead, so without this there'd be no notification.
+            .also { addSession(it) }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Timber.d("onStartCommand(): intent: $intent, startId: $startId")
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =
+        mediaSession
 
-        intent?.let {
-            if (it.action == ACTION_SERVICE_FOREGROUND_START) {
-                startForeground(1, createNotification(MEDIA_SERVICE_NOTIFICATION_PLAY))
-            }
+    override fun onBind(intent: Intent?): IBinder? {
+        val sessionBinder = super.onBind(intent)
+        return if (intent?.action == ACTION_BIND_LOCAL) binder else sessionBinder
+    }
 
-            if (it.action == ACTION_SERVICE_FOREGROUND_STOP) {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-            }
+    override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
+        // Media3 wants the foreground again because playback resumed: it maintains it from here.
+        if (holdForeground && startInForegroundRequired && player.media3Player.isPlaying) {
+            holdForeground = false
         }
-
-        return super.onStartCommand(intent, flags, startId)
+        super.onUpdateNotification(session, startInForegroundRequired || holdForeground)
     }
 
     override fun onDestroy() {
+        Timber.d("onDestroy()")
+        mediaSession?.release()
+        mediaSession = null
+        player.destroy()
         super.onDestroy()
-        Timber.d("onDestroy():")
-
-        destroyPlayer()
     }
 
     //
     // common public methods
     //
 
+    /** Playback does not continue after a finished track: let the service leave the foreground. */
+    fun releaseForegroundHold() {
+        if (!holdForeground) return
+        holdForeground = false
+        mediaSession?.let { onUpdateNotification(it, /* startInForegroundRequired = */ false) }
+    }
+
+    val playing: StateFlow<Boolean> get() = player.playing
+
+    val trackStatus: SharedFlow<Track> get() = player.trackStatus
+
     fun play() {
         Timber.d("play():")
         if (currentTrack == null) return
-
         player.play()
-
-        notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-        val notification = createNotification(MEDIA_SERVICE_NOTIFICATION_PAUSE)
-        notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
     fun pause() {
         Timber.d("pause():")
         if (currentTrack == null) return
-
         player.pause()
-
-        notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-        val notification = createNotification(MEDIA_SERVICE_NOTIFICATION_PLAY)
-        notificationManager!!.notify(MEDIA_SERVICE_NOTIFICATION_ID, notification)
     }
 
     fun stop() {
         player.stop()
     }
 
-    fun isPlaying(): Boolean {
-        Timber.d("isPlaying():")
-        return player.isPlaying()
-    }
-
-    fun playerServiceIsPaused(): Boolean {
-        Timber.d("playerServiceIsPaused():")
-        return player.isPaused()
-    }
+    fun isPlaying(): Boolean = player.isPlaying()
 
     fun setTrackSpeed(speedFactor: Float, masterTempo: Boolean) {
-        Timber.v("setTrackSpeed():")
         player.setSpeed(speedFactor, masterTempo)
     }
 
@@ -152,166 +178,21 @@ class QMediaPlayerService : LifecycleService() {
         player.seekTo(position, andStop)
     }
 
-    fun getCurrentPositionMillis(): Long {
-//        Timber.v("getCurrentPositionMillis():")
-        return player.getCurrentPositionMillis()
-    }
-
-    fun playerServiceGetDurationMillis(): Long {
-        Timber.v("playerServiceGetDurationMillis():")
-        return player.getDurationMillis()
-    }
-
-    fun playerServiceLoadTrackSync(track: Track) {
-        Timber.d("playerServiceLoadTrackSync():")
-
-        currentTrack = track
-        player.loadTrackSync(track)
-    }
+    fun getCurrentPositionMillis(): Long = player.getCurrentPositionMillis()
 
     fun loadTrackASync(track: Track) {
         Timber.d("loadTrackASync():")
-
         currentTrack = track
         player.loadTrackASync(track)
     }
 
-    val trackStatus: SharedFlow<Track> get() = player.trackStatus
-
     //
-    // Private
-    //
-
-    @SuppressLint("SetTextI18n")
-    private fun destroyPlayer() {
-        Timber.d("destroyPlayer():")
-
-        player.destroy()
-        notificationManager!!.cancel(MEDIA_SERVICE_NOTIFICATION_ID)
-    }
-
-    //
-    // Binder class for the Service Connection
+    // Binder class for the in-process Service Connection
     //
 
     inner class MyBinder : Binder() {
 
         val service: QMediaPlayerService
             get() = this@QMediaPlayerService
-    }
-
-    //
-    // Notification
-    //
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel() {
-
-        val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        val mChannel = NotificationChannel(
-                getString(R.string.notification_channel_id), // The id of the channel.
-                getString(R.string.notification_channel_name), // The user-visible name of the channel.
-                NotificationManager.IMPORTANCE_LOW)
-
-        // Configure the notification channel with
-        // The user-visible description of the channel.
-        mChannel.description = getString(R.string.notification_channel_description)
-        mChannel.enableLights(false)
-        mChannel.enableVibration(false)
-
-        mNotificationManager.createNotificationChannel(mChannel)
-    }
-
-    /**
-     * Create a Notification and add an Action depending on type.
-     *
-     * @param type Action type of this Notification ("Play" or "Pause")
-     * @return
-     */
-    private fun createNotification(type: Int): Notification {
-        Timber.d("createNotification(): %d", type)
-
-        val buttonIntent = Intent(this, NotificationBroadcastReceiver::class.java)
-        buttonIntent.putExtra(EXTRA_NOTIFICATION_REQUESTCODE, type)
-        buttonIntent.action = ACTION_PLAYER_TOGGLED
-
-        val pendingButtonIntent = PendingIntent.getBroadcast(
-            applicationContext,
-            type,
-            buttonIntent,
-            PendingIntent.FLAG_IMMUTABLE)
-
-        val contentIntent = Intent(this, PlayerActivity::class.java)
-        contentIntent.putExtra(EXTRA_NOTIFICATION_REQUESTCODE, type)
-        contentIntent.action = ACTION_NOTIFICATION_CLICKED
-
-        val pendingContentIntent = PendingIntent.getActivity(
-            applicationContext,
-            0,
-            contentIntent,
-            PendingIntent.FLAG_IMMUTABLE)
-
-        val dismissIntent = Intent(this, NotificationBroadcastReceiver::class.java)
-        dismissIntent.putExtra(EXTRA_NOTIFICATION_REQUESTCODE, type)
-        dismissIntent.action = ACTION_NOTIFICATION_DISMISSED
-
-        val pendingDismissIntent = PendingIntent.getBroadcast(
-            applicationContext,
-                0, 
-            dismissIntent,
-            PendingIntent.FLAG_IMMUTABLE)
-
-        val remoteViews = RemoteViews(packageName, R.layout.notification_remote_view)
-
-        remoteViews.setImageViewResource(R.id.notificationBigIcon, R.drawable.qplayer_launcher)
-        remoteViews.setOnClickPendingIntent(R.id.notificationButtonPlayPause, pendingButtonIntent)
-
-        if (type == MEDIA_SERVICE_NOTIFICATION_PLAY) {
-            remoteViews.setImageViewResource(R.id.notificationButtonPlayPause, R.drawable.button_play)
-        } else {
-            remoteViews.setImageViewResource(R.id.notificationButtonPlayPause, R.drawable.button_pause)
-        }
-
-        remoteViews.setTextViewText(R.id.notificationTitle, currentTrack?.name)
-
-        val builder = NotificationCompat.Builder(this, getString(R.string.notification_channel_id))
-                .setSmallIcon(R.drawable.qpl_status_bar_icon)
-                .setContent(remoteViews)
-                .setAutoCancel(false)
-                .setDeleteIntent(pendingDismissIntent)
-                .setContentIntent(pendingContentIntent)
-
-        return builder.build()
-    }
-
-    class NotificationBroadcastReceiver : BroadcastReceiver() {
-
-        override fun onReceive(context: Context, intent: Intent?) {
-            if (intent != null) {
-                val action = intent.action
-
-                if (action != null) {
-
-                    if (action == ACTION_NOTIFICATION_DISMISSED) {
-                        Timber.d("onReceive(): ACTION_NOTIFICATION_DISMISSED")
-
-                        val mgr = LocalBroadcastManager.getInstance(context)
-                        mgr.sendBroadcast(Intent().setAction(NOT_ACTION_NOTIFICATION_DISMISSED))
-                    }
-
-                    if (action == ACTION_PLAYER_TOGGLED) {
-                        Timber.d("onReceive(): ACTION_PLAYER_TOGGLED")
-
-                        val mgr = LocalBroadcastManager.getInstance(context)
-                        mgr.sendBroadcast(Intent().setAction(NOT_ACTION_PLAYER_TOGGLED))
-                    }
-
-                    if (action == ACTION_NOTIFICATION_CLICKED) {
-                        Timber.d("onReceive(): ACTION_NOTIFICATION_CLICKED")
-                    }
-                }
-            }
-        }
     }
 }

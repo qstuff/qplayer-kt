@@ -125,6 +125,7 @@ dependencies {
     // Media3 (ExoPlayer) — replaces Superpowered for playback + pitch/tempo
     implementation "androidx.media3:media3-exoplayer:$libs.media3"
     implementation "androidx.media3:media3-common:$libs.media3"
+    implementation "androidx.media3:media3-session:$libs.media3"
 
     // Logging
     implementation "com.jakewharton.timber:timber:$libs.timber"

@@ -3,14 +3,18 @@ package org.qstuff.qplayer.ui.player.mediaservice
 import android.content.Context
 import android.net.Uri
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.qstuff.qplayer.datasource.model.Track
 import timber.log.Timber
 import java.io.File
@@ -27,6 +31,12 @@ class QDeqPlayerMedia3 : QDeqPlayer {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     override val trackStatus: SharedFlow<Track> = _trackStatus.asSharedFlow()
+
+    private val _playing = MutableStateFlow(false)
+    override val playing: StateFlow<Boolean> = _playing.asStateFlow()
+
+    override val media3Player: Player get() = exoPlayer
+
     private lateinit var currentTrack: Track
     private var preparedNotified = false
 
@@ -35,9 +45,18 @@ class QDeqPlayerMedia3 : QDeqPlayer {
         exoPlayer.addListener(listener)
     }
 
+    private fun updatePlaying() {
+        val state = exoPlayer.playbackState
+        _playing.value = exoPlayer.playWhenReady &&
+                state != Player.STATE_IDLE && state != Player.STATE_ENDED
+    }
+
     private val listener = object : Player.Listener {
 
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = updatePlaying()
+
         override fun onPlaybackStateChanged(playbackState: Int) {
+            updatePlaying()
             when (playbackState) {
                 Player.STATE_READY -> {
                     if (!preparedNotified && ::currentTrack.isInitialized) {
@@ -74,7 +93,14 @@ class QDeqPlayerMedia3 : QDeqPlayer {
         currentTrack = track
         preparedNotified = false
         val uri = if (track.uri.startsWith("/")) Uri.fromFile(File(track.uri)) else Uri.parse(track.uri)
-        exoPlayer.setMediaItem(MediaItem.fromUri(uri))
+        // Title metadata is what the system media notification / lock screen shows. (No artwork:
+        // see the foreground-hold note in QMediaPlayerService before adding any.)
+        val mediaItem = MediaItem.Builder()
+            .setUri(uri)
+            .setMediaId(track.uri)
+            .setMediaMetadata(MediaMetadata.Builder().setTitle(track.name).build())
+            .build()
+        exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
     }
 
