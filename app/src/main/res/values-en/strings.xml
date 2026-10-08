@@ -77,8 +77,6 @@
     <string name="settings_proceed_to_next_track_title">Autoproceed to next track</string>
     <string name="settings_proceed_to_next_track_summary">If enabled, after a track has completed the next track is selected.</string>
 
-    <string name="settings_skip_back_behaviour_title">Skip-back button behaviour</string>
-    <string name="settings_skip_back_behaviour_summary">If enabled, the skip-back button brings you to the beginning of the current track and stops there in anay case.\nOtherwise it jumps to the previous track.\nNote that this setting is also active when in shuffle mode.</string>
 
     <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
     <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>

@@ -18,12 +18,6 @@
             android:defaultValue="true"/>
 
         <SwitchPreference
-            android:key="@string/prefs_key_skip_back_to_start"
-            android:title="@string/settings_skip_back_behaviour_title"
-            android:summary="@string/settings_skip_back_behaviour_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
             android:key="@string/prefs_key_show_clear_queue_dialog"
             android:title="@string/settings_show_clear_queue_title"
             android:summary="@string/settings_show_clear_queue_summary"

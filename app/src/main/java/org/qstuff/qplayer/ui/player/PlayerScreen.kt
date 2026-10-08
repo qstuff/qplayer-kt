@@ -118,9 +118,13 @@ fun PlayerScreen(
                 }
                 Track.TrackStatus.COMPLETED -> {
                     isBlinkActive = false
-                    playerViewModel.onTrackCompleted(track)
-                    queueViewModel.onTrackCompleted(track)
                     track.playPosition = 0
+                    // Stop first, then let the queue decide what follows (repeat/shuffle). If
+                    // nothing follows, rewind so Play starts the finished track again.
+                    playerViewModel.onTrackCompleted()
+                    if (!queueViewModel.onTrackCompleted(track)) {
+                        playerViewModel.seekTo(0.0, true)
+                    }
                 }
                 Track.TrackStatus.ERROR -> {}
             }
@@ -261,9 +265,15 @@ fun PlayerScreen(
                 pitchValueText = pitchValueText,
                 pitchRangeValues = pitchRangeValues,
                 pitchFactorIndex = pitchFactorIndex,
-                onPrevious = { queueViewModel.previousTrack(currentTrack, manual = true) },
+                onPrevious = {
+                    // Position-aware: restart the current track if it has played a while,
+                    // otherwise go to the previous one.
+                    if (!playerViewModel.restartCurrentTrackIfPlayed()) {
+                        queueViewModel.previousTrack(currentTrack)
+                    }
+                },
                 onPlayPause = { playerViewModel.playPause() },
-                onNext = { queueViewModel.nextTrack(currentTrack, manual = true) },
+                onNext = { queueViewModel.nextTrack(currentTrack) },
                 onToggleRepeat = { queueViewModel.toggleRepeat() },
                 onToggleShuffle = { queueViewModel.toggleShuffle() },
                 onCueClick = {

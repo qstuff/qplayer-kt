@@ -36,9 +36,6 @@ class SettingsFragment : PreferenceFragmentCompat(), KoinComponent,
         (findPreference<SwitchPreference>(getString(R.string.prefs_key_proceed_to_next_track)))!!.isChecked =
                 preferencesDataSource.isProceedToNextTrackEnabled()
 
-        (findPreference<SwitchPreference>(getString(R.string.prefs_key_skip_back_to_start)))!!.isChecked =
-                preferencesDataSource.isSkipBackToStartEnabled()
-
         (findPreference<SwitchPreference>(getString(R.string.prefs_key_show_clear_queue_dialog)))!!.isChecked =
                 preferencesDataSource.isShowClearQueueWarningEnabled()
 
