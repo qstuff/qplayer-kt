@@ -11,8 +11,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -54,6 +57,12 @@ class  PlayerViewModel (application: Application):
     // dedup of StateFlow / Compose State — no more version-counter observer in the UI.
     private val _playerTrackState = MutableStateFlow<PlayerTrackState?>(null)
     val playerTrackState: StateFlow<PlayerTrackState?> = _playerTrackState.asStateFlow()
+
+    // One-shot event: the current track finished playing (playback is already stopped). The
+    // activity forwards it to the queue to decide what follows. An event, not state — it must
+    // fire once per completion, also while the app is in the background.
+    private val _trackCompleted = MutableSharedFlow<Track>(extraBufferCapacity = 1)
+    val trackCompleted: SharedFlow<Track> = _trackCompleted.asSharedFlow()
     private var trackStateRevision = 0
 
     // Observables — plain UI state, exposed as read-only StateFlow.
@@ -371,10 +380,40 @@ class  PlayerViewModel (application: Application):
         generateWaveform(track)
     }
 
-    /** Publish an immutable [PlayerTrackState] snapshot (distinct on every call via revision). */
+    /**
+     * Publish an immutable [PlayerTrackState] snapshot (distinct on every call via revision) and
+     * apply the playback side effects of the transition here in the ViewModel — not in the UI —
+     * so auto-play and auto-advance also work while the app is in the background (the UI only
+     * collects state while it's started).
+     */
     private fun emitTrackState(track: Track, status: Track.TrackStatus) {
         track.trackStatus = status
         _playerTrackState.value = PlayerTrackState(track, status, ++trackStateRevision)
+
+        when (status) {
+            Track.TrackStatus.PREPARED -> onTrackPrepared(track)
+            Track.TrackStatus.COMPLETED -> onTrackCompleted(track)
+            else -> {}
+        }
+    }
+
+    /** A track is ready: go to its stored position and start it if it should auto-play. */
+    private fun onTrackPrepared(track: Track) {
+        seekTo(track.playPosition.toDouble(), track.isAutoplay)
+        if (track.isAutoplay) playPause()
+    }
+
+    /**
+     * The current track finished: stop playback and the position timer, then announce it via
+     * [trackCompleted]. Whether (and how) a following track is loaded is the queue's decision — a
+     * loaded track that should auto-play starts via [onTrackPrepared].
+     */
+    private fun onTrackCompleted(track: Track) {
+        if (isMediaServiceBound) mediaService.pause()
+        _playerStatus.value = PlayerStatus.PAUSED
+        resetUpdateTimer()
+        track.playPosition = 0
+        _trackCompleted.tryEmit(track)
     }
 
     /**
@@ -411,17 +450,6 @@ class  PlayerViewModel (application: Application):
 
         mediaService.seekTo(position, andStop)
         _onTrackPositionUpdate.value = position.toLong()
-    }
-
-    /**
-     * The current track finished: stop playback and the position timer. Whether (and how) a
-     * following track is loaded is the queue's decision — a loaded track that should auto-play
-     * starts again via its PREPARED handling.
-     */
-    fun onTrackCompleted() {
-        if (isMediaServiceBound) mediaService.pause()
-        _playerStatus.value = PlayerStatus.PAUSED
-        resetUpdateTimer()
     }
 
     /**
