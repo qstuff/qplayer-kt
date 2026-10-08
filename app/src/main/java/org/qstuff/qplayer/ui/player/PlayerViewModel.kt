@@ -9,7 +9,6 @@ import android.os.Looper
 import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,19 +33,11 @@ class  PlayerViewModel (application: Application):
         AndroidViewModel(application), KoinComponent {
 
     companion object {
-        const val ACTION_SERVICE_FOREGROUND_START = "ACTION_SERVICE_FOREGROUND_START"
-        const val ACTION_SERVICE_FOREGROUND_STOP = "ACTION_SERVICE_FOREGROUND_STOP"
-        const val ACTION_SERVICE_BACKGROUND_START = "ACTION_SERVICE_BACKGROUND_START"
-        const val ACTION_SERVICE_BACKGROUND_STOP = "ACTION_SERVICE_BACKGROUND_STOP"
-
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
 
         /** Prev restarts the current track if it has played longer than this, else goes back. */
         const val PREV_RESTART_THRESHOLD_MS = 3000L
     }
-
-    var mediaServiceStartMode: String
-    var mediaServiceStopMode: String
 
     // Overview waveform for the current track (generated in-VM; null while decoding / on change).
     private val _onWaveformDataUpdate = MutableStateFlow<TrackData?>(null)
@@ -64,6 +55,13 @@ class  PlayerViewModel (application: Application):
     private val _trackCompleted = MutableSharedFlow<Track>(extraBufferCapacity = 1)
     val trackCompleted: SharedFlow<Track> = _trackCompleted.asSharedFlow()
     private var trackStateRevision = 0
+
+    // One-shot events: Next/Prev pressed in system media controls (notification, lock screen,
+    // headset, Bluetooth). The activity routes them to the queue, like the on-screen buttons.
+    private val _transportCommands =
+        MutableSharedFlow<QMediaPlayerService.TransportCommand>(extraBufferCapacity = 4)
+    val transportCommands: SharedFlow<QMediaPlayerService.TransportCommand> =
+        _transportCommands.asSharedFlow()
 
     // Observables — plain UI state, exposed as read-only StateFlow.
     private val _playerStatus = MutableStateFlow(PlayerStatus.PAUSED)
@@ -119,33 +117,10 @@ class  PlayerViewModel (application: Application):
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
 
-    // Bridges the media service's status LiveData → immutable PlayerTrackState.
-    private var statusBridgeJob: Job? = null
+    // Collectors of the media service's flows (track status, play state, system Next/Prev).
+    private val serviceJobs = mutableListOf<Job>()
 
     private val preferencesDataSource by inject<PreferencesDataSource>()
-
-
-    private val notificationBroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-
-            if (intent != null) {
-                val action = intent.action
-                if (action != null) {
-
-                    if (action == QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED) {
-                        Timber.d("onReceive(): NOT_ACTION_PLAYER_TOGGLED")
-                        playPause()
-                    }
-                    if (action == QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED) {
-                        Timber.d("onReceive(): NOT_ACTION_NOTIFICATION_DISMISSED")
-                        mediaService.stop()
-//                        mediaService.player.destroy()
-                        stopMediaService()
-                    }
-                }
-            }
-        }
-    }
 
     private val serviceConnection = object : ServiceConnection {
 
@@ -154,10 +129,23 @@ class  PlayerViewModel (application: Application):
 
             mediaService = (binder as QMediaPlayerService.MyBinder).service
 
-            statusBridgeJob = viewModelScope.launch {
+            serviceJobs.forEach { it.cancel() }
+            serviceJobs.clear()
+            serviceJobs += viewModelScope.launch {
                 mediaService.trackStatus.collect { track ->
                     emitTrackState(track, track.trackStatus)
                 }
+            }
+            // The player's real play state is the source of truth for PLAYING/PAUSED and the
+            // position timer — play/pause can also come from system media controls.
+            serviceJobs += viewModelScope.launch {
+                mediaService.playing.collect { playing ->
+                    _playerStatus.value = if (playing) PlayerStatus.PLAYING else PlayerStatus.PAUSED
+                    if (playing) startUpdateTimer() else resetUpdateTimer()
+                }
+            }
+            serviceJobs += viewModelScope.launch {
+                mediaService.transportCommands.collect { _transportCommands.tryEmit(it) }
             }
 
             isMediaServiceRunning = true
@@ -175,26 +163,12 @@ class  PlayerViewModel (application: Application):
             mediaService.stop()
             mediaService.player.destroy()
 
-            statusBridgeJob?.cancel()
+            serviceJobs.forEach { it.cancel() }
+            serviceJobs.clear()
         }
     }
 
     init {
-        if (preferencesDataSource.isStartForegroundEnabled()) {
-            mediaServiceStartMode = ACTION_SERVICE_FOREGROUND_START
-            mediaServiceStopMode = ACTION_SERVICE_FOREGROUND_STOP
-        } else {
-            mediaServiceStartMode = ACTION_SERVICE_BACKGROUND_START
-            mediaServiceStopMode = ACTION_SERVICE_BACKGROUND_STOP
-        }
-
-        LocalBroadcastManager.getInstance(application)
-                .registerReceiver(notificationBroadcastReceiver,
-                        IntentFilter(QMediaPlayerService.NOT_ACTION_PLAYER_TOGGLED))
-        LocalBroadcastManager.getInstance(application)
-                .registerReceiver(notificationBroadcastReceiver,
-                        IntentFilter(QMediaPlayerService.NOT_ACTION_NOTIFICATION_DISMISSED))
-
         loadStates()
         loadSettings()
     }
@@ -203,25 +177,13 @@ class  PlayerViewModel (application: Application):
     // Player User Interaction
     //
 
-    fun playPause() {
+    // Play/pause only command the player; playerStatus and the position timer follow the player's
+    // real play state (see the `playing` collector in serviceConnection).
 
+    fun playPause() {
         if (!isMediaServiceBound) return
 
-        when {
-            _playerStatus.value == PlayerStatus.PLAYING -> {
-
-                mediaService.pause()
-                _playerStatus.value = PlayerStatus.PAUSED
-                resetUpdateTimer()
-            }
-            _playerStatus.value == PlayerStatus.PAUSED -> {
-
-                mediaService.play()
-                _playerStatus.value = PlayerStatus.PLAYING
-                startUpdateTimer()
-            }
-            else -> Timber.w("playPause(): invalid player status: ${_playerStatus.value}")
-        }
+        if (_playerStatus.value == PlayerStatus.PLAYING) mediaService.pause() else mediaService.play()
     }
 
     fun playFromCue(track: Track?) {
@@ -231,9 +193,6 @@ class  PlayerViewModel (application: Application):
 
         mediaService.seekTo(track.cuePosition.toDouble(), true)
         mediaService.play()
-        _playerStatus.value = PlayerStatus.PLAYING
-        resetUpdateTimer()
-        startUpdateTimer()
     }
 
     fun toggleMasterTempo() {
@@ -314,13 +273,16 @@ class  PlayerViewModel (application: Application):
     // MediaService
     //
 
+    // The service only needs to be bound: Media3 itself starts it as a foreground service while
+    // playback is ongoing. ACTION_BIND_LOCAL selects the in-process binder (other bind intents are
+    // Media3 controller connections).
+
     fun startMediaService() {
 
         if(!isMediaServiceRunning) {
             val app = getApplication<QDeqApplication>()
             val intent = Intent(app, QMediaPlayerService::class.java)
-            intent.action = mediaServiceStartMode
-            app.startService(intent)
+                .setAction(QMediaPlayerService.ACTION_BIND_LOCAL)
             app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
     }
@@ -328,10 +290,6 @@ class  PlayerViewModel (application: Application):
     fun stopMediaService() {
 
         val app = getApplication<QDeqApplication>()
-        val intent = Intent(app, QMediaPlayerService::class.java)
-        intent.action = mediaServiceStopMode
-        app.startService(intent)
-        app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
         if (isMediaServiceBound) {
             app.unbindService(serviceConnection)
@@ -362,7 +320,6 @@ class  PlayerViewModel (application: Application):
         val currentTrack = _playerTrackState.value?.track
 
         mediaService.pause()
-        _playerStatus.value = PlayerStatus.PAUSED
 
         if (currentTrack?.uri == track.uri) {
             Timber.d("loadTrack(): same track: $track")
@@ -397,23 +354,41 @@ class  PlayerViewModel (application: Application):
         }
     }
 
-    /** A track is ready: go to its stored position and start it if it should auto-play. */
+    /**
+     * A track is ready: go to its stored position and start it if it should auto-play. Explicit
+     * play() (not the playPause() toggle), since the reported play state may lag a load.
+     */
     private fun onTrackPrepared(track: Track) {
-        seekTo(track.playPosition.toDouble(), track.isAutoplay)
-        if (track.isAutoplay) playPause()
+        if (!isMediaServiceBound) return
+        seekTo(track.playPosition.toDouble(), false)
+        if (track.isAutoplay) {
+            mediaService.play()
+        } else {
+            // Not continuing (e.g. auto-advanced with autostart off): drop the foreground hold
+            // the service took when the previous track ended.
+            mediaService.releaseForegroundHold()
+        }
     }
 
     /**
-     * The current track finished: stop playback and the position timer, then announce it via
-     * [trackCompleted]. Whether (and how) a following track is loaded is the queue's decision — a
-     * loaded track that should auto-play starts via [onTrackPrepared].
+     * The current track finished: stop playback (the play-state flow then stops the timer) and
+     * announce it via [trackCompleted]. Whether (and how) a following track is loaded is the
+     * queue's decision — a loaded track that should auto-play starts via [onTrackPrepared].
      */
     private fun onTrackCompleted(track: Track) {
         if (isMediaServiceBound) mediaService.pause()
-        _playerStatus.value = PlayerStatus.PAUSED
-        resetUpdateTimer()
         track.playPosition = 0
         _trackCompleted.tryEmit(track)
+    }
+
+    /**
+     * Nothing follows a finished track: rewind it (so Play starts it again) and let the service
+     * leave the foreground.
+     */
+    fun stopAfterCompletion() {
+        if (!isMediaServiceBound) return
+        seekTo(0.0, true)
+        mediaService.releaseForegroundHold()
     }
 
     /**

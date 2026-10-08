@@ -14,6 +14,7 @@ import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.SettingsActivity
@@ -62,7 +63,22 @@ class PlayerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             playerViewModel.trackCompleted.collect { track ->
                 if (!queueViewModel.onTrackCompleted(track)) {
-                    playerViewModel.seekTo(0.0, true)
+                    playerViewModel.stopAfterCompletion()
+                }
+            }
+        }
+        // Next/Prev from system media controls (notification, lock screen, headset, Bluetooth)
+        // → same behavior as the on-screen buttons (Prev is position-aware)
+        lifecycleScope.launch {
+            playerViewModel.transportCommands.collect { command ->
+                val current = playerViewModel.playerTrackState.value?.track
+                when (command) {
+                    QMediaPlayerService.TransportCommand.NEXT ->
+                        queueViewModel.nextTrack(current)
+                    QMediaPlayerService.TransportCommand.PREVIOUS ->
+                        if (!playerViewModel.restartCurrentTrackIfPlayed()) {
+                            queueViewModel.previousTrack(current)
+                        }
                 }
             }
         }

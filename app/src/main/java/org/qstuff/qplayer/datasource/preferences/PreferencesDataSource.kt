@@ -43,7 +43,6 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREFS_ENABLE_CRASHREPORTING = "PREFS_ENABLE_CRASHREPORTING"
         const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
         const val PREFS_JOG_WHEEL_SENSITIVITY = "PREFS_JOG_WHEEL_SENSITIVITY"
-        const val PREFS_START_FOREGROUND = "PREFS_START_FOREGROUND"
         const val PREFS_JOG_WHEEL_MODE = "PREFS_JOG_WHEEL_MODE"
 
         // Others
@@ -159,5 +158,4 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
     fun getJogWheelMode() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)
     fun getJogWheelModeEnum() = JogwheelMode.values()[Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)]
-    fun isStartForegroundEnabled() = preferences.getBoolean(PREFS_START_FOREGROUND, false)
 }
