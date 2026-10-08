@@ -90,7 +90,6 @@ class  PlayerViewModel (application: Application):
     // Settings
     private var autoStart = false
     private var isProceedToNextTrackEnabled = false
-    private var isSkipBackToStartEnabled = true
     private var isStopPlaybackOnSettingCuepointEnabled = false
 
     // MediaService
@@ -450,7 +449,6 @@ class  PlayerViewModel (application: Application):
         autoStart = preferencesDataSource.isAutostartEnabled()
         isProceedToNextTrackEnabled = preferencesDataSource.isProceedToNextTrackEnabled()
         _masterTempo.value = preferencesDataSource.readMasterTempoMode()
-        isSkipBackToStartEnabled = preferencesDataSource.isSkipBackToStartEnabled()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
     }
