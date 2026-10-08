@@ -6,9 +6,13 @@ import android.os.Bundle
 import android.content.pm.PackageManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
+import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
@@ -31,6 +35,11 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var playlistViewModel: PlaylistViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
 
+    // Nullable: clearTrackList() posts null.
+    private val trackSelectedObserver = Observer<Track?> { track ->
+        track?.let { playerViewModel.loadTrack(it) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
@@ -41,10 +50,21 @@ class PlayerActivity : AppCompatActivity() {
         playlistViewModel = ViewModelProvider(this).get(PlaylistViewModel::class.java)
         fileBrowserViewModel = ViewModelProvider(this).get(FileBrowserViewModel::class.java)
 
-        // Cross-ViewModel wiring: queue track selection → player load
-        // (formerly in QueueFragment.onViewCreated)
-        queueViewModel.onTrackSelected.observe(this) { track ->
-            track?.let { playerViewModel.loadTrack(it) }
+        // Cross-ViewModel wiring. Deliberately NOT gated on the STARTED state (observeForever /
+        // plain lifecycleScope instead of observe(this) / repeatOnLifecycle): auto-advance must
+        // load and start the next track while the app is in the background, too. Both stop when
+        // the activity is destroyed.
+        //
+        // queue track selection → player load
+        queueViewModel.onTrackSelected.observeForever(trackSelectedObserver)
+        // track finished → the queue decides what follows (repeat/shuffle); if nothing does,
+        // rewind so Play starts the finished track again
+        lifecycleScope.launch {
+            playerViewModel.trackCompleted.collect { track ->
+                if (!queueViewModel.onTrackCompleted(track)) {
+                    playerViewModel.seekTo(0.0, true)
+                }
+            }
         }
         queueViewModel.readTrackList()
         queueViewModel.readSelectedTrack()
@@ -95,6 +115,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        queueViewModel.onTrackSelected.removeObserver(trackSelectedObserver)
         // formerly in QueueFragment.onDestroyView
         queueViewModel.saveStates()
         playerViewModel.stopMediaService()

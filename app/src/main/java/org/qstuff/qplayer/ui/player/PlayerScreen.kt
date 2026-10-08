@@ -98,9 +98,11 @@ fun PlayerScreen(
 
     LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue }
 
+    // UI-state resets only. The playback side effects of these transitions (seek/auto-play on
+    // PREPARED, stop + auto-advance on COMPLETED) live in PlayerViewModel / PlayerActivity, so
+    // they also run while the app is in the background.
     LaunchedEffect(playerTrackState) {
         playerTrackState?.let { state ->
-            val track = state.track
             isTrackPrepared = false
             when (state.status) {
                 Track.TrackStatus.LOADING, Track.TrackStatus.UNDEFINED -> {
@@ -113,18 +115,9 @@ fun PlayerScreen(
                     isBlinkActive = false
                     playbackProgress = 0f
                     seekProgress = null
-                    playerViewModel.seekTo(track.playPosition.toDouble(), track.isAutoplay)
-                    if (track.isAutoplay) playerViewModel.playPause()
                 }
                 Track.TrackStatus.COMPLETED -> {
                     isBlinkActive = false
-                    track.playPosition = 0
-                    // Stop first, then let the queue decide what follows (repeat/shuffle). If
-                    // nothing follows, rewind so Play starts the finished track again.
-                    playerViewModel.onTrackCompleted()
-                    if (!queueViewModel.onTrackCompleted(track)) {
-                        playerViewModel.seekTo(0.0, true)
-                    }
                 }
                 Track.TrackStatus.ERROR -> {}
             }
