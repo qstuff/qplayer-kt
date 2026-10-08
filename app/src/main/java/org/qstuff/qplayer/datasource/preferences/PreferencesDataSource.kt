@@ -35,16 +35,13 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREF_PITCH_FACTOR_INDEX = "PREF_PITCH_FACTOR_INDEX"
         const val PREF_PITCH_VALUE = "PREF_PITCH_VALUE"
         const val PREF_SHOW_REMAINING = "PREF_SHOW_REMAINING"
-        const val PREF_JOGWHEEL_MODE = "PREF_JOGWHEEL_MODE"
 
         // From SettingsFragment
         const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
         const val PREFS_PROCEED_TO_NEXT_TRACK = "PREFS_PROCEED_TO_NEXT_TRACK"
         const val PREFS_SKIP_BACK_TO_START = "PREFS_SKIP_BACK_TO_START"
         const val PREFS_STOP_PLAYBACK_ON_CUE = "PREFS_STOP_PLAYBACK_ON_CUE"
-        //const val PREFS_ENABLE_CUE = "PREFS_ENABLE_CUE"
         const val PREFS_ENABLE_CRASHREPORTING = "PREFS_ENABLE_CRASHREPORTING"
-        const val PREFS_ENABLE_REMAIN_BLINK = "PREFS_ENABLE_REMAIN_BLINK"
         const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
         const val PREFS_JOG_WHEEL_SENSITIVITY = "PREFS_JOG_WHEEL_SENSITIVITY"
         const val PREFS_START_FOREGROUND = "PREFS_START_FOREGROUND"
@@ -142,13 +139,6 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     fun readRemainingTimeMode() = preferences.getBoolean(PREF_SHOW_REMAINING, true)
 
-    fun saveJogwheelMode(mode: JogwheelMode) =
-            preferences.edit{
-                putInt(PREF_JOGWHEEL_MODE, mode.ordinal)
-            }
-
-    fun readJogwheelMode() = JogwheelMode.values()[preferences.getInt(PREF_JOGWHEEL_MODE, 0)]
-
     //
     // Others
     //
@@ -168,7 +158,6 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun isShowClearQueueWarningEnabled() = preferences.getBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, true)
     fun isStopPlaybackOnSettingCuepointEnabled() = preferences.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)
     fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
-    fun isBlinkingRemainEnabled() = preferences.getBoolean(PREFS_ENABLE_REMAIN_BLINK, true)
     fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
     fun getJogWheelMode() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)
     fun getJogWheelModeEnum() = JogwheelMode.values()[Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)]
