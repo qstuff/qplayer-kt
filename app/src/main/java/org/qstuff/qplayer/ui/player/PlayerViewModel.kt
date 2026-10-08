@@ -37,6 +37,9 @@ class  PlayerViewModel (application: Application):
         const val ACTION_SERVICE_BACKGROUND_STOP = "ACTION_SERVICE_BACKGROUND_STOP"
 
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
+
+        /** Prev restarts the current track if it has played longer than this, else goes back. */
+        const val PREV_RESTART_THRESHOLD_MS = 3000L
     }
 
     var mediaServiceStartMode: String
@@ -89,7 +92,6 @@ class  PlayerViewModel (application: Application):
 
     // Settings
     private var autoStart = false
-    private var isProceedToNextTrackEnabled = false
     private var isStopPlaybackOnSettingCuepointEnabled = false
 
     // MediaService
@@ -411,14 +413,26 @@ class  PlayerViewModel (application: Application):
         _onTrackPositionUpdate.value = position.toLong()
     }
 
-    fun onTrackCompleted(track: Track) {
-        Timber.d("onTrackCompleted(): ${track.name}, ${track.isAutoplay}")
-        if (isProceedToNextTrackEnabled && autoStart) {
-            Timber.d("onTrackCompleted(): proceed to next")
-            resetUpdateTimer()
-        } else {
-            playPause()
-        }
+    /**
+     * The current track finished: stop playback and the position timer. Whether (and how) a
+     * following track is loaded is the queue's decision — a loaded track that should auto-play
+     * starts again via its PREPARED handling.
+     */
+    fun onTrackCompleted() {
+        if (isMediaServiceBound) mediaService.pause()
+        _playerStatus.value = PlayerStatus.PAUSED
+        resetUpdateTimer()
+    }
+
+    /**
+     * Prev-button behavior: if more than [PREV_RESTART_THRESHOLD_MS] of the current track has
+     * played, jump back to its start and return true; otherwise return false so the caller goes to
+     * the previous track instead.
+     */
+    fun restartCurrentTrackIfPlayed(): Boolean {
+        if (getTrackPosition() <= PREV_RESTART_THRESHOLD_MS) return false
+        seekTo(0.0, false)
+        return true
     }
 
     fun getTrackPosition(): Long {
@@ -447,7 +461,6 @@ class  PlayerViewModel (application: Application):
 
     fun loadSettings() {
         autoStart = preferencesDataSource.isAutostartEnabled()
-        isProceedToNextTrackEnabled = preferencesDataSource.isProceedToNextTrackEnabled()
         _masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()

@@ -71,7 +71,6 @@
     <!-- Prefs Keys -->
     <string name="prefs_key_track_autostart" translatable="false">PREFS_TRACK_AUTOSTART</string>
     <string name="prefs_key_proceed_to_next_track" translatable="false">PREFS_PROCEED_TO_NEXT_TRACK</string>
-    <string name="prefs_key_skip_back_to_start" translatable="false">PREFS_SKIP_BACK_TO_START</string>
     <string name="prefs_key_show_clear_queue_dialog" translatable="false">PREFS_SHOW_CLEAR_QUEUE_DIALOG</string>
     <string name="prefs_key_stop_playback_on_cue" translatable="false">PREFS_STOP_PLAYBACK_ON_CUE</string>
     <string name="prefs_key_enable_crashreporting" translatable="false">PREFS_ENABLE_CRASHREPORTING</string>
@@ -90,8 +89,6 @@
     <string name="settings_proceed_to_next_track_title">Automatisch zum nächsten Track</string>
     <string name="settings_proceed_to_next_track_summary">Wenn aktiviert wird nach Trackende automatisch der nächste Track geladen.</string>
 
-    <string name="settings_skip_back_behaviour_title">Skip-Back Verhalten</string>
-    <string name="settings_skip_back_behaviour_summary">Wenn aktiviert führt Skip-Back zum Anfang des Tracks und stoppt dort auf jeden Fall.\nWenn deaktiviert wird zum vorherigen Track gesprungen.\nBeachte, dass diese Einstellung auch im Shuffle Mode aktiv ist.</string>
 
     <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
     <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>
