@@ -101,7 +101,6 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$libs.appcompat"
     implementation "androidx.constraintlayout:constraintlayout:$libs.constraintLayout"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$libs.lifecycle"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$libs.lifecycle"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$libs.lifecycle"
     implementation "androidx.lifecycle:lifecycle-runtime-compose:$libs.lifecycle"
 
@@ -121,7 +120,6 @@ dependencies {
     implementation 'androidx.compose.material:material-icons-extended'
     implementation 'androidx.compose.ui:ui-tooling-preview'
     implementation 'androidx.activity:activity-compose'
-    implementation 'androidx.compose.runtime:runtime-livedata'
     debugImplementation 'androidx.compose.ui:ui-tooling'
 
     // Media3 (ExoPlayer) — replaces Superpowered for playback + pitch/tempo

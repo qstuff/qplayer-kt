@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
@@ -34,7 +34,7 @@ fun PlaylistScreen(
     playlistViewModel: PlaylistViewModel,
     queueViewModel: QueueViewModel
 ) {
-    val playlists = playlistViewModel.playlistList.observeAsState(emptyList()).value.toList()
+    val playlists by playlistViewModel.playlistList.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -79,7 +79,10 @@ fun PlaylistScreen(
     }
 
     openPlaylist?.let { playlist ->
-        val tracks = remember(playlist) { playlistViewModel.getTracksForPlaylist(playlist) }
+        // Loaded off the main thread; the dialog appears once the tracks are there.
+        val tracks = produceState<List<Track>?>(initialValue = null, playlist) {
+            value = playlistViewModel.getTracksForPlaylist(playlist)
+        }.value ?: return@let
         OpenPlaylistDialog(
             playlist = playlist,
             tracks = tracks,

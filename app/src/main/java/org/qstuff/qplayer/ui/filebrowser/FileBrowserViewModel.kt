@@ -2,7 +2,9 @@ package org.qstuff.qplayer.ui.filebrowser
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
@@ -11,6 +13,21 @@ import timber.log.Timber
 import java.io.File
 import java.util.*
 
+
+/**
+ * What the file browser shows. Updated as one object, so the header and the list always change
+ * together.
+ */
+data class FileBrowserState(
+    /** The current directory relative to its storage, e.g. "SD card/Music". */
+    val directoryName: String = "",
+    val files: List<File> = emptyList(),
+    /**
+     * Non-null while the storage list (the level above all storage roots) is shown instead of a
+     * directory — that's where internal storage and the SD card are picked.
+     */
+    val storageRoots: List<StorageRoot>? = null
+)
 
 /*
  * Created by Claus Chierici (claus@qstuff.org)
@@ -21,16 +38,8 @@ class FileBrowserViewModel(
     application: Application
 ) : AndroidViewModel(application), KoinComponent {
 
-    var fileList: MutableLiveData<List<File>> = MutableLiveData()
-
-    /** The current directory relative to its storage, e.g. "SD card/Music". */
-    var directoryName: MutableLiveData<String> = MutableLiveData()
-
-    /**
-     * Non-null while the storage list (the level above all storage roots) is shown instead of a
-     * directory — that's where internal storage and the SD card are picked.
-     */
-    var storageRoots: MutableLiveData<List<StorageRoot>?> = MutableLiveData()
+    private val _state = MutableStateFlow(FileBrowserState())
+    val state: StateFlow<FileBrowserState> = _state.asStateFlow()
 
     /** The browsed directory; null while the storage list is shown. */
     private var currentDir: File? = null
@@ -78,9 +87,7 @@ class FileBrowserViewModel(
     private fun showStorageRoots(roots: List<StorageRoot> = StorageRoots.find(getApplication())) {
         Timber.d("showStorageRoots(): ${roots.map { it.dir }}")
         currentDir = null
-        storageRoots.value = roots
-        fileList.value = emptyList()
-        directoryName.value = ""
+        _state.value = FileBrowserState(storageRoots = roots)
     }
 
     private fun browseTo(dir: File?) {
@@ -92,7 +99,6 @@ class FileBrowserViewModel(
 
             if (!fileList.isNullOrEmpty()) {
                 currentDir = dir
-                storageRoots.value = null
                 filterFileList(dir, fileList.asList())
             } else {
                 Timber.w("browseTo(): empty: ${dir.path}")
@@ -115,8 +121,7 @@ class FileBrowserViewModel(
         Collections.sort(files, FileItemsComparator())
 
         supportedFiles.addAll(files.filter { it.isSupported() })
-        fileList.value = supportedFiles
-        directoryName.value = displayName(dir)
+        _state.value = FileBrowserState(directoryName = displayName(dir), files = supportedFiles)
     }
 
     /** "<storage label><path below the storage root>", e.g. "SD card/Music/House". */

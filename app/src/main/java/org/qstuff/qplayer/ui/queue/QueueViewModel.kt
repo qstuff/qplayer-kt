@@ -1,9 +1,12 @@
 package org.qstuff.qplayer.ui.queue
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -35,10 +38,17 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private val _shuffle = MutableStateFlow(false)
     val shuffle: StateFlow<Boolean> = _shuffle.asStateFlow()
 
-    // onTrackSelected stays LiveData: it's a one-shot selection EVENT observed by PlayerActivity
-    // to trigger loadTrack (re-selecting the same track must reload), where LiveData's Activity-
-    // lifecycle observation is a good fit.
-    var onTrackSelected = MutableLiveData<Track>()
+    // One-shot event: a track was selected (queue tap, Next/Prev, auto-advance, restore on start).
+    // PlayerActivity collects it to load the track — every emission counts, so re-selecting the
+    // same track reloads it (an event, not state: no equality dedup).
+    private val _trackSelected = MutableSharedFlow<Track>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST   // the latest selection wins
+    )
+    val trackSelected: SharedFlow<Track> = _trackSelected.asSharedFlow()
+
+    // The current selection, persisted on save; null after the queue was cleared.
+    private var selectedTrack: Track? = null
 
     // Settings
     private var isProceedToNextTrackEnabled = true
@@ -174,7 +184,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
         currentTrackList.clear()
         _trackList.value = ArrayList(currentTrackList)
         _onTrackSelectedIndex.value = -1
-        onTrackSelected.value = null
+        selectedTrack = null
         _shuffle.value = false
         _repeat.value = TrackRepeatStatus.NONE
         shufflePlayedUris.clear()
@@ -186,8 +196,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
         track.isAutoplay = preferencesDataSource.isAutostartEnabled()
         _onTrackSelectedIndex.value = currentTrackList.indexOf(track)
-        onTrackSelected.value = track
-        saveSelectedTrack()
+        select(track)
     }
 
     //
@@ -269,8 +278,13 @@ class QueueViewModel: ViewModel(), KoinComponent {
     private fun selectTrackAt(index: Int) {
         val track = currentTrackList[index]
         track.isAutoplay = preferencesDataSource.isAutostartEnabled()
-        onTrackSelected.value = track
         _onTrackSelectedIndex.value = index
+        select(track)
+    }
+
+    private fun select(track: Track) {
+        selectedTrack = track
+        _trackSelected.tryEmit(track)
         saveSelectedTrack()
     }
 
@@ -308,11 +322,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     private fun saveSelectedTrack() {
-
-        if (onTrackSelected.value != null) {
-            val track = onTrackSelected.value
-            preferencesDataSource.saveSelectedTrackList(track!!)
-        }
+        selectedTrack?.let { preferencesDataSource.saveSelectedTrackList(it) }
     }
 
     fun readSelectedTrack() {
@@ -326,7 +336,8 @@ class QueueViewModel: ViewModel(), KoinComponent {
                     // stale `true` persisted from an earlier next/prev while autostart was on).
                     it.isAutoplay = false
                     _onTrackSelectedIndex.value = index
-                    onTrackSelected.value = it
+                    selectedTrack = it
+                    _trackSelected.tryEmit(it)
                 }
                 index++
             }

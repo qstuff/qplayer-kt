@@ -11,14 +11,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
-import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.lockOrientationForDevice
@@ -48,11 +46,6 @@ class PlayerActivity : AppCompatActivity() {
 
     private val preferencesDataSource: PreferencesDataSource by inject()
 
-    // Nullable: clearTrackList() posts null.
-    private val trackSelectedObserver = Observer<Track?> { track ->
-        track?.let { playerViewModel.loadTrack(it) }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
@@ -66,13 +59,15 @@ class PlayerActivity : AppCompatActivity() {
         playlistViewModel = ViewModelProvider(this).get(PlaylistViewModel::class.java)
         fileBrowserViewModel = ViewModelProvider(this).get(FileBrowserViewModel::class.java)
 
-        // Cross-ViewModel wiring. Deliberately NOT gated on the STARTED state (observeForever /
-        // plain lifecycleScope instead of observe(this) / repeatOnLifecycle): auto-advance must
-        // load and start the next track while the app is in the background, too. Both stop when
-        // the activity is destroyed.
+        // Cross-ViewModel wiring. Deliberately NOT gated on the STARTED state (plain lifecycleScope
+        // instead of repeatOnLifecycle): auto-advance must load and start the next track while the
+        // app is in the background, too. The collectors stop when the activity is destroyed.
         //
-        // queue track selection → player load
-        queueViewModel.onTrackSelected.observeForever(trackSelectedObserver)
+        // queue track selection → player load. Collecting starts right here (lifecycleScope runs on
+        // Main.immediate), before readSelectedTrack() below emits the track restored on start.
+        lifecycleScope.launch {
+            queueViewModel.trackSelected.collect { track -> playerViewModel.loadTrack(track) }
+        }
         // track finished → the queue decides what follows (repeat/shuffle); if nothing does,
         // rewind so Play starts the finished track again
         lifecycleScope.launch {
@@ -161,7 +156,6 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        queueViewModel.onTrackSelected.removeObserver(trackSelectedObserver)
         // formerly in QueueFragment.onDestroyView
         queueViewModel.saveStates()
         playerViewModel.stopMediaService()
