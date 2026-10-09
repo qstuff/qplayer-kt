@@ -1,48 +1,148 @@
+<!DOCTYPE html>
 <html>
-<font color="#FC7614">
-    <header><h3>qplayer</h3></header>
-</font>
-<body bgcolor="#00000000">
-<font color="white">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html, body { background: #000000; }
+        body { color: #FFFFFF; font-family: sans-serif; line-height: 1.4; margin: 16px; }
+        h1 { color: #FC7614; font-size: 1.3em; }
+        h2 { color: #FC7614; font-size: 1.1em; margin-top: 2em; }
+        h3 { font-size: 1em; margin-top: 1.4em; }
+        a { color: #FC7614; }
+        hr { border: none; border-top: 1px solid #FC7614; margin: 2.5em 0; }
+    </style>
+</head>
+<body>
 
-    <p><b>Datenschutzerklärung</p></b>
+<h1>qdeq</h1>
 
-    Diese App speichert keine personenbezogenen Daten.<br>
-    Diese App spielt nur die Musik, die die Benutzer*in auf seinem Gerät gespeichert hat.<br>
-    Dafür benötigt diese App die Berechtigung auf den Speicher (Fotos, Medien und Dateien) zugreifen zu können.<br>
-    Diese App zeigt keine Werbung.<br>
-    Diese App kostet nichts.<br><br>
+<h2>Datenschutzerklärung</h2>
 
-    Diese App nutzt den Google Service "Firebase Crashlytics" zur Analyse von App-Crashes und -Fehlern.<br>
-    Dafür wird eine Internetverbindung benutzt.<br>
-    Dieser Service ist bei der ersten Installation der App deaktiviert. Nutzer*innen können den Service in den Einstellungen selbst aktivieren und jederzeit wieder deaktivieren.<br>
-    Beim ersten App Start wird dafür ein Opt-In Dialog angezeigt<br><br>
+<h3>Kurzfassung</h3>
+<p>
+    qdeq spielt Musik ab, die auf deinem Gerät gespeichert ist. Die App zeigt keine Werbung,
+    kostet nichts und hat keine Benutzerkonten. Alle Daten der App bleiben auf deinem Gerät.
+    Die einzige Ausnahme sind Absturzberichte – und die nur, wenn du sie ausdrücklich erlaubst.
+</p>
 
-    Siehe dazu:<br>
-    <a href="https://firebase.google.com/" style="color: #FC7614">Google Firebase</a>,
-    <a href="https://firebase.google.com/terms/crashlytics/" style="color: #FC7614">Firebase Crashlytics</a> and
-    <a href="https://www.google.com/policies/privacy/" style="color: #FC7614">Google Privacy</a><br>
-    für weitere Informationen<br>
+<h3>Verantwortlich</h3>
+<p>
+    QStuff – Claus Chierici und Ingo Stahl-Blood<br>
+    Nöldnerstr. 9, 10317 Berlin<br>
+    <a href="mailto:qplayer@qstuff.org">qplayer@qstuff.org</a>
+</p>
 
-    <br><br>
-    <p><b>Privacy Statement</p></b>
+<h3>Daten auf deinem Gerät</h3>
+<p>
+    Die App speichert nur lokal auf deinem Gerät: die Queue, deine Playlists, die Einstellungen
+    und den zuletzt geöffneten Ordner. Diese Daten werden nicht übertragen und beim Deinstallieren
+    der App gelöscht.
+</p>
 
-    This App does not save any personal data.<br>
-    This App plays only the music the user has stored on the device.<br>
-    Therefore this App requires the permission to access storage (Photos, Media and Files)<br>
-    This App shows no ads.<br>
-    This App does not charge you any fees.<br><br>
+<h3>Berechtigungen</h3>
+<p>
+    Um deine Musik abzuspielen, braucht die App Lesezugriff auf Audiodateien
+    („Musik und Audio“, bis Android 12 „Fotos, Medien und Dateien“). Die Wiedergabe im Hintergrund
+    wird als Medien-Benachrichtigung angezeigt.
+</p>
 
-    This App uses Google's service "Firebase Crashlytics" to analyze crashes and errors.<br>
-    This uses an internet connection<br>
-    By default this service is disabled. The user may opt-in if he want and opt-out again at any time. You'll find the opt-out switch in the settings page<br><br>
+<h3>Absturzberichte (Firebase Crashlytics)</h3>
+<p>
+    Wenn du zustimmst, sendet die App bei einem Absturz einen Bericht an den Dienst
+    „Firebase Crashlytics“ von Google, damit wir Fehler finden und beheben können.
+    Ein Bericht enthält: den technischen Fehlerverlauf (Stacktrace), Gerätemodell,
+    Android-Version, App-Version, den Zeitpunkt und eine zufällige Installations-ID
+    (keine Werbe- oder Geräte-ID). Bei der Übertragung verarbeitet Google zudem deine IP-Adresse.
+    Inhalte wie deine Musik oder Playlists werden nicht übertragen.
+</p>
+<p>
+    <b>Einwilligung:</b> Absturzberichte sind standardmäßig ausgeschaltet. Beim ersten Start fragt
+    die App einmal nach deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst sie jederzeit in
+    den Einstellungen unter „Absturzberichte“ widerrufen; Berichte, die noch nicht gesendet wurden,
+    werden dann gelöscht.
+</p>
+<p>
+    <b>Empfänger:</b> Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland, als
+    Auftragsverarbeiter. Dabei können Daten in die USA übermittelt werden; Google ist unter dem
+    EU-US Data Privacy Framework zertifiziert. Google speichert die Absturzdaten 90 Tage.
+</p>
+<p>
+    Weitere Informationen:
+    <a href="https://firebase.google.com/support/privacy">Datenschutz bei Firebase</a>,
+    <a href="https://policies.google.com/privacy">Datenschutzerklärung von Google</a>
+</p>
 
-    Please refer to:<br>
-    <a href="https://firebase.google.com/" style="color: #FC7614">Google Firebase</a>,
-    <a href="https://firebase.google.com/terms/crashlytics/" style="color: #FC7614">Firebase Crashlytics</a> and
-    <a href="https://www.google.com/policies/privacy/" style="color: #FC7614">Google Privacy</a><br>
-    for further information.<br>
+<h3>Deine Rechte</h3>
+<p>
+    Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung
+    deiner Daten sowie das Recht, deine Einwilligung zu widerrufen. Wende dich dazu an die oben
+    genannte Adresse. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren,
+    z.&nbsp;B. bei der Berliner Beauftragten für Datenschutz und Informationsfreiheit.
+</p>
 
-</font>
+<hr>
+
+<h2>Privacy Statement</h2>
+
+<h3>Summary</h3>
+<p>
+    qdeq plays music that is stored on your device. The app shows no ads, is free of charge and
+    has no user accounts. All app data stays on your device. The only exception are crash
+    reports – and only if you explicitly allow them.
+</p>
+
+<h3>Controller</h3>
+<p>
+    QStuff – Claus Chierici and Ingo Stahl-Blood<br>
+    Nöldnerstr. 9, 10317 Berlin, Germany<br>
+    <a href="mailto:qplayer@qstuff.org">qplayer@qstuff.org</a>
+</p>
+
+<h3>Data on your device</h3>
+<p>
+    The app only stores data locally on your device: the queue, your playlists, the settings and
+    the last opened folder. This data is never transmitted and is deleted when you uninstall
+    the app.
+</p>
+
+<h3>Permissions</h3>
+<p>
+    To play your music, the app needs read access to audio files ("Music and audio", up to
+    Android 12 "Photos, media and files"). Background playback is shown as a media notification.
+</p>
+
+<h3>Crash reports (Firebase Crashlytics)</h3>
+<p>
+    If you agree, the app sends a report to Google's "Firebase Crashlytics" service when it
+    crashes, so we can find and fix bugs. A report contains: the technical error trace (stack
+    trace), device model, Android version, app version, the time and a random installation ID
+    (not an advertising or device ID). Google also processes your IP address during the transfer.
+    Content such as your music or playlists is never transmitted.
+</p>
+<p>
+    <b>Consent:</b> crash reports are off by default. On first start the app asks once for your
+    consent (Art. 6(1)(a) GDPR). You can withdraw it at any time in the settings under
+    "Crash reports"; reports that haven't been sent yet are then deleted.
+</p>
+<p>
+    <b>Recipient:</b> Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland, as
+    processor. Data may be transferred to the USA; Google is certified under the EU-US Data
+    Privacy Framework. Google retains crash data for 90 days.
+</p>
+<p>
+    More information:
+    <a href="https://firebase.google.com/support/privacy">Privacy and security in Firebase</a>,
+    <a href="https://policies.google.com/privacy">Google Privacy Policy</a>
+</p>
+
+<h3>Your rights</h3>
+<p>
+    You have the right to access, rectification, erasure and restriction of processing of your
+    data, and the right to withdraw your consent. Please contact us at the address above. You may
+    also lodge a complaint with a data protection supervisory authority, e.g. the Berlin
+    Commissioner for Data Protection and Freedom of Information.
+</p>
+
 </body>
 </html>

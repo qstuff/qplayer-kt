@@ -1,0 +1,15 @@
+{
+  "uniqueId": "wseemann:JavaPlaylistParser",
+  "artifactVersion": "",
+  "name": "JavaPlaylistParser (parts of the M3U parser)",
+  "description": "Parts of the M3U playlist parser are based on code by William Seemann.",
+  "website": "https://github.com/wseemann/JavaPlaylistParser",
+  "developers": [
+    {
+      "name": "William Seemann"
+    }
+  ],
+  "licenses": [
+    "Apache-2.0"
+  ]
+}

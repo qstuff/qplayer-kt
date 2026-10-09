@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.ui.settings
 
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import org.qstuff.qplayer.databinding.WebviewBinding
@@ -23,6 +24,8 @@ class WebViewActivity: AppCompatActivity() {
 
         binding = WebviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // The page canvas is white by default (the view's android:background doesn't apply to it).
+        binding.webView.setBackgroundColor(Color.BLACK)
 
 
         if (url != null) {
