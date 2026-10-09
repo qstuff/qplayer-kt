@@ -39,6 +39,7 @@
 
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
+    <string name="navigate_back">Zurück</string>
     <string name="dialog_cancel">Abbrechen</string>
 
     <string name="dialog_add_to_queue">In die Queue laden</string>
@@ -68,17 +69,6 @@
     <string name="more_menu_contact">Feedback</string>
     <string name="more_menu_licenses">Lizenzen</string>
 
-    <!-- Prefs Keys -->
-    <string name="prefs_key_track_autostart" translatable="false">PREFS_TRACK_AUTOSTART</string>
-    <string name="prefs_key_proceed_to_next_track" translatable="false">PREFS_PROCEED_TO_NEXT_TRACK</string>
-    <string name="prefs_key_show_clear_queue_dialog" translatable="false">PREFS_SHOW_CLEAR_QUEUE_DIALOG</string>
-    <string name="prefs_key_stop_playback_on_cue" translatable="false">PREFS_STOP_PLAYBACK_ON_CUE</string>
-    <string name="prefs_key_enable_crashreporting" translatable="false">PREFS_ENABLE_CRASHREPORTING</string>
-    <string name="prefs_key_app_version" translatable="false">PREFS_APP_VERSION</string>
-    <string name="prefs_key_device_info" translatable="false">PREFS_DEVICE_INFO</string>
-    <string name="prefs_key_jogwheel_sensitivity" translatable="false">PREFS_JOG_WHEEL_SENSITIVITY</string>
-    <string name="prefs_key_jogwheel_mode" translatable="false">PREFS_JOG_WHEEL_MODE</string>
-
     <!-- Basic Playback Settings -->
     <string name="settings_cat_player_basic_title">Einstellungen für Wiedergabe</string>
 
@@ -88,22 +78,14 @@
     <string name="settings_proceed_to_next_track_title">Automatisch zum nächsten Track</string>
     <string name="settings_proceed_to_next_track_summary">Wenn aktiviert wird nach Trackende automatisch der nächste Track geladen.</string>
 
-
     <string name="settings_show_clear_queue_title">Warndialog für Clear-Queue zeigen</string>
     <string name="settings_show_clear_queue_summary">Wenn aktiviert wird vor dem Löschen der Queue ein Warndialog angezeigt</string>
-
 
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">Einstellungen für DJ Features</string>
 
-    <string name="settings_dj_enable_cue">Cue-Punkt setzen</string>
-    <string name="settings_dj_enable_cue_summary">Aktivieren um einen Cue-Punkt setzen zu können (Tap auf CUE aktiviert, Long-Tap löscht den Cue-Punkt).</string>
-
     <string name="settings_dj_stop_playback_on_cue_title">Wiedergabe stoppen beim Cue-Punkt setzen</string>
     <string name="settings_dj_stop_playback_on_cue_summary">Wenn aktiviert stoppt die Wiedergabe beim Setzen eines Cue-Punktes</string>
-
-    <string name="settings_dj_enable_remain_blink_title">Zeitanzeige für \"remain\" blinkt</string>
-    <string name="settings_dj_remain_blink_summary">Wenn aktiviert blinkt die Zeitanzeige während der letzten 30 Sekunden eines Tracks</string>
 
     <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel Empfindlichkeit</string>
     <string name="settings_dj_jogwheel_sensitivity_summary">Legt fest wie stark das Jogwheel auf Aktion reagiert\nAktuell: %1$s</string>

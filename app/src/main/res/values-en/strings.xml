@@ -39,6 +39,7 @@
 
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
+    <string name="navigate_back">Back</string>
     <string name="dialog_cancel">Cancel</string>
 
     <string name="dialog_add_to_queue">Add tracks to queue</string>
@@ -77,22 +78,14 @@
     <string name="settings_proceed_to_next_track_title">Autoproceed to next track</string>
     <string name="settings_proceed_to_next_track_summary">If enabled, after a track has completed the next track is selected.</string>
 
-
     <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
     <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
-
 
     <!-- DJ Specific Settings -->
     <string name="settings_cat_dj_specific_options_title">DJ Settings</string>
 
-    <string name="settings_dj_enable_cue">Enable Cue</string>
-    <string name="settings_dj_enable_cue_summary">Enables setting and playing from a cuepoint</string>
-
     <string name="settings_dj_stop_playback_on_cue_title">Stop playback on Cue</string>
     <string name="settings_dj_stop_playback_on_cue_summary">If enabled playback stops when setting a cuepoint</string>
-
-    <string name="settings_dj_enable_remain_blink_title">Timer \"remain\" blinks</string>
-    <string name="settings_dj_remain_blink_summary">If enabled the timer blinks during the last 30 seconds of a track</string>
 
     <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel sensitivity</string>
     <string name="settings_dj_jogwheel_sensitivity_summary">Determines how sensitiv the jogwheel responds to action\nCurrent: %1$s</string>

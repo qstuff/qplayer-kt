@@ -36,7 +36,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREF_PITCH_VALUE = "PREF_PITCH_VALUE"
         const val PREF_SHOW_REMAINING = "PREF_SHOW_REMAINING"
 
-        // From SettingsFragment
+        // Settings
         const val PREFS_TRACK_AUTOSTART = "PREFS_TRACK_AUTOSTART"
         const val PREFS_PROCEED_TO_NEXT_TRACK = "PREFS_PROCEED_TO_NEXT_TRACK"
         const val PREFS_STOP_PLAYBACK_ON_CUE = "PREFS_STOP_PLAYBACK_ON_CUE"
@@ -147,7 +147,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
                 putBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, shown)
             }
     //
-    // SettingsFragment
+    // Settings
     //
 
     fun isAutostartEnabled() = preferences.getBoolean(PREFS_TRACK_AUTOSTART, false)
@@ -158,4 +158,26 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
     fun getJogWheelMode() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)
     fun getJogWheelModeEnum() = JogwheelMode.values()[Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)]
+
+    fun setAutostartEnabled(enabled: Boolean) =
+            preferences.edit { putBoolean(PREFS_TRACK_AUTOSTART, enabled) }
+
+    fun setProceedToNextTrackEnabled(enabled: Boolean) =
+            preferences.edit { putBoolean(PREFS_PROCEED_TO_NEXT_TRACK, enabled) }
+
+    fun setShowClearQueueWarningEnabled(enabled: Boolean) =
+            preferences.edit { putBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, enabled) }
+
+    fun setStopPlaybackOnSettingCuepointEnabled(enabled: Boolean) =
+            preferences.edit { putBoolean(PREFS_STOP_PLAYBACK_ON_CUE, enabled) }
+
+    fun setCrashreportingEnabled(enabled: Boolean) =
+            preferences.edit { putBoolean(PREFS_ENABLE_CRASHREPORTING, enabled) }
+
+    // Jog wheel values are stored as Strings (format of the former ListPreference)
+    fun setJogWheelSensitivity(sensitivity: Int) =
+            preferences.edit { putString(PREFS_JOG_WHEEL_SENSITIVITY, sensitivity.toString()) }
+
+    fun setJogWheelMode(mode: Int) =
+            preferences.edit { putString(PREFS_JOG_WHEEL_MODE, mode.toString()) }
 }
