@@ -12,11 +12,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.ui.player.audio.AudioDecoder
 import timber.log.Timber
+import java.io.Closeable
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.FileChannel
+import java.nio.ShortBuffer
 import kotlin.math.PI
 
 /**
@@ -27,8 +28,10 @@ import kotlin.math.PI
  * [start]s the engine at the playback position, feeds the wheel's rotation via [scratchTo] and
  * hands the final position back to ExoPlayer after [stop].
  *
- * - [prepare] decodes the track (via [AudioDecoder], in the background) to 16-bit PCM in a
- *   memory-mapped, already-unlinked cache file — off the Java heap, and nothing is left on disk.
+ * - [prepare] decodes the track (via [AudioDecoder], in the background) to 16-bit PCM in a cache
+ *   file (~10 MB per minute) — off the Java heap. Only the prepared track's file exists; it is
+ *   unlinked right after creation and closed explicitly when the track changes or the engine is
+ *   released, so its disk space is freed immediately (and by the OS if the process dies).
  *   Scratching works as soon as the decoder has passed the playback position.
  * - A render thread plays the PCM through a low-latency [AudioTrack] at the device's native rate.
  *   Its read head follows the wheel with a critically damped follower (forward, backward or
@@ -49,28 +52,65 @@ class ScratchEngine(private val context: Context) {
         /** Fade in/out at start/stop so the hand-over to/from ExoPlayer doesn't click. */
         private const val FADE_FRAMES = 256
         private const val DC_BLOCK_HZ = 20.0
-        /** Buffer size used when the container doesn't report a duration. */
-        private const val UNKNOWN_DURATION_S = 15 * 60.0
+        /** Frames the read head can move within one block, either way (+ interpolation). */
+        private val WINDOW_REACH = (MAX_RATE * BLOCK_FRAMES).toInt() + 2
     }
 
-    /** Decoded PCM of the prepared track: interleaved 16-bit, at most 2 channels. */
-    private class PcmSource(
-        val sampleRate: Int,
-        val channels: Int,
-        val capacityFrames: Int,
-        private val buffer: ByteBuffer
-    ) {
+    /**
+     * Decoded PCM of the prepared track (interleaved 16-bit, at most 2 channels) in a cache file.
+     *
+     * The file is unlinked as soon as it's open, so it only exists while the source is open: [close]
+     * frees the space at once (a mapped file would only be freed whenever the GC unmaps it, which let
+     * deleted files of previously loaded tracks pile up to gigabytes). The decoder appends, the
+     * render thread reads windows around the read head; both use positional I/O, which may run
+     * concurrently.
+     */
+    private class PcmSource(cacheDir: File, val sampleRate: Int, val channels: Int) : Closeable {
+
+        // Open first, then unlink: the open file stays usable, its name is gone.
+        private val file = File.createTempFile("scratch", ".pcm", cacheDir).let { tmp ->
+            RandomAccessFile(tmp, "rw").also { tmp.delete() }
+        }
+        private val channel = file.channel
+        private val frameBytes = channels * 2
+
         /** Frames written so far. Written by the decoder, read by the render thread. */
         @Volatile var decodedFrames = 0
 
-        fun put(frame: Int, channel: Int, value: Short) {
-            buffer.putShort((frame * channels + channel) * 2, value)
+        /** Decoder side: appends the frames between the buffer's position and limit. */
+        fun append(frames: ByteBuffer) {
+            var offset = decodedFrames.toLong() * frameBytes
+            val count = frames.remaining() / frameBytes
+            while (frames.hasRemaining()) offset += channel.write(frames, offset)
+            decodedFrames += count
         }
 
-        fun sample(frame: Int, channel: Int): Float =
-            buffer.getShort((frame * channels + channel) * 2) / 32768f
+        /**
+         * Render side: reads frames [first] until [first] + count (clamped to what's decoded) into
+         * [into], interleaved, via [buffer] and its short [view] (reused, so the audio thread
+         * doesn't allocate); returns the number of frames read.
+         */
+        fun read(first: Int, count: Int, buffer: ByteBuffer, view: ShortBuffer, into: ShortArray): Int {
+            val frames = count.coerceAtMost(decodedFrames - first).coerceAtLeast(0)
+            buffer.clear().limit(frames * frameBytes)
+            var offset = first.toLong() * frameBytes
+            while (buffer.hasRemaining()) {
+                val n = channel.read(buffer, offset)
+                if (n < 0) break
+                offset += n
+            }
+            view.clear()
+            view.get(into, 0, frames * channels)
+            return frames
+        }
+
+        override fun close() {
+            try { file.close() } catch (_: Exception) {}
+        }
     }
 
+    // `source` and `preparedUri` change together under `lock` (main thread vs. decoder).
+    private val lock = Any()
     @Volatile private var source: PcmSource? = null
     @Volatile private var preparedUri: String? = null
     private var decodeJob: Job? = null
@@ -95,20 +135,27 @@ class ScratchEngine(private val context: Context) {
         if (uri == preparedUri) return
         stop()
         decodeJob?.cancel()
-        source = null
-        preparedUri = uri
+        closeSource(newUri = uri)
         decodeJob = scope.launch { decode(uri) }
     }
 
-    /** Stop scratching, drop the decoded track and the audio output. */
+    /** Stop scratching, drop the decoded track (freeing its disk space) and the audio output. */
     fun release() {
         stop()
         decodeJob?.cancel()
         decodeJob = null
-        source = null
-        preparedUri = null
+        closeSource(newUri = null)
         audioTrack?.release()
         audioTrack = null
+    }
+
+    /** Closes (and so deletes) the current track's PCM file; a still running decoder then fails. */
+    private fun closeSource(newUri: String?) {
+        val old = synchronized(lock) {
+            preparedUri = newUri
+            source.also { source = null }
+        }
+        old?.close()
     }
 
     /**
@@ -158,53 +205,40 @@ class ScratchEngine(private val context: Context) {
 
     private suspend fun decode(uri: String) {
         var pcm: PcmSource? = null
-        var writeFrame = 0
+        // Reused staging buffer for the frames of one decoder chunk (grown as needed).
+        var staging = ByteBuffer.allocateDirect(64 * 1024).order(ByteOrder.nativeOrder())
 
-        AudioDecoder.decode(
-            context, uri,
-            onFormat = { sampleRate, channels, durationUs ->
-                val outChannels = channels.coerceAtMost(2)
-                val seconds = if (durationUs > 0) {
-                    durationUs / 1_000_000.0 * 1.05 + 5   // margin for inexact (VBR) durations
-                } else UNKNOWN_DURATION_S
-                // One mapping is limited to 2 GB.
-                val capacityFrames = (seconds * sampleRate).toLong()
-                    .coerceAtMost(Int.MAX_VALUE / (2L * outChannels)).toInt()
-                try {
-                    val buffer = mapTempFile(capacityFrames.toLong() * outChannels * 2)
-                    pcm = PcmSource(sampleRate, outChannels, capacityFrames, buffer).also {
-                        if (preparedUri == uri) source = it
+        try {
+            AudioDecoder.decode(
+                context, uri,
+                onFormat = { sampleRate, channels, _ ->
+                    val created = PcmSource(context.cacheDir, sampleRate, channels.coerceAtMost(2))
+                    val current = synchronized(lock) {
+                        (preparedUri == uri).also { if (it) source = created }
                     }
-                } catch (e: Exception) {
-                    Timber.e(e, "ScratchEngine: can't allocate the PCM buffer")
+                    if (current) pcm = created else created.close()
+                },
+                onPcm = chunk@{ shorts, channels ->
+                    val p = pcm ?: return@chunk
+                    val frames = (shorts.limit() - shorts.position()) / channels
+                    val bytes = frames * p.channels * 2
+                    if (staging.capacity() < bytes) {
+                        staging = ByteBuffer.allocateDirect(bytes).order(ByteOrder.nativeOrder())
+                    }
+                    staging.clear()
+                    val out = staging.asShortBuffer()
+                    var i = shorts.position()
+                    repeat(frames) {
+                        for (c in 0 until p.channels) out.put(shorts.get(i + c))
+                        i += channels
+                    }
+                    staging.limit(bytes)
+                    p.append(staging)
                 }
-            },
-            onPcm = chunk@{ shorts, channels ->
-                val p = pcm ?: return@chunk
-                val n = shorts.limit()
-                var i = shorts.position()
-                while (i + channels <= n && writeFrame < p.capacityFrames) {
-                    for (c in 0 until p.channels) p.put(writeFrame, c, shorts.get(i + c))
-                    i += channels
-                    writeFrame++
-                }
-                p.decodedFrames = writeFrame
-            }
-        )
-    }
-
-    /** A zero-filled, memory-mapped scratch buffer whose file is deleted right away. */
-    private fun mapTempFile(bytes: Long): ByteBuffer {
-        val file = File.createTempFile("scratch", ".pcm", context.cacheDir)
-        return try {
-            RandomAccessFile(file, "rw").use { raf ->
-                raf.setLength(bytes)
-                // The mapping stays valid after the channel is closed and the file is deleted.
-                raf.channel.map(FileChannel.MapMode.READ_WRITE, 0, bytes)
-                    .order(ByteOrder.nativeOrder())
-            }
+            )
         } finally {
-            file.delete()
+            // Superseded meanwhile (track changed / released): don't leave its file open.
+            pcm?.let { p -> if (synchronized(lock) { source !== p }) p.close() }
         }
     }
 
@@ -256,6 +290,27 @@ class ScratchEngine(private val context: Context) {
 
         val channels = src.channels
         val out = FloatArray(BLOCK_FRAMES * channels)
+        // The decoded frames around the read head, re-read for every block: the head can move at
+        // most WINDOW_REACH frames either way within one block.
+        val windowFrames = 2 * WINDOW_REACH + 1
+        val windowBytes = ByteBuffer.allocateDirect(windowFrames * channels * 2)
+            .order(ByteOrder.nativeOrder())
+        val windowShorts = windowBytes.asShortBuffer()
+        val window = ShortArray(windowFrames * channels)
+        var windowStart = 0
+        var windowCount = 0
+
+        fun loadWindow(center: Int) {
+            windowStart = (center - WINDOW_REACH).coerceAtLeast(0)
+            windowCount = src.read(windowStart, windowFrames, windowBytes, windowShorts, window)
+        }
+
+        fun sample(frame: Int, channel: Int): Float {
+            if (windowCount == 0) return 0f
+            val i = (frame - windowStart).coerceIn(0, windowCount - 1)
+            return window[i * channels + channel] / 32768f
+        }
+
         // Follower in output frames. damping = 4 / followFrames makes it critically damped, so the
         // record stops where the finger stops — no overshoot or wobble.
         val followFrames = FOLLOW_TIME_S * track.sampleRate
@@ -268,14 +323,18 @@ class ScratchEngine(private val context: Context) {
         var pos = positionFrame
         var rate = 0.0          // source frames per output frame
         var gain = 0f
-        val lastIn = FloatArray(channels) { c -> src.sample(pos.toInt(), c) }
+        val lastIn = FloatArray(channels)
         val lastOut = FloatArray(channels)
 
         try {
+            loadWindow(pos.toInt())
+            for (c in 0 until channels) lastIn[c] = sample(pos.toInt(), c)
+
             while (true) {
                 val fadingOut = !running
                 val target = targetFrame
                 val last = (src.decodedFrames - 2).coerceAtLeast(0).toDouble()
+                loadWindow(pos.toInt())
 
                 for (n in 0 until BLOCK_FRAMES) {
                     rate += ((target - pos) / followFrames - rate) * damping
@@ -294,8 +353,8 @@ class ScratchEngine(private val context: Context) {
                     val i = pos.toInt()
                     val f = (pos - i).toFloat()
                     for (c in 0 until channels) {
-                        val a = src.sample(i, c)
-                        val b = src.sample(i + 1, c)
+                        val a = sample(i, c)
+                        val b = sample(i + 1, c)
                         val x = a + (b - a) * f
                         val y = x - lastIn[c] + dcCoefficient * lastOut[c]
                         lastIn[c] = x
