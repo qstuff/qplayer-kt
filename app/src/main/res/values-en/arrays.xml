@@ -32,4 +32,11 @@
         <item>2</item>
     </string-array>
 
+    <string-array name="jogwheel_haptics_entries">
+        <item>Off</item>
+        <item>Light</item>
+        <item>Medium</item>
+        <item>Strong</item>
+    </string-array>
+
 </resources>

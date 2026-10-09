@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -48,12 +49,14 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     appVersion: String,
     deviceInfo: String,
+    canVibrate: Boolean,
     onBack: () -> Unit
 ) {
     val state by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
     var showSensitivityDialog by rememberSaveable { mutableStateOf(false) }
     var showModeDialog by rememberSaveable { mutableStateOf(false) }
+    var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
 
     val sensitivityEntries = stringArrayResource(R.array.jogwheel_sensitivity_entries)
     val sensitivityValues = stringArrayResource(R.array.jogwheel_sensitivity_values).map { it.toInt() }
@@ -62,6 +65,9 @@ fun SettingsScreen(
 
     val sensitivityIndex = sensitivityValues.indexOf(state.jogwheelSensitivity)
     val modeIndex = modeValues.indexOf(state.jogwheelMode)
+
+    // Index = JogwheelHaptics.LEVEL_* (off / light / medium / strong)
+    val hapticEntries = stringArrayResource(R.array.jogwheel_haptics_entries)
 
     Scaffold(
         containerColor = Color.Black,
@@ -134,6 +140,17 @@ fun SettingsScreen(
                 ),
                 onClick = { showModeDialog = true }
             )
+            ClickableRow(
+                title = stringResource(R.string.settings_dj_jogwheel_haptics_title),
+                summary = if (canVibrate) {
+                    stringResource(
+                        R.string.settings_dj_jogwheel_haptics_summary,
+                        hapticEntries.getOrElse(state.jogwheelHapticLevel) { "" }
+                    )
+                } else stringResource(R.string.settings_dj_jogwheel_haptics_unavailable),
+                enabled = canVibrate,
+                onClick = { showHapticsDialog = true }
+            )
 
             CategoryHeader(stringResource(R.string.settings_cat_privacy_title))
             SwitchRow(
@@ -163,6 +180,19 @@ fun SettingsScreen(
                 showSensitivityDialog = false
             },
             onDismiss = { showSensitivityDialog = false }
+        )
+    }
+
+    if (showHapticsDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_dj_jogwheel_haptics_title),
+            entries = hapticEntries.toList(),
+            selectedIndex = state.jogwheelHapticLevel,
+            onSelect = { level ->
+                settingsViewModel.setJogwheelHapticLevel(level)
+                showHapticsDialog = false
+            },
+            onDismiss = { showHapticsDialog = false }
         )
     }
 
@@ -214,14 +244,16 @@ private fun SwitchRow(
 private fun ClickableRow(
     title: String,
     summary: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     TitleAndSummary(
         title = title,
         summary = summary,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
+            .alpha(if (enabled) 1f else 0.4f)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     )
 }

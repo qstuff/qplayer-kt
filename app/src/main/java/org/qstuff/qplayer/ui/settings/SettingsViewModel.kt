@@ -17,6 +17,7 @@ data class SettingsUiState(
     val stopPlaybackOnCue: Boolean,
     val jogwheelSensitivity: Int,
     val jogwheelMode: Int,
+    val jogwheelHapticLevel: Int,
     val crashreporting: Boolean
 )
 
@@ -57,6 +58,11 @@ class SettingsViewModel : ViewModel(), KoinComponent {
         _uiState.update { it.copy(jogwheelMode = mode) }
     }
 
+    fun setJogwheelHapticLevel(level: Int) {
+        preferencesDataSource.setJogWheelHapticLevel(level)
+        _uiState.update { it.copy(jogwheelHapticLevel = level) }
+    }
+
     fun setCrashreporting(enabled: Boolean) {
         preferencesDataSource.setCrashreportingEnabled(enabled)
         CrashReporting.apply(enabled)
@@ -70,6 +76,7 @@ class SettingsViewModel : ViewModel(), KoinComponent {
         stopPlaybackOnCue = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled(),
         jogwheelSensitivity = preferencesDataSource.getJogWheelSensitivity(),
         jogwheelMode = preferencesDataSource.getJogWheelMode(),
+        jogwheelHapticLevel = preferencesDataSource.getJogWheelHapticLevel(),
         crashreporting = preferencesDataSource.isCrashreportingEnabled()
     )
 }

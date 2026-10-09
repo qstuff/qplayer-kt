@@ -41,6 +41,8 @@ import org.qstuff.qplayer.util.JogwheelMode
  * @param onScratchStart in SCRATCH mode, called on touch-down; returns whether scratching started
  *        (the gesture then drives [onScratch] with the rotation since touch-down and ends with
  *        [onScratchEnd]).
+ * @param onJogTouch / onJogRotate every touch-down / rotation (since touch-down) of the jog wheel,
+ *        in any mode — used for haptic feedback.
  * @param fitHeight false (phone): the jog wheel fills the width, the row's height follows.
  *        true (tablet pane): the jog wheel is also limited by the available height, and the
  *        fader + wheel group is centred horizontally.
@@ -54,6 +56,8 @@ fun PitchJogSection(
     onScratchStart: () -> Boolean,
     onScratch: (rotationRad: Double) -> Unit,
     onScratchEnd: () -> Unit,
+    onJogTouch: () -> Unit,
+    onJogRotate: (rotationRad: Double) -> Unit,
     modifier: Modifier = Modifier,
     fitHeight: Boolean = false
 ) {
@@ -142,12 +146,14 @@ fun PitchJogSection(
                     .fillMaxHeight()
                     .background(Color.Black),
                 onDown = {
+                    onJogTouch()
                     jogState.capturedPitchProgress = pitchProgress
                     jogState.onMoveTime = System.currentTimeMillis()
                     jogState.scratching =
                         getJogwheelMode() == JogwheelMode.SCRATCH && onScratchStart()
                 },
                 onMove = { textureAngle ->
+                    onJogRotate(textureAngle)
                     if (jogState.scratching) {
                         onScratch(textureAngle)
                         return@JogWheel
