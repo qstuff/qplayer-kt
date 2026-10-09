@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.util.CrashReporting
 
 data class SettingsUiState(
     val autostart: Boolean,
@@ -58,6 +59,7 @@ class SettingsViewModel : ViewModel(), KoinComponent {
 
     fun setCrashreporting(enabled: Boolean) {
         preferencesDataSource.setCrashreportingEnabled(enabled)
+        CrashReporting.apply(enabled)
         _uiState.update { it.copy(crashreporting = enabled) }
     }
 

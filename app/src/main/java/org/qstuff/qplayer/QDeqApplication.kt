@@ -9,6 +9,7 @@ import org.koin.dsl.module
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
+import org.qstuff.qplayer.util.CrashReporting
 import timber.log.Timber
 
 /*
@@ -23,10 +24,12 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        startKoin {
+        val koin = startKoin {
             androidContext(this@QDeqApplication)
             modules(preferencesDataSource, roomDatabaseModule, roomDataSource)
-        }
+        }.koin
+
+        CrashReporting.apply(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

@@ -139,6 +139,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     // Others
     //
 
+    /** Whether the crash reporting opt-in dialog was answered (it's shown once). */
     fun isCrashreportingEnabledDialogShown() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, false)
     fun setCrashreportingEnabledDialogShown(shown: Boolean) =
             preferences.edit {

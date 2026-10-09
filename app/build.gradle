@@ -2,8 +2,8 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
-//    id 'com.google.gms.google-services'
-//    id 'com.google.firebase.crashlytics'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 // defs from the root level build.gradle
@@ -56,10 +56,6 @@ android {
             debuggable false
 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-
-//            firebaseCrashlytics {
-//                nativeSymbolUploadEnabled true
-//            }
         }
     }
 
@@ -132,14 +128,11 @@ dependencies {
     // Gson
     implementation "com.google.code.gson:gson:$libs.gson"
 
-    // Crash reporting
-//    implementation "com.google.firebase:firebase-core:$libs.firebase"
-//    implementation "com.google.firebase:firebase-crashlytics:$libs.crashlytics"
+    // Crash reporting (opt-in, see CrashReporting)
+    implementation "com.google.firebase:firebase-crashlytics:$libs.crashlytics"
 
     testImplementation "junit:junit:$libs.jUnit"
     androidTestImplementation "androidx.test:runner:$libs.espressoRunner"
     androidTestImplementation "androidx.test.espresso:espresso-core:$libs.espresso"
 
 }
-
-// apply plugin: 'com.google.gms.google-services'
