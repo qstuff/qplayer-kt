@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -43,7 +42,7 @@ fun QueueScreen(
     // which would crash LazyColumn's getContentType if we captured the mutable reference.
     val tracks = queueViewModel.trackList.collectAsStateWithLifecycle().value.toList()
     val selectedIndex by queueViewModel.onTrackSelectedIndex.collectAsStateWithLifecycle()
-    val playlists by playlistViewModel.playlistList.observeAsState(emptyList())
+    val playlists by playlistViewModel.playlistList.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

@@ -1,59 +1,43 @@
 package org.qstuff.qplayer.datasource.room
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
-import kotlin.coroutines.CoroutineContext
 
 /*
- * Created by Claus Chierici (claus@qstuff.org) 
+ * Created by Claus Chierici (claus@qstuff.org)
  * on 4/1/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class RoomDataSource: KoinComponent, CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO
+/** Playlist/track persistence. The DAOs are blocking, so every call switches to Dispatchers.IO. */
+class RoomDataSource: KoinComponent {
 
     private val database by inject<QDeqDatabase>()
 
-    suspend fun getAllPlaylists(): List<Playlist> {
-        return async {
-            database.playlistDao().getAll()
-        }.await()
+    suspend fun getAllPlaylists(): List<Playlist> = withContext(Dispatchers.IO) {
+        database.playlistDao().getAll()
     }
 
-    suspend fun addPlaylist(playlist: Playlist) {
-        return async {
-            database.playlistDao().insertAll(playlist)
-        }.await()
+    suspend fun addPlaylist(playlist: Playlist) = withContext(Dispatchers.IO) {
+        database.playlistDao().insertAll(playlist)
     }
 
-    suspend fun removePlaylist(playlist: Playlist) {
-        return async {
-            database.playlistDao().delete(playlist.name)
-        }.await()
+    suspend fun removePlaylist(playlist: Playlist) = withContext(Dispatchers.IO) {
+        database.playlistDao().delete(playlist.name)
     }
 
-    suspend fun getTracksForPlaylist(playlistName: String): List<Track>? {
-        return async {
-            database.trackDao().getTracksForPlaylist(playlistName)
-        }.await()
+    suspend fun getTracksForPlaylist(playlistName: String): List<Track>? = withContext(Dispatchers.IO) {
+        database.trackDao().getTracksForPlaylist(playlistName)
     }
 
-    suspend fun addTracks(tracklist: List<Track>) {
-        return async {
-            database.trackDao().insertAll(tracklist)
-        }.await()
+    suspend fun addTracks(tracklist: List<Track>) = withContext(Dispatchers.IO) {
+        database.trackDao().insertAll(tracklist)
     }
 
-    suspend fun removeTracksForPlaylist(playlistName: String) {
-        return async {
-            database.trackDao().deleteTracksForPlaylist(playlistName)
-        }.await()
+    suspend fun removeTracksForPlaylist(playlistName: String) = withContext(Dispatchers.IO) {
+        database.trackDao().deleteTracksForPlaylist(playlistName)
     }
 }

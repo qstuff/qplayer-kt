@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.playlists.M3uUtils
@@ -90,10 +90,11 @@ fun FileBrowserScreen(
         return
     }
 
-    val files by fileBrowserViewModel.fileList.observeAsState(emptyList())
-    val directoryName by fileBrowserViewModel.directoryName.observeAsState("")
+    val state by fileBrowserViewModel.state.collectAsStateWithLifecycle()
+    val files = state.files
+    val directoryName = state.directoryName
     // Non-null: show the storage list (internal storage, SD card, …) instead of a directory.
-    val storageRoots by fileBrowserViewModel.storageRoots.observeAsState()
+    val storageRoots = state.storageRoots
 
     var addTracksDialogFiles by remember { mutableStateOf<List<File>?>(null) }
     var m3uDialogFile by remember { mutableStateOf<File?>(null) }
