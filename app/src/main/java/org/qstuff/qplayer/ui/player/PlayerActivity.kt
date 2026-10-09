@@ -26,6 +26,7 @@ import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
+import org.qstuff.qplayer.ui.settings.LicensesActivity
 import org.qstuff.qplayer.ui.settings.SettingsActivity
 import org.qstuff.qplayer.ui.settings.WebViewActivity
 import org.qstuff.qplayer.ui.theme.QDeqTheme
@@ -38,7 +39,6 @@ class PlayerActivity : AppCompatActivity() {
         const val EXTRA_URL = "EXTRA_URL"
         const val HTMLPAGE_PRIVACY = "privacy.html"
         const val HTMLPAGE_IMPRINT = "imprint.html"
-        const val HTMLPAGE_LICENSES = "licenses.html"
     }
 
     private lateinit var playerViewModel: PlayerViewModel
@@ -126,7 +126,8 @@ class PlayerActivity : AppCompatActivity() {
                     fileBrowserViewModel = fileBrowserViewModel,
                     titleSuffix = titleSuffix,
                     onOpenSettings = ::startSettingsActivity,
-                    onOpenWebView = ::startWebViewActivity
+                    onOpenWebView = ::startWebViewActivity,
+                    onOpenLicenses = ::startLicensesActivity
                 )
 
                 if (showCrashReportingOptIn) {
@@ -174,6 +175,10 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun startSettingsActivity() {
         startActivity(Intent(this, SettingsActivity::class.java))
+    }
+
+    private fun startLicensesActivity() {
+        startActivity(Intent(this, LicensesActivity::class.java))
     }
 
     @Suppress("DEPRECATION")

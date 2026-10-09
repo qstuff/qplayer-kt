@@ -38,6 +38,7 @@ fun PlayerTitleBar(
     titleSuffix: String,
     onOpenSettings: () -> Unit,
     onOpenWebView: (url: String) -> Unit,
+    onOpenLicenses: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showMoreMenu by remember { mutableStateOf(false) }
@@ -91,7 +92,7 @@ fun PlayerTitleBar(
                 )
                 DropdownMenuItem(
                     text = { Text("Licenses") },
-                    onClick = { showMoreMenu = false; onOpenWebView("licenses.html") }
+                    onClick = { showMoreMenu = false; onOpenLicenses() }
                 )
             }
         }
