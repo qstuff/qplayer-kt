@@ -38,6 +38,9 @@ import org.qstuff.qplayer.util.JogwheelMode
  * @param pitchProgress current pitch (0..1000, 500 = neutral).
  * @param onPitchChange emit a new pitch value (parent updates its state + the player).
  * @param getSensitivity / getJogwheelMode read at gesture time so live setting changes apply.
+ * @param onScratchStart in SCRATCH mode, called on touch-down; returns whether scratching started
+ *        (the gesture then drives [onScratch] with the rotation since touch-down and ends with
+ *        [onScratchEnd]).
  */
 @Composable
 fun PitchJogSection(
@@ -45,6 +48,9 @@ fun PitchJogSection(
     onPitchChange: (Int) -> Unit,
     getSensitivity: () -> Int,
     getJogwheelMode: () -> JogwheelMode,
+    onScratchStart: () -> Boolean,
+    onScratch: (rotationRad: Double) -> Unit,
+    onScratchEnd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
@@ -55,6 +61,7 @@ fun PitchJogSection(
             var lastOnMoveTime = 0L
             var lastAngle = 0.0
             val deltaList = arrayListOf<Double>()
+            var scratching = false
         }
     }
 
@@ -128,8 +135,14 @@ fun PitchJogSection(
                 onDown = {
                     jogState.capturedPitchProgress = pitchProgress
                     jogState.onMoveTime = System.currentTimeMillis()
+                    jogState.scratching =
+                        getJogwheelMode() == JogwheelMode.SCRATCH && onScratchStart()
                 },
                 onMove = { textureAngle ->
+                    if (jogState.scratching) {
+                        onScratch(textureAngle)
+                        return@JogWheel
+                    }
                     val sensitivity = getSensitivity()
                     jogState.lastOnMoveTime = jogState.onMoveTime
                     jogState.onMoveTime = System.currentTimeMillis()
@@ -150,6 +163,11 @@ fun PitchJogSection(
                     }
                 },
                 onUp = {
+                    if (jogState.scratching) {
+                        jogState.scratching = false
+                        onScratchEnd()
+                        return@JogWheel
+                    }
                     onPitchChange(jogState.capturedPitchProgress)
                     jogState.onMoveTime = 0L
                     jogState.lastOnMoveTime = 0L

@@ -246,7 +246,10 @@ fun PlayerScreen(
                     playerViewModel.onPitchChanged(v)
                 },
                 getSensitivity = { playerViewModel.jogwheelSensitivity.value },
-                getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() }
+                getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() },
+                onScratchStart = playerViewModel::startScratch,
+                onScratch = playerViewModel::scratchTo,
+                onScratchEnd = playerViewModel::endScratch
             )
 
             PlayerControls(

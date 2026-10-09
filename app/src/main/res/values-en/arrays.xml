@@ -23,7 +23,7 @@
     <string-array name="jogwheel_mode_entries">
         <item>By angle:\nThe farther you spin the more action you get\n</item>
         <item>By velocity:\nThe faster you spin the more action you get\n</item>
-        <item>Scratch (not yet supported):\nRewind or fast forward</item>
+        <item>Scratch:\nThe jog wheel moves playback directly, like a vinyl record</item>
     </string-array>
 
     <string-array name="jogwheel_mode_values">

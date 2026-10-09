@@ -23,7 +23,7 @@
     <string-array name="jogwheel_mode_entries">
         <item>Nach Winkel:\nJe weiter du drehst desto mehr Aktion\n</item>
         <item>Nach Geschwindigkeit:\nJe schneller du drehts desto mehr Aktion\n</item>
-        <item>Scratch (noch nicht unterstützt):\nDas Jogwheel spult vor oder zurück</item>
+        <item>Scratch:\nDas Jogwheel bewegt die Wiedergabe direkt wie eine Schallplatte</item>
     </string-array>
 
     <string-array name="jogwheel_mode_values">
