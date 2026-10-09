@@ -2,7 +2,6 @@ package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -12,13 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,28 +20,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-import org.qstuff.qplayer.R
-import org.qstuff.qplayer.ui.filebrowser.FileBrowserScreen
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlayerViewModel
-import org.qstuff.qplayer.ui.playlists.PlaylistScreen
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
-import org.qstuff.qplayer.ui.queue.QueueScreen
 import org.qstuff.qplayer.ui.queue.QueueViewModel
-import org.qstuff.qplayer.ui.theme.QOrange
 
 /**
- * The draggable bottom sheet with the Queue / Files / Playlists tabs and pager.
+ * The draggable bottom sheet (phone layout) holding the [PlayerTabs].
  *
  * Its height is driven in the layout phase from an [Animatable] offset (0 = expanded to
  * [expandedHeightPx], [maxSheetOffsetPx] = collapsed) so dragging only re-lays-out and the tab
  * lists' viewports track the visible height. Drag is bound to the notch handle and the TabRow.
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerTabSheet(
     expandedHeightPx: Float,
@@ -61,12 +47,6 @@ fun PlayerTabSheet(
 ) {
     val sheetOffset = remember { Animatable(maxSheetOffsetPx) }
     val sheetScope = rememberCoroutineScope()
-    val pagerState = rememberPagerState(pageCount = { 3 })
-    val tabTitles = listOf(
-        stringResource(R.string.queue_title),
-        stringResource(R.string.filebrowser_title),
-        stringResource(R.string.playlists_title)
-    )
     // Shared drag behavior for the collapse/expand handle areas (notch row + TabRow).
     val sheetDragModifier = Modifier.draggable(
         orientation = Orientation.Vertical,
@@ -119,52 +99,19 @@ fun PlayerTabSheet(
                     .background(Color.White, RoundedCornerShape(3.dp))
             )
         }
-        TabRow(
-            selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.Black,
-            contentColor = QOrange,
-            modifier = sheetDragModifier
-        ) {
-            tabTitles.forEachIndexed { index, title ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        if (pagerState.currentPage == index) {
-                            // tap on the already-selected tab → toggle the sheet
-                            val target =
-                                if (sheetOffset.value < maxSheetOffsetPx / 2) maxSheetOffsetPx
-                                else 0f
-                            sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
-                        } else {
-                            sheetScope.launch { pagerState.animateScrollToPage(index) }
-                        }
-                    },
-                    text = { Text(title) },
-                    selectedContentColor = QOrange,
-                    unselectedContentColor = Color.White
-                )
-            }
-        }
-        HorizontalPager(
-            state = pagerState,
+        PlayerTabs(
+            queueViewModel = queueViewModel,
+            playlistViewModel = playlistViewModel,
+            fileBrowserViewModel = fileBrowserViewModel,
+            playerViewModel = playerViewModel,
             modifier = Modifier.weight(1f),
-            beyondBoundsPageCount = 1
-        ) { page ->
-            when (page) {
-                0 -> QueueScreen(
-                    queueViewModel = queueViewModel,
-                    playlistViewModel = playlistViewModel
-                )
-                1 -> FileBrowserScreen(
-                    fileBrowserViewModel = fileBrowserViewModel,
-                    queueViewModel = queueViewModel,
-                    playerViewModel = playerViewModel
-                )
-                2 -> PlaylistScreen(
-                    playlistViewModel = playlistViewModel,
-                    queueViewModel = queueViewModel
-                )
+            tabRowModifier = sheetDragModifier,
+            // tap on the already-selected tab → toggle the sheet
+            onSelectedTabClick = {
+                val target =
+                    if (sheetOffset.value < maxSheetOffsetPx / 2) maxSheetOffsetPx else 0f
+                sheetScope.launch { sheetOffset.animateTo(target, tween(300)) }
             }
-        }
+        )
     }
 }

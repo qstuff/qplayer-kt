@@ -41,6 +41,9 @@ import org.qstuff.qplayer.util.JogwheelMode
  * @param onScratchStart in SCRATCH mode, called on touch-down; returns whether scratching started
  *        (the gesture then drives [onScratch] with the rotation since touch-down and ends with
  *        [onScratchEnd]).
+ * @param fitHeight false (phone): the jog wheel fills the width, the row's height follows.
+ *        true (tablet pane): the jog wheel is also limited by the available height, and the
+ *        fader + wheel group is centred horizontally.
  */
 @Composable
 fun PitchJogSection(
@@ -51,7 +54,8 @@ fun PitchJogSection(
     onScratchStart: () -> Boolean,
     onScratch: (rotationRad: Double) -> Unit,
     onScratchEnd: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fitHeight: Boolean = false
 ) {
     val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
     val jogState = remember {
@@ -68,14 +72,19 @@ fun PitchJogSection(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 4.dp)   // 4dp below the duration row
+            .padding(top = 4.dp),  // 4dp below the duration row
+        contentAlignment = Alignment.TopCenter
     ) {
         val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
         // The jog wheel is square and fills the width to the right of the pitch fader, so the
         // row height = that width. The pitch fader uses fillMaxHeight for the same top/height.
-        val jogSize = maxWidth - pitchbarWidth
+        val jogSize = if (fitHeight) {
+            minOf(maxWidth - pitchbarWidth, maxHeight)
+        } else {
+            maxWidth - pitchbarWidth
+        }
         Row(
-            modifier = Modifier.fillMaxWidth().height(jogSize),
+            modifier = Modifier.width(pitchbarWidth + jogSize).height(jogSize),
             verticalAlignment = Alignment.Top
         ) {
             // Pitch fader

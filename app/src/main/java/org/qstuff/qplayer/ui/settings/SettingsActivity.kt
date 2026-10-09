@@ -1,5 +1,6 @@
 package org.qstuff.qplayer.ui.settings
 
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Bundle
@@ -7,12 +8,14 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import org.qstuff.qplayer.BuildConfig
+import org.qstuff.qplayer.ui.lockOrientationForDevice
 import org.qstuff.qplayer.ui.theme.QDeqTheme
 
 class SettingsActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lockOrientationForDevice(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT)
 
         val settingsViewModel = ViewModelProvider(this).get(SettingsViewModel::class.java)
         val appVersion = getVersionString()

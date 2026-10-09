@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.ui.player
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.content.pm.PackageManager
@@ -14,6 +15,7 @@ import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.ui.lockOrientationForDevice
 import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
@@ -44,6 +46,9 @@ class PlayerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
+        // Phones: portrait. Tablets: landscape two-pane layout (see PlayerScreen). The manifest's
+        // configChanges keep the activity alive when this rotates it — onDestroy stops playback.
+        lockOrientationForDevice(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
         playerViewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
