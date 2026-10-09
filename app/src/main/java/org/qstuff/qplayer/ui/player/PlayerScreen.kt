@@ -10,9 +10,15 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
@@ -36,6 +43,7 @@ import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.components.PitchJogSection
 import org.qstuff.qplayer.ui.player.components.PlayerControls
 import org.qstuff.qplayer.ui.player.components.PlayerTabSheet
+import org.qstuff.qplayer.ui.player.components.PlayerTabs
 import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
 import org.qstuff.qplayer.ui.player.components.TrackInfoSection
 import org.qstuff.qplayer.ui.player.components.WaveformSeekbar
@@ -179,79 +187,12 @@ fun PlayerScreen(
             .statusBarsPadding()
     ) {
         val colHPadding = 4.dp
-        val colWidth = maxWidth - colHPadding * 2
-        val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
-        val titleBarHeight = dimensionResource(R.dimen.title_textview_height)
-        val textviewHeight = dimensionResource(R.dimen.textview_height)
-        val seekbarHeight = dimensionResource(R.dimen.seekbar_height)
+        // Tablets (locked to landscape, see PlayerActivity): deck (title … jog wheel) left,
+        // tabs + button bar permanently right.
+        val isTwoPane = maxWidth > maxHeight
 
-        // Jog+pitch row: the jog wheel is a square filling the width to the right of the
-        // pitch fader, so its height = that width. +4.dp gap below the duration row.
-        // Mirrors PitchJogSection's inner BoxWithConstraints.
-        val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
-        val trackInfoHeight = textviewHeight * 2 + 4.dp
-        // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
-        val btnRowsHeight = textviewHeight * 2 + 24.dp
-        // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
-        val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
-        val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
-
-        val density = LocalDensity.current
-        val expandedHeightPx = with(density) { expandedHeight.toPx() }
-        val maxSheetOffsetPx = with(density) { (expandedHeight - peekHeight).toPx() }
-
-        // ─── Main player content ─────────────────────────────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = colHPadding)
-        ) {
-            PlayerTitleBar(
-                titleSuffix = titleSuffix,
-                onOpenSettings = onOpenSettings,
-                onOpenWebView = onOpenWebView,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            TrackInfoSection(
-                trackTitleText = trackTitleText,
-                totalDurationText = totalDurationText,
-                dynamicTimeText = dynamicTimeText,
-                dynamicTimeAlpha = dynamicTimeAlpha,
-                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() }
-            )
-
-            WaveformSeekbar(
-                waveformData = waveformData,
-                waveformReady = waveformReady,
-                showCalculating = currentTrack != null && !waveformReady,
-                displayedProgress = displayedProgress,
-                dynamicTimeAlpha = dynamicTimeAlpha,
-                cueActive = cueActive,
-                cueProgressPos = cueProgressPos,
-                onSeekChange = { seekProgress = it },
-                onSeekCommit = { target ->
-                    playbackProgress = target // avoid a 1-frame jump back
-                    currentTrack?.let { track ->
-                        playerViewModel.seekTo((target * track.duration).toDouble(), false)
-                    }
-                    seekProgress = null
-                }
-            )
-
-            PitchJogSection(
-                pitchProgress = pitchProgress,
-                onPitchChange = { v ->
-                    pitchProgressState.value = v
-                    playerViewModel.onPitchChanged(v)
-                },
-                getSensitivity = { playerViewModel.jogwheelSensitivity.value },
-                getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() },
-                onScratchStart = playerViewModel::startScratch,
-                onScratch = playerViewModel::scratchTo,
-                onScratchEnd = playerViewModel::endScratch
-            )
-
+        // ─── Button bar: transport, cue, pitch fine-tuning, range, reset, master tempo ───
+        val controls: @Composable () -> Unit = {
             PlayerControls(
                 isPlaying = playerStatus == PlayerStatus.PLAYING,
                 repeat = repeat,
@@ -311,15 +252,140 @@ fun PlayerScreen(
             )
         }
 
-        PlayerTabSheet(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            expandedHeightPx = expandedHeightPx,
-            maxSheetOffsetPx = maxSheetOffsetPx,
-            queueViewModel = queueViewModel,
-            playlistViewModel = playlistViewModel,
-            fileBrowserViewModel = fileBrowserViewModel,
-            playerViewModel = playerViewModel
-        )
+        // ─── Player deck: title bar, track info, waveform, pitch + jog (+ buttons on phones) ───
+        val deckContent: @Composable ColumnScope.() -> Unit = {
+            PlayerTitleBar(
+                titleSuffix = titleSuffix,
+                onOpenSettings = onOpenSettings,
+                onOpenWebView = onOpenWebView,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            TrackInfoSection(
+                trackTitleText = trackTitleText,
+                totalDurationText = totalDurationText,
+                dynamicTimeText = dynamicTimeText,
+                dynamicTimeAlpha = dynamicTimeAlpha,
+                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() }
+            )
+
+            WaveformSeekbar(
+                waveformData = waveformData,
+                waveformReady = waveformReady,
+                showCalculating = currentTrack != null && !waveformReady,
+                displayedProgress = displayedProgress,
+                dynamicTimeAlpha = dynamicTimeAlpha,
+                cueActive = cueActive,
+                cueProgressPos = cueProgressPos,
+                onSeekChange = { seekProgress = it },
+                onSeekCommit = { target ->
+                    playbackProgress = target // avoid a 1-frame jump back
+                    currentTrack?.let { track ->
+                        playerViewModel.seekTo((target * track.duration).toDouble(), false)
+                    }
+                    seekProgress = null
+                }
+            )
+
+            PitchJogSection(
+                pitchProgress = pitchProgress,
+                onPitchChange = { v ->
+                    pitchProgressState.value = v
+                    playerViewModel.onPitchChanged(v)
+                },
+                getSensitivity = { playerViewModel.jogwheelSensitivity.value },
+                getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() },
+                onScratchStart = playerViewModel::startScratch,
+                onScratch = playerViewModel::scratchTo,
+                onScratchEnd = playerViewModel::endScratch,
+                // Tablet: the wheel takes the height left below the waveform.
+                modifier = if (isTwoPane) Modifier.weight(1f) else Modifier,
+                fitHeight = isTwoPane
+            )
+
+            // Phone: buttons below the jog wheel. Tablet: below the tabs (right pane).
+            if (!isTwoPane) controls()
+        }
+
+        val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
+        val titleBarHeight = dimensionResource(R.dimen.title_textview_height)
+        val textviewHeight = dimensionResource(R.dimen.textview_height)
+        val seekbarHeight = dimensionResource(R.dimen.seekbar_height)
+
+        if (isTwoPane) {
+            // The jog wheel gets all the height below the waveform (title bar incl. 4dp top
+            // padding, track info = 2 rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
+            // the button bar's own bottom gap). The deck is exactly as wide as fader + wheel, so
+            // there's no white space beside them; the right pane takes the rest of the width.
+            val deckFixedHeight = 4.dp + titleBarHeight + textviewHeight * 2 + 12.dp +
+                    seekbarHeight + 4.dp + 8.dp
+            val jogSize = maxHeight - deckFixedHeight
+            val deckWidth = (pitchbarWidth + jogSize + colHPadding * 2)
+                .coerceIn(maxWidth * 0.4f, maxWidth * 0.65f)
+
+            Row(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .width(deckWidth)
+                        .fillMaxHeight()
+                        .padding(start = colHPadding, end = colHPadding, bottom = 8.dp),
+                    content = deckContent
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(top = 4.dp, end = colHPadding)
+                ) {
+                    PlayerTabs(
+                        queueViewModel = queueViewModel,
+                        playlistViewModel = playlistViewModel,
+                        fileBrowserViewModel = fileBrowserViewModel,
+                        playerViewModel = playerViewModel,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius)))
+                            .background(Color.Black)
+                    )
+                    controls()
+                }
+            }
+        } else {
+            val colWidth = maxWidth - colHPadding * 2
+
+            // Jog+pitch row: the jog wheel is a square filling the width to the right of the
+            // pitch fader, so its height = that width. +4.dp gap below the duration row.
+            // Mirrors PitchJogSection's inner BoxWithConstraints.
+            val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
+            val trackInfoHeight = textviewHeight * 2 + 4.dp
+            // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
+            val btnRowsHeight = textviewHeight * 2 + 24.dp
+            // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
+            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
+            val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
+
+            val density = LocalDensity.current
+            val expandedHeightPx = with(density) { expandedHeight.toPx() }
+            val maxSheetOffsetPx = with(density) { (expandedHeight - peekHeight).toPx() }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = colHPadding),
+                content = deckContent
+            )
+
+            PlayerTabSheet(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                expandedHeightPx = expandedHeightPx,
+                maxSheetOffsetPx = maxSheetOffsetPx,
+                queueViewModel = queueViewModel,
+                playlistViewModel = playlistViewModel,
+                fileBrowserViewModel = fileBrowserViewModel,
+                playerViewModel = playerViewModel
+            )
+        }
     }
 }
 

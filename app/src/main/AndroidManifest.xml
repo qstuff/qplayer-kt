@@ -43,8 +43,7 @@
 
         <activity
             android:name=".ui.player.PlayerActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:exported="true">
 
             <intent-filter>
@@ -56,17 +55,13 @@
 
         <activity
             android:name=".ui.settings.WebViewActivity"
-            android:theme="@style/Theme.QPlayer"
-            android:screenOrientation="sensorPortrait"
-            tools:ignore="LockedOrientationActivity">
+            android:theme="@style/Theme.QPlayer">
 
         </activity>
 
         <activity
             android:name=".ui.settings.SettingsActivity"
-            android:theme="@style/Theme.QPlayer"
-            android:screenOrientation="sensorPortrait"
-            tools:ignore="LockedOrientationActivity">
+            android:theme="@style/Theme.QPlayer">
         </activity>
 
         <service
