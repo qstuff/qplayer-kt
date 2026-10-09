@@ -6,22 +6,30 @@ import android.os.Build
 import android.os.Bundle
 import android.content.pm.PackageManager
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.lockOrientationForDevice
 import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
+import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
 import org.qstuff.qplayer.ui.settings.SettingsActivity
 import org.qstuff.qplayer.ui.settings.WebViewActivity
 import org.qstuff.qplayer.ui.theme.QDeqTheme
+import org.qstuff.qplayer.util.CrashReporting
 import timber.log.Timber
 
 class PlayerActivity : AppCompatActivity() {
@@ -37,6 +45,8 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var queueViewModel: QueueViewModel
     private lateinit var playlistViewModel: PlaylistViewModel
     private lateinit var fileBrowserViewModel: FileBrowserViewModel
+
+    private val preferencesDataSource: PreferencesDataSource by inject()
 
     // Nullable: clearTrackList() posts null.
     private val trackSelectedObserver = Observer<Track?> { track ->
@@ -103,6 +113,11 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         setContent {
+            // Crash reporting opt-in: asked once, then changeable in Settings.
+            var showCrashReportingOptIn by remember {
+                mutableStateOf(!preferencesDataSource.isCrashreportingEnabledDialogShown())
+            }
+
             QDeqTheme {
                 PlayerScreen(
                     playerViewModel = playerViewModel,
@@ -113,6 +128,15 @@ class PlayerActivity : AppCompatActivity() {
                     onOpenSettings = ::startSettingsActivity,
                     onOpenWebView = ::startWebViewActivity
                 )
+
+                if (showCrashReportingOptIn) {
+                    CrashReportingOptInDialog { enabled ->
+                        preferencesDataSource.setCrashreportingEnabled(enabled)
+                        preferencesDataSource.setCrashreportingEnabledDialogShown(true)
+                        CrashReporting.apply(enabled)
+                        showCrashReportingOptIn = false
+                    }
+                }
             }
         }
     }
