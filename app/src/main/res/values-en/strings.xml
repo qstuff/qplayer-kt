@@ -94,6 +94,10 @@
     <string name="settings_dj_jogwheel_mode_title">Jogwheel mode</string>
     <string name="settings_dj_jogwheel_mode_summary">Determines which way the jogwheel responds to action\nCurrent: %1$s</string>
 
+    <string name="settings_dj_jogwheel_haptics_title">Jogwheel vibration</string>
+    <string name="settings_dj_jogwheel_haptics_summary">Short vibration when touching and spinning the jog wheel\nCurrent: %1$s</string>
+    <string name="settings_dj_jogwheel_haptics_unavailable">This device can\'t vibrate</string>
+
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Common Settings</string>
     <string name="settings_privacy_crashreport_title">Crashreports</string>

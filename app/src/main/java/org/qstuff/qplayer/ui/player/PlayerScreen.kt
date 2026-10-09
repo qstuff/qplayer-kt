@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringArrayResource
@@ -47,6 +49,7 @@ import org.qstuff.qplayer.ui.player.components.PlayerTabs
 import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
 import org.qstuff.qplayer.ui.player.components.TrackInfoSection
 import org.qstuff.qplayer.ui.player.components.WaveformSeekbar
+import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.util.PlayerStatus
@@ -88,6 +91,7 @@ fun PlayerScreen(
     val pitchFactorIndex by playerViewModel.pitchFactorIndex.collectAsStateWithLifecycle()
     val cueActive by playerViewModel.cueActive.collectAsStateWithLifecycle()
     val showRemainingTime by playerViewModel.showRemainingTime.collectAsStateWithLifecycle()
+    val jogwheelHapticLevel by playerViewModel.jogwheelHapticLevel.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
@@ -180,6 +184,10 @@ fun PlayerScreen(
     }
 
     val pitchRangeValues = stringArrayResource(R.array.pitch_range_values)
+
+    val context = LocalContext.current
+    val jogwheelHaptics = remember { JogwheelHaptics(context) }
+    SideEffect { jogwheelHaptics.level = jogwheelHapticLevel }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -300,6 +308,8 @@ fun PlayerScreen(
                 onScratchStart = playerViewModel::startScratch,
                 onScratch = playerViewModel::scratchTo,
                 onScratchEnd = playerViewModel::endScratch,
+                onJogTouch = jogwheelHaptics::onTouch,
+                onJogRotate = jogwheelHaptics::onRotate,
                 // Tablet: the wheel takes the height left below the waveform.
                 modifier = if (isTwoPane) Modifier.weight(1f) else Modifier,
                 fitHeight = isTwoPane

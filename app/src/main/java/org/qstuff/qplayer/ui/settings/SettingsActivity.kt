@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import org.qstuff.qplayer.BuildConfig
+import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
 import org.qstuff.qplayer.ui.lockOrientationForDevice
 import org.qstuff.qplayer.ui.theme.QDeqTheme
 
@@ -20,6 +21,7 @@ class SettingsActivity: AppCompatActivity() {
         val settingsViewModel = ViewModelProvider(this).get(SettingsViewModel::class.java)
         val appVersion = getVersionString()
         val deviceInfo = getDeviceInfoString()
+        val canVibrate = JogwheelHaptics.isSupported(this)
 
         setContent {
             QDeqTheme {
@@ -27,6 +29,7 @@ class SettingsActivity: AppCompatActivity() {
                     settingsViewModel = settingsViewModel,
                     appVersion = appVersion,
                     deviceInfo = deviceInfo,
+                    canVibrate = canVibrate,
                     onBack = ::finish
                 )
             }

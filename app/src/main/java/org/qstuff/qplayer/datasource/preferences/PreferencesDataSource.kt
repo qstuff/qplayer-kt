@@ -44,6 +44,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
         const val PREFS_SHOW_CLEAR_QUEUE_DIALOG = "PREFS_SHOW_CLEAR_QUEUE_DIALOG"
         const val PREFS_JOG_WHEEL_SENSITIVITY = "PREFS_JOG_WHEEL_SENSITIVITY"
         const val PREFS_JOG_WHEEL_MODE = "PREFS_JOG_WHEEL_MODE"
+        const val PREFS_JOG_WHEEL_HAPTICS = "PREFS_JOG_WHEEL_HAPTICS"
 
         // Others
         const val PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN = "PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN"
@@ -156,6 +157,8 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
     fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
     fun getJogWheelMode() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)
+    /** JogwheelHaptics.LEVEL_* (off / light / medium / strong); medium by default. */
+    fun getJogWheelHapticLevel() = preferences.getInt(PREFS_JOG_WHEEL_HAPTICS, 2)
     fun getJogWheelModeEnum() = JogwheelMode.values()[Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)]
 
     fun setAutostartEnabled(enabled: Boolean) =
@@ -179,4 +182,7 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     fun setJogWheelMode(mode: Int) =
             preferences.edit { putString(PREFS_JOG_WHEEL_MODE, mode.toString()) }
+
+    fun setJogWheelHapticLevel(level: Int) =
+            preferences.edit { putInt(PREFS_JOG_WHEEL_HAPTICS, level) }
 }

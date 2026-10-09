@@ -81,6 +81,10 @@ class  PlayerViewModel (application: Application):
     private val _jogwheelSensitivity = MutableStateFlow(10)
     val jogwheelSensitivity: StateFlow<Int> = _jogwheelSensitivity.asStateFlow()
 
+    // JogwheelHaptics.LEVEL_* (jog wheel vibration setting)
+    private val _jogwheelHapticLevel = MutableStateFlow(2)
+    val jogwheelHapticLevel: StateFlow<Int> = _jogwheelHapticLevel.asStateFlow()
+
     private val _pitchFactorIndex = MutableStateFlow(0)
     val pitchFactorIndex: StateFlow<Int> = _pitchFactorIndex.asStateFlow()
 
@@ -526,6 +530,7 @@ class  PlayerViewModel (application: Application):
         _masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
+        _jogwheelHapticLevel.value = preferencesDataSource.getJogWheelHapticLevel()
         isScratchModeEnabled = preferencesDataSource.getJogWheelModeEnum() == JogwheelMode.SCRATCH
         prepareScratch()
     }
