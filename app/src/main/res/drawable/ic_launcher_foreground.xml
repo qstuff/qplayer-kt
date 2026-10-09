@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive launcher icon foreground (108dp grid, content inside the 66dp safe zone): the qdeq "Q" —
+  a hexagon outline with rounded corners and a diagonal tail. Also used as the monochrome layer for
+  themed icons (Android 13+), where only its shape counts.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M53.5,33.75 L71.25,44 L71.25,64.5 L53.5,74.75 L35.75,64.5 L35.75,44 Z M53.5,54.25 L71.5,74.5"
+        android:strokeColor="#000000"
+        android:strokeWidth="7.75"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
