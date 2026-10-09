@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <!-- General -->
     <string name="app_name">qdeq</string>
-    <string name="build_type">Release</string>
 
     <!-- Player -->
-    <string name="player_no_track_loaded">…no track loaded…</string>
-    <string name="player_loading">loading…</string>
 
     <!-- Queue -->
     <string name="queue_title">queue</string>
@@ -15,16 +11,11 @@
     <string name="queue_dialog_confirm_clear_title">Clear queue</string>
     <string name="queue_dialog_confirm_clear_message">Really clear the queue?</string>
     <string name="queue_dialog_save_tracks_as_playlist_title">Save the queue as playlist</string>
-    <string name="queue_dialog_add_tracks_to_playlist_title">Existing playlists</string>
-    <string name="queue_dialog_add_tracks_to_playlist_edittext_hint">Playlist name</string>
     <string name="queue_dialog_save_tracks_as_playlist_message">Create a new playlist or add the tracks to an existing playlist</string>
     <string name="queue_dialog_add_tracks_to_existing_playlist_title">Add to existing playlist</string>
     <string name="queue_dialog_add_tracks_to_existing_playlist_message">Append the tracks or overwrite the playlist?</string>
     <string name="queue_dialog_add_tracks_to_existing_playlist_append">Append</string>
     <string name="queue_dialog_add_tracks_to_existing_playlist_overwrite">Overwriwe</string>
-
-    <string name="queue_toast_save_tracks_as_queue_need_name">Please enter a name for the playlist</string>
-    <string name="queue_toast_add_to_existing_playlist_problem">A problmem occurred</string>
 
     <!-- Playlists -->
     <string name="playlists_title">playlists</string>
@@ -36,23 +27,13 @@
     <string name="filebrowser_dialog_add_tracks_to_queue_title">Load these tracks into the queue ?</string>
     <string name="filebrowser_dialog_queue_overwrite">Overwrite queue</string>
 
-    <string name="filebrowser_toast_empty_directory">This directory contains no supported audio tracks</string>
-
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
     <string name="navigate_back">Back</string>
     <string name="dialog_cancel">Cancel</string>
 
-    <string name="dialog_add_to_queue">Add tracks to queue</string>
-    <string name="dialog_add_to_playlist">To playlist</string>
-    <string name="dialog_play">Play now</string>
-
     <string name="add_m3ulist_to_queue_dialog_tracks_found_title">Open %1$s  in Queue</string>
     <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">Can\'t open %1$s</string>
-    <string name="add_m3ulist_to_queue_tracks_found_title">Following tracks are found:</string>
-    <string name="add_m3ulist_to_queue_tracks_not_found_title">Following tracks are not found:</string>
-
-    <string name="storage_permission_request_message">We need the storage permission to access the sound files on your sdcard</string>
 
     <string name="dialog_crashlytics_opt_in_title">Enable crashreporting?</string>
     <string name="dialog_crashlytics_opt_in_message">Crashreports are essential for improving the app quality. Crashreports are sent anonymized (see Privacy).\nYou can disable the sending of crashreports in the settings at any time.</string>
@@ -60,14 +41,11 @@
     <string name="dialog_crashlytics_opt_in_no_thanks">No thanks</string>
 
     <!-- Snackbar -->
-    <string name="snackbar_title_removed">%1$s was removed</string>
-    <string name="snackbar_undo">Undo</string>
 
     <!-- More Menu and Settings -->
     <string name="more_menu_settings">Settings</string>
     <string name="more_menu_imprint">Imprint</string>
     <string name="more_menu_privacy">Privacy</string>
-    <string name="more_menu_contact">Feedback</string>
     <string name="more_menu_licenses">Licenses</string>
 
     <!-- Basic Playback Settings -->
@@ -107,12 +85,6 @@
     <string name="settings_device_info_title">Device Info</string>
 
     <!-- Feedback Activity -->
-    <string name="feedback_activity_explanation">To have a better understanding of your feedback it is very useful for us when we get some information about your device.\nWe can read this data and you can send them along with your feedback message.\nBelow you can see what information it is.\nWhen you tap \"Send with device infos\" this information will automatically added to your message. If you don\'t want to send this information please tap \"Send without device infos\"</string>
-    <string name="feedback_activity_device_info_title">Your device infos:</string>
-    <string name="feedback_activity_send_button_with">Send with device infos</string>
-    <string name="feedback_activity_send_button_without">Send without device infos</string>
 
     <!-- M3UUtils -->
-    <string name="toast_track_not_found">Could not find track from playlist: </string>
-
 </resources>
