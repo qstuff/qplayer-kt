@@ -25,7 +25,9 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
+import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
 import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
+import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.PlayerStatus
 import timber.log.Timber
 
@@ -117,6 +119,11 @@ class  PlayerViewModel (application: Application):
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
 
+    // Jog wheel SCRATCH mode: takes over the audio from ExoPlayer while the wheel is touched.
+    private val scratchEngine = ScratchEngine(application)
+    private var isScratchModeEnabled = false
+    private var wasPlayingBeforeScratch = false
+
     // Collectors of the media service's flows (track status, play state, system Next/Prev).
     private val serviceJobs = mutableListOf<Job>()
 
@@ -140,6 +147,8 @@ class  PlayerViewModel (application: Application):
             // position timer — play/pause can also come from system media controls.
             serviceJobs += viewModelScope.launch {
                 mediaService.playing.collect { playing ->
+                    // While scratching ExoPlayer is paused on purpose; the deck keeps its state.
+                    if (scratchEngine.isScratching) return@collect
                     _playerStatus.value = if (playing) PlayerStatus.PLAYING else PlayerStatus.PAUSED
                     if (playing) startUpdateTimer() else resetUpdateTimer()
                 }
@@ -317,6 +326,8 @@ class  PlayerViewModel (application: Application):
             return
         }
 
+        endScratch()
+
         val currentTrack = _playerTrackState.value?.track
 
         mediaService.pause()
@@ -335,6 +346,7 @@ class  PlayerViewModel (application: Application):
         }
 
         generateWaveform(track)
+        prepareScratch()
     }
 
     /**
@@ -420,6 +432,49 @@ class  PlayerViewModel (application: Application):
         }
     }
 
+    //
+    // Scratching (jog wheel SCRATCH mode)
+    //
+
+    /** Decode the current track for scratching if SCRATCH mode is on, else free the engine. */
+    private fun prepareScratch() {
+        val track = _playerTrackState.value?.track
+        if (!isScratchModeEnabled) {
+            scratchEngine.release()
+        } else if (track != null) {
+            scratchEngine.prepare(viewModelScope, track.uri)
+        }
+    }
+
+    /**
+     * Jog wheel touched in SCRATCH mode: hand the audio from ExoPlayer to the scratch engine at the
+     * current position. Returns false if scratching isn't possible (yet) — e.g. the track hasn't
+     * been decoded up to the position.
+     */
+    fun startScratch(): Boolean {
+        if (!isMediaServiceBound || !isScratchModeEnabled) return false
+        if (!scratchEngine.start(mediaService.getCurrentPositionMillis(), _jogwheelSensitivity.value)) {
+            return false
+        }
+        wasPlayingBeforeScratch = _playerStatus.value == PlayerStatus.PLAYING
+        mediaService.pause()
+        startUpdateTimer()
+        return true
+    }
+
+    fun scratchTo(rotationRad: Double) = scratchEngine.scratchTo(rotationRad)
+
+    /**
+     * Jog wheel released: ExoPlayer takes over where the scratch ended, playing again only if it
+     * was playing before.
+     */
+    fun endScratch() {
+        if (!scratchEngine.isScratching) return
+        val position = scratchEngine.stop()
+        seekTo(position.toDouble(), false)
+        if (wasPlayingBeforeScratch) mediaService.play() else resetUpdateTimer()
+    }
+
     fun seekTo(position: Double, andStop: Boolean) {
         if (!isMediaServiceBound) return
 
@@ -441,8 +496,12 @@ class  PlayerViewModel (application: Application):
     fun getTrackPosition(): Long {
         if (!isMediaServiceBound) return 0
 
-        return mediaService.getCurrentPositionMillis()
+        return currentPositionMillis()
     }
+
+    private fun currentPositionMillis() =
+        if (scratchEngine.isScratching) scratchEngine.positionMs
+        else mediaService.getCurrentPositionMillis()
 
     //
     // Private
@@ -467,6 +526,8 @@ class  PlayerViewModel (application: Application):
         _masterTempo.value = preferencesDataSource.readMasterTempoMode()
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
+        isScratchModeEnabled = preferencesDataSource.getJogWheelModeEnum() == JogwheelMode.SCRATCH
+        prepareScratch()
     }
 
     private fun startUpdateTimer() {
@@ -477,10 +538,11 @@ class  PlayerViewModel (application: Application):
         updateHandler = Handler(Looper.getMainLooper())
         updateRunnable = object : Runnable {
             override fun run() {
-                _onTrackPositionUpdate.value = mediaService.getCurrentPositionMillis()
+                _onTrackPositionUpdate.value = currentPositionMillis()
                 // 250ms is plenty for the progress bar/time and keeps per-tick recomposition
                 // from starving touch dispatch (which made seeking laggy during playback).
-                updateHandler.postDelayed(this, 250)
+                // Faster while scratching, so the waveform follows the wheel.
+                updateHandler.postDelayed(this, if (scratchEngine.isScratching) 100 else 250)
             }
         }
         updateHandler.post(updateRunnable as Runnable)
@@ -491,5 +553,10 @@ class  PlayerViewModel (application: Application):
 
         updateRunnable?.let { updateHandler.removeCallbacks(it) }
         isUpdatetaskRunning = false
+    }
+
+    override fun onCleared() {
+        scratchEngine.release()
+        super.onCleared()
     }
 }
