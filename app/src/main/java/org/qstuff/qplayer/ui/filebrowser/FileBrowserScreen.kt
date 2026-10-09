@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,8 +15,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -89,6 +92,8 @@ fun FileBrowserScreen(
 
     val files by fileBrowserViewModel.fileList.observeAsState(emptyList())
     val directoryName by fileBrowserViewModel.directoryName.observeAsState("")
+    // Non-null: show the storage list (internal storage, SD card, …) instead of a directory.
+    val storageRoots by fileBrowserViewModel.storageRoots.observeAsState()
 
     var addTracksDialogFiles by remember { mutableStateOf<List<File>?>(null) }
     var m3uDialogFile by remember { mutableStateOf<File?>(null) }
@@ -99,7 +104,9 @@ fun FileBrowserScreen(
             .background(Color.Black)
     ) {
         Text(
-            text = directoryName,
+            text = if (storageRoots != null) {
+                stringResource(R.string.filebrowser_storages_title)
+            } else directoryName,
             color = Color.White,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
@@ -116,22 +123,37 @@ fun FileBrowserScreen(
                 .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = { fileBrowserViewModel.navigateUp() },
-                modifier = Modifier.size(28.dp)
-            ) {
-                Icon(
-                    Icons.Default.SubdirectoryArrowLeft,
-                    contentDescription = "Navigate up",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
+            // Nothing above the storage list.
+            if (storageRoots == null) {
+                IconButton(
+                    onClick = { fileBrowserViewModel.navigateUp() },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        Icons.Default.SubdirectoryArrowLeft,
+                        contentDescription = "Navigate up",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 
         HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        storageRoots?.let { roots ->
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(roots, key = { it.dir.absolutePath }) { root ->
+                    StorageRootItem(
+                        root = root,
+                        onClick = { fileBrowserViewModel.onStorageRootClicked(root) }
+                    )
+                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+                }
+            }
+        }
+
+        if (storageRoots == null) LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(files, key = { it.absolutePath }) { file ->
                 FileListItem(
                     file = file,
@@ -251,6 +273,36 @@ fun FileBrowserScreen(
                     }
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun StorageRootItem(root: StorageRoot, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp)
+            .background(Color.Black)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (root.isRemovable) Icons.Default.SdCard else Icons.Default.PhoneAndroid,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = root.label,
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
     }
 }

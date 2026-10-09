@@ -52,8 +52,6 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
 
     private val preferences: SharedPreferences = context.applicationContext.getSharedPreferences("QDEQ", Context.MODE_PRIVATE)
 
-    fun getRootDir() = DEFAULT_ROOT_DIR
-
     fun saveLastBrowsedDir(dir: String) =
         preferences.edit {
             putString(PREF_LAST_BROWSED_DIR, dir)

@@ -31,6 +31,7 @@
 
     <!-- Filebrowser -->
     <string name="filebrowser_title">filebrowser</string>
+    <string name="filebrowser_storages_title">Storage</string>
 
     <string name="filebrowser_dialog_add_tracks_to_queue_title">Load these tracks into the queue ?</string>
     <string name="filebrowser_dialog_queue_overwrite">Overwrite queue</string>

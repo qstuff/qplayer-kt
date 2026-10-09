@@ -1,98 +1,65 @@
 package org.qstuff.qplayer.ui.filebrowser
 
 import android.app.Application
-import android.os.Build
-import android.os.Environment
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat.getExternalFilesDirs
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.isSupported
 import timber.log.Timber
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 /*
- * Created by Claus Chierici (claus@qstuff.org) 
+ * Created by Claus Chierici (claus@qstuff.org)
  * on 2/10/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-@RequiresApi(Build.VERSION_CODES.R)
 class FileBrowserViewModel(
     application: Application
 ) : AndroidViewModel(application), KoinComponent {
 
-    companion object {
-        val SAMSUNG_SD_CARD_HACK_PATH = listOf(
-            "/storage/3437-6533",
-            "/storage/3865-3532",
-            "/storage/6262-3034",
-        )
-
-        const val SD_CARD_HACK_PATH = "/storage/emulated"
-    }
-
     var fileList: MutableLiveData<List<File>> = MutableLiveData()
+
+    /** The current directory relative to its storage, e.g. "SD card/Music". */
     var directoryName: MutableLiveData<String> = MutableLiveData()
 
+    /**
+     * Non-null while the storage list (the level above all storage roots) is shown instead of a
+     * directory — that's where internal storage and the SD card are picked.
+     */
+    var storageRoots: MutableLiveData<List<StorageRoot>?> = MutableLiveData()
 
-    private var currentDir: File
+    /** The browsed directory; null while the storage list is shown. */
+    private var currentDir: File? = null
     private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
     init {
-        Timber.d("init()")
-
-
-        val dirs = getExternalFilesDirs(application, "")
-        for (currD in dirs) {
-            if (currD.absolutePath == getApplication<QDeqApplication>().getExternalFilesDir("")?.absolutePath) {
-                Timber.d("XXX INTERNAL: $currD")
-            } else {
-                Timber.d("XXX EXTERNAL: $currD")
-            }
+        // Reopen the last browsed directory if its storage is still mounted (an SD card may have
+        // been removed meanwhile), else start at the storage list.
+        val lastDir = File(preferencesDataSource.getLastBrowsedDir())
+        if (rootOf(lastDir, StorageRoots.find(application)) != null) {
+            browseTo(lastDir)
         }
-
-        currentDir = File(preferencesDataSource.getLastBrowsedDir())
-        browseTo(currentDir)
-        Timber.d("init(): ${currentDir.path}")
-
-        browseTo(currentDir)
+        if (currentDir == null) showStorageRoots()
     }
 
     override fun onCleared() {
         super.onCleared()
-        Timber.d("onCleared(): ${currentDir.path}")
-        preferencesDataSource.saveLastBrowsedDir(currentDir.path)
+        saveLastBrowsedDir()
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
     fun navigateUp() {
-        Timber.d("navigateUp(): current dir: ${currentDir.absolutePath}")
+        val dir = currentDir ?: return
+        val roots = StorageRoots.find(getApplication())
 
-        if (currentDir.parentFile?.absolutePath  == SD_CARD_HACK_PATH) {
-
-            Timber.d("navigateUp(): SD_HACK current dir 1: ${currentDir.path}")
-
-            currentDir = File(preferencesDataSource.getRootDir())
-
-            Timber.d("navigateUp(): SD_HACK current dir 2: ${currentDir.path}")
-
-            browseTo(currentDir)
-
-        } else if  (currentDir.absolutePath == preferencesDataSource.getRootDir()
-                || currentDir.absolutePath == "/"
-                || currentDir.parentFile?.absolutePath  == "/") {
-            return
-
+        if (roots.any { it.dir.absolutePath == dir.absolutePath } || rootOf(dir, roots) == null) {
+            showStorageRoots(roots)
         } else {
-            browseTo(currentDir.parentFile)
+            browseTo(dir.parentFile)
         }
     }
 
@@ -100,52 +67,45 @@ class FileBrowserViewModel(
         browseTo(file)
     }
 
+    fun onStorageRootClicked(root: StorageRoot) {
+        browseTo(root.dir)
+    }
+
     fun saveLastBrowsedDir() {
-        preferencesDataSource.saveLastBrowsedDir(currentDir.absolutePath)
+        currentDir?.let { preferencesDataSource.saveLastBrowsedDir(it.absolutePath) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    private fun showStorageRoots(roots: List<StorageRoot> = StorageRoots.find(getApplication())) {
+        Timber.d("showStorageRoots(): ${roots.map { it.dir }}")
+        currentDir = null
+        storageRoots.value = roots
+        fileList.value = emptyList()
+        directoryName.value = ""
+    }
+
     private fun browseTo(dir: File?) {
-        dir?.let {
-            Timber.d("xxx browseTo(): ${dir.path}")
+        dir ?: return
+        Timber.d("browseTo(): ${dir.path}")
 
-            var nextDir = it
+        if (dir.isDirectory) {
+            val fileList = dir.listFiles()
 
-            if (nextDir.absolutePath == SD_CARD_HACK_PATH) {
-                Timber.d("xxx browseTo(): SD_HACK: ${dir.path}")
-                nextDir = Environment.getExternalStorageDirectory()
-            }
-
-            val root = Environment.getExternalStorageDirectory()
-            Timber.d("xxx browseTo(): root: $root")
-            Timber.d("xxx browseTo(): root: ${root.listFiles()?.size}")
-            Timber.d("xxx browseTo(): nextDir: $nextDir")
-
-            if (nextDir.isDirectory) {
-                Timber.d("xxx browseTo(): is Directory")
-
-                val fileList =  nextDir.listFiles()
-
-                Timber.d("xxx browseTo(): files: ${fileList?.size}")
-
-                if (!fileList.isNullOrEmpty()) {
-                    currentDir = nextDir
-                    filterFileList(fileList.asList())
-                } else {
-                    Timber.w("xxx browseTo(): empty: ${dir.path}")
-                }
-            } else if (nextDir.isFile) {
-                Timber.w("xxx browseTo(): is file: ${dir.path}")
+            if (!fileList.isNullOrEmpty()) {
+                currentDir = dir
+                storageRoots.value = null
+                filterFileList(dir, fileList.asList())
             } else {
-                Timber.w("xxx browseTo(): does not exist: ${dir.path}")
+                Timber.w("browseTo(): empty: ${dir.path}")
             }
-            saveLastBrowsedDir()
+        } else if (dir.isFile) {
+            Timber.w("browseTo(): is file: ${dir.path}")
+        } else {
+            Timber.w("browseTo(): does not exist: ${dir.path}")
         }
+        saveLastBrowsedDir()
     }
 
-    private fun filterFileList(files: List<File>) {
-        Timber.d("XXX filterFileList(): num: ${files.size}")
-
+    private fun filterFileList(dir: File, files: List<File>) {
         if (files.isEmpty()) {
             return
         }
@@ -156,11 +116,22 @@ class FileBrowserViewModel(
 
         supportedFiles.addAll(files.filter { it.isSupported() })
         fileList.value = supportedFiles
-        directoryName.value = currentDir.absolutePath
+        directoryName.value = displayName(dir)
+    }
 
-        Timber.d("XXX filterFileList(): supp: ${(fileList.value as ArrayList<File>).size}")
-        Timber.d("XXX filterFileList(): dir : ${directoryName.value}")
+    /** "<storage label><path below the storage root>", e.g. "SD card/Music/House". */
+    private fun displayName(dir: File): String {
+        val root = rootOf(dir, StorageRoots.find(getApplication())) ?: return dir.absolutePath
+        return root.label + dir.absolutePath.removePrefix(root.dir.absolutePath)
+    }
 
+    /** The storage root [dir] lies on, or null if it's on none of the mounted ones. */
+    private fun rootOf(dir: File, roots: List<StorageRoot>): StorageRoot? {
+        val path = dir.absolutePath
+        return roots.firstOrNull {
+            val rootPath = it.dir.absolutePath
+            path == rootPath || path.startsWith("$rootPath/")
+        }
     }
 
     /**
