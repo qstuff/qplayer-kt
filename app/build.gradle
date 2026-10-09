@@ -101,7 +101,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$libs.lifecycle"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$libs.lifecycle"
     implementation "androidx.lifecycle:lifecycle-runtime-compose:$libs.lifecycle"
-    implementation "androidx.preference:preference-ktx:$libs.preference"
 
     // Room
     implementation "androidx.room:room-runtime:$libs.room"

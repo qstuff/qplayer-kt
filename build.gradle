@@ -29,7 +29,6 @@ buildscript {
             lifecycle               : '2.7.0',
             material                : '1.11.0',
             multidex                : '1.0.3',
-            preference              : '1.2.1',
             room                    : '2.6.1',
             timber                  : '5.0.1',
         media3                  : '1.4.1',
