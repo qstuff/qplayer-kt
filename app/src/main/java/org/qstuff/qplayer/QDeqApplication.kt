@@ -1,8 +1,12 @@
 package org.qstuff.qplayer
 
 import android.app.Application
+import android.content.Context
 import android.util.DisplayMetrics
 import androidx.room.Room
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
+import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -10,7 +14,6 @@ import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
 import org.qstuff.qplayer.util.CrashReporting
-import timber.log.Timber
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -24,16 +27,15 @@ class QDeqApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // Logging only in debug builds (as with the former Timber DebugTree).
+        Logger.setMinSeverity(if (BuildConfig.DEBUG) Severity.Verbose else Severity.Assert)
+
         val koin = startKoin {
             androidContext(this@QDeqApplication)
             modules(preferencesDataSource, roomDatabaseModule, roomDataSource)
         }.koin
 
         CrashReporting.apply(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
-
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
     }
 
     //
@@ -42,7 +44,9 @@ class QDeqApplication : Application() {
 
     private val preferencesDataSource = module {
         single {
-            PreferencesDataSource(this@QDeqApplication)
+            PreferencesDataSource(
+                SharedPreferencesSettings(getSharedPreferences("QDEQ", Context.MODE_PRIVATE))
+            )
         }
     }
 

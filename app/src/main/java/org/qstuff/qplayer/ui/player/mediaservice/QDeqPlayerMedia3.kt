@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.qstuff.qplayer.datasource.model.Track
-import timber.log.Timber
+import co.touchlab.kermit.Logger
 import java.io.File
+
+private val log = Logger.withTag("QDeqPlayerMedia3")
 
 class QDeqPlayerMedia3 : QDeqPlayer {
 
@@ -78,7 +80,7 @@ class QDeqPlayerMedia3 : QDeqPlayer {
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Timber.e(error, "onPlayerError()")
+            log.e(error) { "onPlayerError()" }
             if (::currentTrack.isInitialized) {
                 currentTrack.trackStatus = Track.TrackStatus.ERROR
                 _trackStatus.tryEmit(currentTrack)

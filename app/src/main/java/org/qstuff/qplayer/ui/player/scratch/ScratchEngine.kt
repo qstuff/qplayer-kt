@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.ui.player.audio.AudioDecoder
-import timber.log.Timber
+import co.touchlab.kermit.Logger
 import java.io.Closeable
 import java.io.File
 import java.io.RandomAccessFile
@@ -19,6 +19,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.ShortBuffer
 import kotlin.math.PI
+
+private val log = Logger.withTag("ScratchEngine")
 
 /**
  * Vinyl-style scratching for the jog wheel's SCRATCH mode.
@@ -279,7 +281,7 @@ class ScratchEngine(private val context: Context) {
             }
             builder.build().also { audioTrack = it }
         } catch (e: Exception) {
-            Timber.e(e, "ScratchEngine: can't open the audio output")
+            log.e(e) { "ScratchEngine: can't open the audio output" }
             null
         }
     }
@@ -368,7 +370,7 @@ class ScratchEngine(private val context: Context) {
                 if (fadingOut && gain <= 0f) break
             }
         } catch (e: Exception) {
-            Timber.e(e, "ScratchEngine: render failed")
+            log.e(e) { "ScratchEngine: render failed" }
         }
     }
 }

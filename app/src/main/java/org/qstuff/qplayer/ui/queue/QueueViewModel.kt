@@ -14,9 +14,11 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.util.next
-import timber.log.Timber
+import co.touchlab.kermit.Logger
 import java.io.File
 import java.util.*
+
+private val log = Logger.withTag("QueueViewModel")
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -67,10 +69,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
 
 
     private fun addTrack(track: Track) {
-        Timber.d("addTrack(): $track ")
+        log.d { "addTrack(): $track " }
 
         if (containsTrack(track)) {
-            Timber.d("addTrack(): already in queue ")
+            log.d { "addTrack(): already in queue " }
             return
         }
 
@@ -96,7 +98,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     }
 
     fun restoreTrackAt(track: Track, position: Int) {
-        Timber.d("restoreTrackAt(): pos: $position, selected: ${_onTrackSelectedIndex.value}")
+        log.d { "restoreTrackAt(): pos: $position, selected: ${_onTrackSelectedIndex.value}" }
 
         addTrackAt(track, position)
 
@@ -246,7 +248,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
             repeat == TrackRepeatStatus.ALL -> 0
             else -> null
         }
-        Timber.d("onTrackCompleted(): index: $index, repeat: $repeat, shuffle: ${_shuffle.value} -> $nextIndex")
+        log.d { "onTrackCompleted(): index: $index, repeat: $repeat, shuffle: ${_shuffle.value} -> $nextIndex" }
 
         nextIndex ?: return false
         selectTrackAt(nextIndex)

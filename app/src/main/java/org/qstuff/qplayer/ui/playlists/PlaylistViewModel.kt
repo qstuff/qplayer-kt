@@ -11,7 +11,9 @@ import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.room.RoomDataSource
-import timber.log.Timber
+import co.touchlab.kermit.Logger
+
+private val log = Logger.withTag("PlaylistViewModel")
 
 /*
  * Created by Claus Chierici (claus@qstuff.org)
@@ -97,7 +99,7 @@ class PlaylistViewModel: ViewModel(), KoinComponent {
 
     fun restorePlaylistAt(playlist: Playlist, position: Int) {
 
-        Timber.d("restorePlaylistAt(): ${playlist.trackList}")
+        log.d { "restorePlaylistAt(): ${playlist.trackList}" }
         viewModelScope.launch {
             roomDataSource.addPlaylist(playlist)
             // An empty playlist has no tracks to restore.

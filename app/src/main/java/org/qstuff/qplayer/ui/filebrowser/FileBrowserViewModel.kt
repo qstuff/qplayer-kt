@@ -9,10 +9,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.isSupported
-import timber.log.Timber
+import co.touchlab.kermit.Logger
 import java.io.File
 import java.util.*
 
+
+private val log = Logger.withTag("FileBrowserViewModel")
 
 /**
  * What the file browser shows. Updated as one object, so the header and the list always change
@@ -85,14 +87,14 @@ class FileBrowserViewModel(
     }
 
     private fun showStorageRoots(roots: List<StorageRoot> = StorageRoots.find(getApplication())) {
-        Timber.d("showStorageRoots(): ${roots.map { it.dir }}")
+        log.d { "showStorageRoots(): ${roots.map { it.dir }}" }
         currentDir = null
         _state.value = FileBrowserState(storageRoots = roots)
     }
 
     private fun browseTo(dir: File?) {
         dir ?: return
-        Timber.d("browseTo(): ${dir.path}")
+        log.d { "browseTo(): ${dir.path}" }
 
         if (dir.isDirectory) {
             val fileList = dir.listFiles()
@@ -101,12 +103,12 @@ class FileBrowserViewModel(
                 currentDir = dir
                 filterFileList(dir, fileList.asList())
             } else {
-                Timber.w("browseTo(): empty: ${dir.path}")
+                log.w { "browseTo(): empty: ${dir.path}" }
             }
         } else if (dir.isFile) {
-            Timber.w("browseTo(): is file: ${dir.path}")
+            log.w { "browseTo(): is file: ${dir.path}" }
         } else {
-            Timber.w("browseTo(): does not exist: ${dir.path}")
+            log.w { "browseTo(): does not exist: ${dir.path}" }
         }
         saveLastBrowsedDir()
     }

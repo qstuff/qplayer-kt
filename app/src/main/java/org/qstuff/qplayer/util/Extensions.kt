@@ -2,7 +2,6 @@ package org.qstuff.qplayer.util
 
 import android.content.Context
 import android.widget.Toast
-import timber.log.Timber
 import kotlin.math.round
 
 /*

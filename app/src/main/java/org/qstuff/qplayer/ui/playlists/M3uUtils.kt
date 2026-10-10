@@ -1,9 +1,11 @@
 package org.qstuff.qplayer.ui.playlists
 
 import org.qstuff.qplayer.datasource.model.Track
-import timber.log.Timber
+import co.touchlab.kermit.Logger
 import java.io.*
 import java.util.*
+
+private val log = Logger.withTag("M3uUtils")
 
 /*
  * For parts of the parser code:
@@ -43,14 +45,14 @@ object M3uUtils {
         reader.useLines { sequence ->
             sequence.toList().forEach { line ->
 
-                Timber.v("m3UParserGetTracks(): line: %s", line)
+                log.v { "m3UParserGetTracks(): line: $line" }
 
                 if (!(line.equals(EXTENDED_INFO_TAG, ignoreCase = true) || line.trim { it <= ' ' } == "")) {
 
                     if (line.matches(RECORD_TAG.toRegex())) {
-                        Timber.v("m3UParserGetTracks(): RECORD TAG %s", line.replace("^(.*?),".toRegex(), ""))
+                        log.v { "m3UParserGetTracks(): RECORD TAG ${line.replace("^(.*?),".toRegex(), "")}" }
                     } else {
-                        Timber.v("m3UParserGetTracks(): ELSE %s", line.replace("^(.*?),".toRegex(), ""))
+                        log.v { "m3UParserGetTracks(): ELSE ${line.replace("^(.*?),".toRegex(), "")}" }
 
                         val trackFile: File
 
