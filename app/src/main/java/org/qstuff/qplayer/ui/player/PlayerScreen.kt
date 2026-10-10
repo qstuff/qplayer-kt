@@ -71,7 +71,8 @@ fun PlayerScreen(
     fileBrowserViewModel: FileBrowserViewModel,
     titleSuffix: String,
     onOpenSettings: () -> Unit,
-    onOpenWebView: (url: String) -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenImprint: () -> Unit,
     onOpenLicenses: () -> Unit
 ) {
     val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
@@ -266,7 +267,8 @@ fun PlayerScreen(
             PlayerTitleBar(
                 titleSuffix = titleSuffix,
                 onOpenSettings = onOpenSettings,
-                onOpenWebView = onOpenWebView,
+                onOpenPrivacy = onOpenPrivacy,
+                onOpenImprint = onOpenImprint,
                 onOpenLicenses = onOpenLicenses,
                 modifier = Modifier.padding(top = 4.dp)
             )

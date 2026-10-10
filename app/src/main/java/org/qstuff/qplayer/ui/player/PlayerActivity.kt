@@ -1,6 +1,5 @@
 package org.qstuff.qplayer.ui.player
 
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
@@ -18,26 +17,22 @@ import org.koin.android.ext.android.inject
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.ui.QDeqNavigation
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.lockOrientationForDevice
 import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
-import org.qstuff.qplayer.ui.settings.LicensesActivity
-import org.qstuff.qplayer.ui.settings.SettingsActivity
-import org.qstuff.qplayer.ui.settings.WebViewActivity
 import org.qstuff.qplayer.ui.theme.QDeqTheme
 import org.qstuff.qplayer.util.CrashReporting
 import timber.log.Timber
 
+/**
+ * The app's only activity: hosts the Compose UI (player, Settings, Licenses, info pages — see
+ * QDeqNavigation), the cross-ViewModel wiring and the media service lifecycle.
+ */
 class PlayerActivity : AppCompatActivity() {
-
-    companion object {
-        const val EXTRA_URL = "EXTRA_URL"
-        const val HTMLPAGE_PRIVACY = "privacy.html"
-        const val HTMLPAGE_IMPRINT = "imprint.html"
-    }
 
     private lateinit var playerViewModel: PlayerViewModel
     private lateinit var queueViewModel: QueueViewModel
@@ -114,15 +109,13 @@ class PlayerActivity : AppCompatActivity() {
             }
 
             QDeqTheme {
-                PlayerScreen(
+                QDeqNavigation(
                     playerViewModel = playerViewModel,
                     queueViewModel = queueViewModel,
                     playlistViewModel = playlistViewModel,
                     fileBrowserViewModel = fileBrowserViewModel,
                     titleSuffix = titleSuffix,
-                    onOpenSettings = ::startSettingsActivity,
-                    onOpenWebView = ::startWebViewActivity,
-                    onOpenLicenses = ::startLicensesActivity
+                    onSettingsClosed = ::loadSettings
                 )
 
                 if (showCrashReportingOptIn) {
@@ -139,8 +132,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        playerViewModel.loadSettings()
-        queueViewModel.loadSettings()
+        loadSettings()
     }
 
     override fun onPause() {
@@ -161,18 +153,10 @@ class PlayerActivity : AppCompatActivity() {
         playerViewModel.stopMediaService()
     }
 
-    private fun startWebViewActivity(url: String) {
-        val intent = Intent(this, WebViewActivity::class.java)
-        intent.putExtra(EXTRA_URL, url)
-        startActivity(intent)
-    }
-
-    private fun startSettingsActivity() {
-        startActivity(Intent(this, SettingsActivity::class.java))
-    }
-
-    private fun startLicensesActivity() {
-        startActivity(Intent(this, LicensesActivity::class.java))
+    /** Apply the (possibly changed) settings to the player and the queue. */
+    private fun loadSettings() {
+        playerViewModel.loadSettings()
+        queueViewModel.loadSettings()
     }
 
     @Suppress("DEPRECATION")
