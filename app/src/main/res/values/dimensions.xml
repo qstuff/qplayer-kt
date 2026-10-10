@@ -20,7 +20,6 @@
     <dimen name="kebabbutton_size">25dp</dimen>
 
     <!-- Waveform / cue overlay -->
-    <dimen name="waveform_side_margin">10dp</dimen>
     <dimen name="waveform_top_margin">2dp</dimen>
     <dimen name="cue_marker_width">30dp</dimen>
     <dimen name="cue_marker_top_margin">15dp</dimen>

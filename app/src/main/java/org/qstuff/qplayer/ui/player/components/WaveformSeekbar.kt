@@ -1,6 +1,5 @@
 package org.qstuff.qplayer.ui.player.components
 
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -17,24 +16,28 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.TrackData
-import org.qstuff.qplayer.ui.player.trackprogress.CuepointView
-import org.qstuff.qplayer.ui.player.trackprogress.WaveformView
 import org.qstuff.qplayer.ui.theme.QOrange
 
 /**
- * The seekbar area: the overview waveform (an [WaveformView]), a "calculating…" hint while the
- * overview is still being generated, a translucent-orange progress fill + playhead line that
- * can be dragged/tapped to seek, and the cue-point marker overlay.
+ * The seekbar area: the overview waveform, a "calculating…" hint while the overview is still
+ * being generated, a translucent-orange progress fill + playhead line that can be dragged/tapped
+ * to seek, and the cue-point marker overlay. All plain Compose drawing; the waveform, the
+ * progress and the cue marker use the same full width, so a cue sits exactly where the playhead
+ * was when it was set.
  *
  * State stays in the parent: [onSeekChange] fires live while dragging (parent updates its
  * seek preview), and [onSeekCommit] fires once on release with the final fraction.
@@ -64,16 +67,11 @@ fun WaveformSeekbar(
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.seekbar_height))
     ) {
-        AndroidView(
-            factory = { ctx ->
-                WaveformView(ctx).apply { updateWaveform(null) }
-            },
-            update = { view ->
-                // Show the current track's overview, or clear it (on track change or while
-                // it's still being generated) so a previous track's waveform never lingers.
-                if (waveformReady) view.updateWaveform(waveformData)
-                else view.updateWaveform(null)
-            },
+        // Show the current track's overview, or nothing (on track change or while it's still
+        // being generated) so a previous track's waveform never lingers.
+        Waveform(
+            peaks = if (waveformReady) waveformData?.bytes else null,
+            verticalInset = dimensionResource(R.dimen.waveform_top_margin),
             modifier = Modifier
                 .fillMaxSize()
                 .clip(roundedShape)
@@ -122,13 +120,70 @@ fun WaveformSeekbar(
                 strokeWidth = 2.dp.toPx()
             )
         }
-        AndroidView(
-            factory = { ctx -> CuepointView(ctx) },
-            update = { view ->
-                view.cuepointPosition = cueProgressPos
-                view.visibility = if (cueActive) View.VISIBLE else View.INVISIBLE
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+        if (cueActive) {
+            CueMarker(
+                position = cueProgressPos / 1000f,
+                markerWidth = dimensionResource(R.dimen.cue_marker_width),
+                markerOverhang = dimensionResource(R.dimen.cue_marker_top_margin),
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+/**
+ * Overview waveform: an orange center line and one white bar per peak (0..127), symmetric around
+ * the center and spread over the full width. The bars are built once per [peaks] array (and
+ * size) — not on every progress update.
+ */
+@Composable
+private fun Waveform(peaks: ByteArray?, verticalInset: Dp, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.drawWithCache {
+            val centerY = size.height / 2f
+            val bars = Path()
+            if (peaks != null && peaks.isNotEmpty()) {
+                val barWidth = size.width / peaks.size
+                val drawnWidth = barWidth.coerceAtLeast(1f)
+                val halfMax = (size.height - 2 * verticalInset.toPx()) / 2f
+                peaks.forEachIndexed { i, peak ->
+                    val half = peak.toInt().coerceIn(0, 127) / 127f * halfMax
+                    val left = i * barWidth + (barWidth - drawnWidth) / 2f
+                    bars.addRect(
+                        Rect(left, centerY - half, left + drawnWidth, centerY + half)
+                    )
+                }
+            }
+            onDrawBehind {
+                drawLine(QOrange, Offset(0f, centerY), Offset(size.width, centerY), strokeWidth = 1f)
+                drawPath(bars, Color.White)
+            }
+        }
+    )
+}
+
+/**
+ * Cue-point marker at [position] (0..1 of the width): an orange funnel from the top edge
+ * ([markerWidth] wide, starting [markerOverhang] above the top) narrowing to a 2px line at a fifth
+ * of the height, which runs down to the bottom. Clipped to the seekbar, like the former View.
+ */
+@Composable
+private fun CueMarker(position: Float, markerWidth: Dp, markerOverhang: Dp, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.clipToBounds()) {
+        val x = position.coerceIn(0f, 1f) * size.width
+        val halfWidth = markerWidth.toPx() / 2f
+        val overhang = markerOverhang.toPx()
+        val neckY = size.height / 5f
+        val line = 1.dp.toPx()
+        val marker = Path().apply {
+            moveTo(x - halfWidth, -overhang)
+            lineTo(x + halfWidth, -overhang)
+            lineTo(x + line, neckY)
+            lineTo(x + line, size.height + overhang)
+            lineTo(x - line, size.height + overhang)
+            lineTo(x - line, neckY)
+            close()
+        }
+        drawPath(marker, QOrange)
     }
 }
