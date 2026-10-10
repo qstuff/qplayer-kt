@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,7 +73,7 @@ fun QueueScreen(
                     },
                     modifier = Modifier.size(30.dp)
                 ) {
-                    Icon(Icons.Default.PlaylistAdd, contentDescription = "Save as playlist", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = "Save as playlist", tint = Color.White)
                 }
                 Spacer(Modifier.width(4.dp))
                 IconButton(

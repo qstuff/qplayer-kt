@@ -16,9 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.lockOrientationForDevice
@@ -67,7 +69,10 @@ private fun LicensesScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
+        // Loaded off the main thread from the JSON the plugin generated at build time.
+        val libraries by produceLibraries()
         LibrariesContainer(
+            libraries = libraries,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
