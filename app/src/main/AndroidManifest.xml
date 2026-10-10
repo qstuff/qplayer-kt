@@ -46,22 +46,6 @@
 
         </activity>
 
-        <activity
-            android:name=".ui.settings.WebViewActivity"
-            android:theme="@style/Theme.QPlayer">
-
-        </activity>
-
-        <activity
-            android:name=".ui.settings.SettingsActivity"
-            android:theme="@style/Theme.QPlayer">
-        </activity>
-
-        <activity
-            android:name=".ui.settings.LicensesActivity"
-            android:theme="@style/Theme.QPlayer">
-        </activity>
-
         <service
             android:name=".ui.player.mediaservice.QMediaPlayerService"
             android:exported="true"

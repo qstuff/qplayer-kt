@@ -38,7 +38,8 @@ import org.qstuff.qplayer.ui.theme.QOrange
 fun PlayerTitleBar(
     titleSuffix: String,
     onOpenSettings: () -> Unit,
-    onOpenWebView: (url: String) -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenImprint: () -> Unit,
     onOpenLicenses: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -85,11 +86,11 @@ fun PlayerTitleBar(
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.more_menu_privacy)) },
-                    onClick = { showMoreMenu = false; onOpenWebView("privacy.html") }
+                    onClick = { showMoreMenu = false; onOpenPrivacy() }
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.more_menu_imprint)) },
-                    onClick = { showMoreMenu = false; onOpenWebView("imprint.html") }
+                    onClick = { showMoreMenu = false; onOpenImprint() }
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.more_menu_licenses)) },
