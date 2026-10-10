@@ -17,7 +17,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.player.PlayerActivity
-import timber.log.Timber
+import co.touchlab.kermit.Logger
+
+private val log = Logger.withTag("QMediaPlayerService")
 
 /**
  * Playback service, a Media3 [MediaSessionService]: the system shows a media-style notification
@@ -71,7 +73,7 @@ class QMediaPlayerService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        Timber.d("onCreate()")
+        log.d { "onCreate()" }
 
         player = QDeqPlayerMedia3()
         player.create(this)
@@ -130,7 +132,7 @@ class QMediaPlayerService : MediaSessionService() {
     }
 
     override fun onDestroy() {
-        Timber.d("onDestroy()")
+        log.d { "onDestroy()" }
         mediaSession?.release()
         mediaSession = null
         player.destroy()
@@ -153,13 +155,13 @@ class QMediaPlayerService : MediaSessionService() {
     val trackStatus: SharedFlow<Track> get() = player.trackStatus
 
     fun play() {
-        Timber.d("play():")
+        log.d { "play():" }
         if (currentTrack == null) return
         player.play()
     }
 
     fun pause() {
-        Timber.d("pause():")
+        log.d { "pause():" }
         if (currentTrack == null) return
         player.pause()
     }
@@ -181,7 +183,7 @@ class QMediaPlayerService : MediaSessionService() {
     fun getCurrentPositionMillis(): Long = player.getCurrentPositionMillis()
 
     fun loadTrackASync(track: Track) {
-        Timber.d("loadTrackASync():")
+        log.d { "loadTrackASync():" }
         currentTrack = track
         player.loadTrackASync(track)
     }

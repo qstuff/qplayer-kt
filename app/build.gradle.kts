@@ -94,7 +94,7 @@ dependencies {
     implementation(libs.navigation3.runtime)
     implementation(libs.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
 
     // Room
     implementation(libs.room.runtime)
@@ -119,10 +119,10 @@ dependencies {
     implementation(libs.media3.session)
 
     // Logging
-    implementation(libs.timber)
+    implementation(libs.kermit)
 
-    // Gson
-    implementation(libs.gson)
+    // Settings storage (SharedPreferences on Android)
+    implementation(libs.multiplatform.settings)
 
     // Licenses screen
     implementation(libs.aboutlibraries.compose.m3)
@@ -132,6 +132,7 @@ dependencies {
     implementation(libs.firebase.crashlytics)
 
     testImplementation(libs.junit)
+    testImplementation(libs.multiplatform.settings.test)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.espresso.core)
 }

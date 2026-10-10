@@ -26,7 +26,9 @@ import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
 import org.qstuff.qplayer.ui.theme.QDeqTheme
 import org.qstuff.qplayer.util.CrashReporting
-import timber.log.Timber
+import co.touchlab.kermit.Logger
+
+private val log = Logger.withTag("PlayerActivity")
 
 /**
  * The app's only activity: hosts the Compose UI (player, Settings, Licenses, info pages — see
@@ -43,7 +45,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Timber.d("onCreate()")
+        log.d { "onCreate()" }
         // Phones: portrait. Tablets: landscape two-pane layout (see PlayerScreen). The manifest's
         // configChanges keep the activity alive when this rotates it — onDestroy stops playback.
         lockOrientationForDevice(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)

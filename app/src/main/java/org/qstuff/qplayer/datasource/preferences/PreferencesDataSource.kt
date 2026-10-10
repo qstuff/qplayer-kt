@@ -1,11 +1,9 @@
 package org.qstuff.qplayer.datasource.preferences
 
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.edit
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import org.koin.core.component.KoinComponent
+import co.touchlab.kermit.Logger
+import com.russhwolf.settings.Settings
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.TrackRepeatStatus
@@ -15,7 +13,12 @@ import org.qstuff.qplayer.util.TrackRepeatStatus
  * on 2/11/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class PreferencesDataSource (val context: Context) : KoinComponent {
+/**
+ * All persisted settings and player/queue state, on a multiplatform [Settings] store (on Android
+ * the SharedPreferences file "QDEQ" — same keys and value formats as before, so nothing needs
+ * migrating). The queue and the selected track are stored as JSON.
+ */
+class PreferencesDataSource(private val settings: Settings) {
 
     companion object {
 
@@ -51,138 +54,123 @@ class PreferencesDataSource (val context: Context) : KoinComponent {
     }
 
 
-    private val preferences: SharedPreferences = context.applicationContext.getSharedPreferences("QDEQ", Context.MODE_PRIVATE)
+    private val log = Logger.withTag("PreferencesDataSource")
+
+    // Also reads queues stored by the former Gson code: they contain Track.trackStatus, which is
+    // no longer persisted.
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun saveLastBrowsedDir(dir: String) =
-        preferences.edit {
-            putString(PREF_LAST_BROWSED_DIR, dir)
-        }
+        settings.putString(PREF_LAST_BROWSED_DIR, dir)
 
     fun getLastBrowsedDir(): String =
-            preferences.getString(
-                    PREF_LAST_BROWSED_DIR,
-                    DEFAULT_ROOT_DIR) ?: DEFAULT_ROOT_DIR
+            settings.getString(PREF_LAST_BROWSED_DIR, DEFAULT_ROOT_DIR)
 
     //
     // Saved/Loaded in QueueViewModel
     //
 
     fun saveTrackList(key: String, tracks: ArrayList<Track>) =
-        preferences.edit {
-            putString(key, Gson().toJson(tracks))
-        }
+        settings.putString(key, json.encodeToString(ListSerializer(Track.serializer()), tracks))
 
     fun readTrackList(key: String): ArrayList<Track>? {
-
-        val json = preferences.getString(key, "")
-        if (json.isNullOrBlank()) return null
-        return Gson().fromJson<ArrayList<Track>>(json, object: TypeToken<ArrayList<Track>>() {}.type)
+        val stored = settings.getString(key, "")
+        if (stored.isBlank()) return null
+        return runCatching { ArrayList(json.decodeFromString(ListSerializer(Track.serializer()), stored)) }
+            .onFailure { log.e(it) { "readTrackList(): can't parse the stored queue" } }
+            .getOrNull()
     }
 
     fun saveSelectedTrackList(track: Track) =
-        preferences.edit {
-            putString(PREF_SELECTED_TRACK, Gson().toJson(track))
-        }
+        settings.putString(PREF_SELECTED_TRACK, json.encodeToString(Track.serializer(), track))
 
     fun readSelectedTrack(): Track? {
-        val json = preferences.getString(PREF_SELECTED_TRACK, "")
-        if (json.isNullOrBlank()) return null
-        return Gson().fromJson<Track>(json, object: TypeToken<Track>() {}.type)
+        val stored = settings.getString(PREF_SELECTED_TRACK, "")
+        if (stored.isBlank()) return null
+        return runCatching { json.decodeFromString(Track.serializer(), stored) }
+            .onFailure { log.e(it) { "readSelectedTrack(): can't parse the stored track" } }
+            .getOrNull()
     }
 
     fun saveShuffleMode(shuffle: Boolean) =
-        preferences.edit{
-            putBoolean(PREF_SHUFFLE_MODE, shuffle)
-        }
+        settings.putBoolean(PREF_SHUFFLE_MODE, shuffle)
 
-    fun readShuffleMode() = preferences.getBoolean(PREF_SHUFFLE_MODE, false)
+    fun readShuffleMode() = settings.getBoolean(PREF_SHUFFLE_MODE, false)
 
     fun saveRepeatMode(repeat: Int) =
-            preferences.edit{
-                putInt(PREF_REPEAT_MODE, repeat)
-            }
+            settings.putInt(PREF_REPEAT_MODE, repeat)
 
-    fun readRepeatMode() = preferences.getInt(PREF_REPEAT_MODE, TrackRepeatStatus.NONE.ordinal)
+    fun readRepeatMode() = settings.getInt(PREF_REPEAT_MODE, TrackRepeatStatus.NONE.ordinal)
 
     //
     // Saved/Loaded in PlayerModel
     //
 
     fun savePitchFactorIndex(pitchFactorIndex: Int) =
-            preferences.edit{
-                putInt(PREF_PITCH_FACTOR_INDEX, pitchFactorIndex)
-            }
+            settings.putInt(PREF_PITCH_FACTOR_INDEX, pitchFactorIndex)
 
-    fun readPitchFactorIndex() = preferences.getInt(PREF_PITCH_FACTOR_INDEX, 0)
+    fun readPitchFactorIndex() = settings.getInt(PREF_PITCH_FACTOR_INDEX, 0)
 
     fun savePitchValue(pitchValue: Int) =
-            preferences.edit{
-                putInt(PREF_PITCH_VALUE, pitchValue)
-            }
+            settings.putInt(PREF_PITCH_VALUE, pitchValue)
 
-    fun readPitchValue() = preferences.getInt(PREF_PITCH_VALUE, 500)
+    fun readPitchValue() = settings.getInt(PREF_PITCH_VALUE, 500)
 
     fun saveMasterTempoMode(enabled: Boolean) =
-            preferences.edit{
-                putBoolean(PREF_MASTER_TEMPO_MODE, enabled)
-            }
+            settings.putBoolean(PREF_MASTER_TEMPO_MODE, enabled)
 
-    fun readMasterTempoMode() = preferences.getBoolean(PREF_MASTER_TEMPO_MODE, false)
+    fun readMasterTempoMode() = settings.getBoolean(PREF_MASTER_TEMPO_MODE, false)
 
     fun saveRemainingTimeMode(enabled: Boolean) =
-            preferences.edit{
-                putBoolean(PREF_SHOW_REMAINING, enabled)
-            }
+            settings.putBoolean(PREF_SHOW_REMAINING, enabled)
 
-    fun readRemainingTimeMode() = preferences.getBoolean(PREF_SHOW_REMAINING, true)
+    fun readRemainingTimeMode() = settings.getBoolean(PREF_SHOW_REMAINING, true)
 
     //
     // Others
     //
 
     /** Whether the crash reporting opt-in dialog was answered (it's shown once). */
-    fun isCrashreportingEnabledDialogShown() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, false)
+    fun isCrashreportingEnabledDialogShown() = settings.getBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, false)
     fun setCrashreportingEnabledDialogShown(shown: Boolean) =
-            preferences.edit {
-                putBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, shown)
-            }
+            settings.putBoolean(PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN, shown)
     //
     // Settings
     //
 
-    fun isAutostartEnabled() = preferences.getBoolean(PREFS_TRACK_AUTOSTART, false)
-    fun isProceedToNextTrackEnabled() = preferences.getBoolean(PREFS_PROCEED_TO_NEXT_TRACK, true)
-    fun isShowClearQueueWarningEnabled() = preferences.getBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, true)
-    fun isStopPlaybackOnSettingCuepointEnabled() = preferences.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)
-    fun isCrashreportingEnabled() = preferences.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
-    fun getJogWheelSensitivity() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10")!!)
-    fun getJogWheelMode() = Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)
+    fun isAutostartEnabled() = settings.getBoolean(PREFS_TRACK_AUTOSTART, false)
+    fun isProceedToNextTrackEnabled() = settings.getBoolean(PREFS_PROCEED_TO_NEXT_TRACK, true)
+    fun isShowClearQueueWarningEnabled() = settings.getBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, true)
+    fun isStopPlaybackOnSettingCuepointEnabled() = settings.getBoolean(PREFS_STOP_PLAYBACK_ON_CUE, false)
+    fun isCrashreportingEnabled() = settings.getBoolean(PREFS_ENABLE_CRASHREPORTING, false)
+    fun getJogWheelSensitivity() = settings.getString(PREFS_JOG_WHEEL_SENSITIVITY, "10").toInt()
+    fun getJogWheelMode() = settings.getString(PREFS_JOG_WHEEL_MODE, "0").toInt()
     /** JogwheelHaptics.LEVEL_* (off / light / medium / strong); medium by default. */
-    fun getJogWheelHapticLevel() = preferences.getInt(PREFS_JOG_WHEEL_HAPTICS, 2)
-    fun getJogWheelModeEnum() = JogwheelMode.values()[Integer.parseInt(preferences.getString(PREFS_JOG_WHEEL_MODE, "0")!!)]
+    fun getJogWheelHapticLevel() = settings.getInt(PREFS_JOG_WHEEL_HAPTICS, 2)
+    fun getJogWheelModeEnum() = JogwheelMode.entries[settings.getString(PREFS_JOG_WHEEL_MODE, "0").toInt()]
 
     fun setAutostartEnabled(enabled: Boolean) =
-            preferences.edit { putBoolean(PREFS_TRACK_AUTOSTART, enabled) }
+            settings.putBoolean(PREFS_TRACK_AUTOSTART, enabled)
 
     fun setProceedToNextTrackEnabled(enabled: Boolean) =
-            preferences.edit { putBoolean(PREFS_PROCEED_TO_NEXT_TRACK, enabled) }
+            settings.putBoolean(PREFS_PROCEED_TO_NEXT_TRACK, enabled)
 
     fun setShowClearQueueWarningEnabled(enabled: Boolean) =
-            preferences.edit { putBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, enabled) }
+            settings.putBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, enabled)
 
     fun setStopPlaybackOnSettingCuepointEnabled(enabled: Boolean) =
-            preferences.edit { putBoolean(PREFS_STOP_PLAYBACK_ON_CUE, enabled) }
+            settings.putBoolean(PREFS_STOP_PLAYBACK_ON_CUE, enabled)
 
     fun setCrashreportingEnabled(enabled: Boolean) =
-            preferences.edit { putBoolean(PREFS_ENABLE_CRASHREPORTING, enabled) }
+            settings.putBoolean(PREFS_ENABLE_CRASHREPORTING, enabled)
 
     // Jog wheel values are stored as Strings (format of the former ListPreference)
     fun setJogWheelSensitivity(sensitivity: Int) =
-            preferences.edit { putString(PREFS_JOG_WHEEL_SENSITIVITY, sensitivity.toString()) }
+            settings.putString(PREFS_JOG_WHEEL_SENSITIVITY, sensitivity.toString())
 
     fun setJogWheelMode(mode: Int) =
-            preferences.edit { putString(PREFS_JOG_WHEEL_MODE, mode.toString()) }
+            settings.putString(PREFS_JOG_WHEEL_MODE, mode.toString())
 
     fun setJogWheelHapticLevel(level: Int) =
-            preferences.edit { putInt(PREFS_JOG_WHEEL_HAPTICS, level) }
+            settings.putInt(PREFS_JOG_WHEEL_HAPTICS, level)
 }

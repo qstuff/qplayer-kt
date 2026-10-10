@@ -8,10 +8,12 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import co.touchlab.kermit.Logger
 import java.nio.ByteOrder
 import java.nio.ShortBuffer
 import kotlin.coroutines.coroutineContext
+
+private val log = Logger.withTag("AudioDecoder")
 
 /**
  * Decodes the first audio track of a file to 16-bit PCM using only platform codecs
@@ -117,7 +119,7 @@ object AudioDecoder {
             }
             sawOutputEOS
         } catch (e: Exception) {
-            Timber.e(e, "AudioDecoder.decode failed for %s", uri)
+            log.e(e) { "decode failed for $uri" }
             false
         } finally {
             try { codec?.stop() } catch (_: Exception) {}

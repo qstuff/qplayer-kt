@@ -29,7 +29,9 @@ import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
 import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.PlayerStatus
-import timber.log.Timber
+import co.touchlab.kermit.Logger
+
+private val log = Logger.withTag("PlayerViewModel")
 
 class  PlayerViewModel (application: Application):
         AndroidViewModel(application), KoinComponent {
@@ -136,7 +138,7 @@ class  PlayerViewModel (application: Application):
     private val serviceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            Timber.d("onServiceConnected(): ${name.toShortString()}")
+            log.d { "onServiceConnected(): ${name.toShortString()}" }
 
             mediaService = (binder as QMediaPlayerService.MyBinder).service
 
@@ -171,7 +173,7 @@ class  PlayerViewModel (application: Application):
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            Timber.d("onServiceDisconnected(): ${name.toShortString()}")
+            log.d { "onServiceDisconnected(): ${name.toShortString()}" }
 
             mediaService.stop()
             mediaService.player.destroy()
@@ -319,7 +321,7 @@ class  PlayerViewModel (application: Application):
     //
 
     fun loadTrack(track: Track?) {
-        Timber.d("loadTrack(): $track")
+        log.d { "loadTrack(): $track" }
 
         if (!isMediaServiceBound) {
             pendingTrack = track
@@ -337,14 +339,14 @@ class  PlayerViewModel (application: Application):
         mediaService.pause()
 
         if (currentTrack?.uri == track.uri) {
-            Timber.d("loadTrack(): same track: $track")
+            log.d { "loadTrack(): same track: $track" }
 
             currentTrack.playPosition = 0
             currentTrack.isAutoplay = autoStart
             emitTrackState(currentTrack, Track.TrackStatus.PREPARED)
 
         } else {
-            Timber.d("loadTrack(): new track: $track")
+            log.d { "loadTrack(): new track: $track" }
             mediaService.loadTrackASync(track)
             emitTrackState(track, Track.TrackStatus.LOADING)
         }
@@ -536,7 +538,7 @@ class  PlayerViewModel (application: Application):
     }
 
     private fun startUpdateTimer() {
-        Timber.d("startUpdateTimer()")
+        log.d { "startUpdateTimer()" }
 
         if (isUpdatetaskRunning) return
 
