@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
 import androidx.compose.material3.*
@@ -327,7 +327,7 @@ private fun FileListItem(
     ) {
         val icon = when {
             file.isDirectory -> Icons.Default.Folder
-            file.isM3UList() -> Icons.Default.PlaylistPlay
+            file.isM3UList() -> Icons.AutoMirrored.Filled.PlaylistPlay
             else -> Icons.Default.MusicNote
         }
         Icon(

@@ -76,7 +76,7 @@ fun PlayerTabs(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f),
-            beyondBoundsPageCount = 1
+            beyondViewportPageCount = 1
         ) { page ->
             when (page) {
                 0 -> QueueScreen(
