@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.room.RoomDataSource
@@ -20,14 +18,15 @@ private val log = Logger.withTag("PlaylistViewModel")
  * on 4/1/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class PlaylistViewModel: ViewModel(), KoinComponent {
+class PlaylistViewModel(
+    private val roomDataSource: RoomDataSource
+) : ViewModel() {
 
     // Plain UI state, exposed as read-only StateFlow. Always a fresh list copy, never the
     // mutable working list.
     private val _playlistList = MutableStateFlow<List<Playlist>>(emptyList())
     val playlistList: StateFlow<List<Playlist>> = _playlistList.asStateFlow()
 
-    private val roomDataSource by inject<RoomDataSource>()
 
     private val currentPlaylistList = arrayListOf<Playlist>()
     // Tracks of the last removed playlist, for Undo.

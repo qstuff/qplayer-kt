@@ -5,8 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.CrashReporting
 
@@ -21,9 +19,10 @@ data class SettingsUiState(
     val crashreporting: Boolean
 )
 
-class SettingsViewModel : ViewModel(), KoinComponent {
+class SettingsViewModel(
+    private val preferencesDataSource: PreferencesDataSource
+) : ViewModel() {
 
-    private val preferencesDataSource by inject<PreferencesDataSource>()
 
     private val _uiState = MutableStateFlow(readSettings())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()

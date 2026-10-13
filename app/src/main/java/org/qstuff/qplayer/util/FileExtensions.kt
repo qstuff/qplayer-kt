@@ -8,24 +8,14 @@ import java.io.File
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 
-fun File.isM3UList() = this.name.endsWith(".m3u")
+// java.io.File helpers for the Android file browser; the rules themselves are in AudioFiles.
 
-fun File.isSupported(): Boolean {
-    if (this.isDirectory) {
-        return !this.name.startsWith(".")
-        //        && this.listFiles().isNotEmpty()
-    }
-    if (this.isFile) {
-        return !this.name.startsWith(".")
-                && (this.name.endsWith(".mp3")
-                || this.name.endsWith(".mp4")
-                || this.name.endsWith(".m4a")
-                || this.name.endsWith(".aif")
-                || this.name.endsWith(".aac")
-                || this.name.endsWith(".wav")
-                || this.name.endsWith(".m3u"))
-    }
-    return false
+fun File.isM3UList() = AudioFiles.isM3uPlaylist(name)
+
+fun File.isSupported(): Boolean = when {
+    isDirectory -> !AudioFiles.isHidden(name)
+    isFile -> AudioFiles.isSupported(name)
+    else -> false
 }
 
 fun File.directoryContainsSupportedFiles(): Boolean {
@@ -56,7 +46,7 @@ fun File.listTracksForAddDialog(): List<File> {
     val ret = arrayListOf<File>()
     val files = this.listFiles() ?: return ret
     files.forEach {
-        if (it.isFile && it.isSupported() && !it.name.endsWith(".m3u")) {
+        if (it.isFile && it.isSupported() && !it.isM3UList()) {
             ret.add(it)
         }
     }

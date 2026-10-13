@@ -2,8 +2,8 @@ package org.qstuff.qplayer.ui.playlists
 
 import org.qstuff.qplayer.datasource.model.Track
 import co.touchlab.kermit.Logger
-import java.io.*
-import java.util.*
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 
 private val log = Logger.withTag("M3uUtils")
 
@@ -35,48 +35,42 @@ object M3uUtils {
     private const val EXTENDED_INFO_TAG = "#EXTM3U"
     private const val RECORD_TAG = "^[#][E|e][X|x][T|t][I|i][N|n][F|f].*"
 
-    @Throws(IOException::class)
-    fun m3UParserGetTracks(fis: FileInputStream, directoryPath: String):
-            Pair<ArrayList<Track>, ArrayList<Track>> {
+    /**
+     * Parses the M3U playlist [content] (entries relative to [directoryPath] or absolute) into the
+     * tracks that exist and the ones that don't.
+     */
+    fun m3UParserGetTracks(
+        content: String,
+        directoryPath: String,
+        isExistingFile: (path: String) -> Boolean = ::isExistingFile
+    ): Pair<ArrayList<Track>, ArrayList<Track>> {
         val tracksFound = ArrayList<Track>()
         val notFound = ArrayList<Track>()
 
-        val reader = BufferedReader(InputStreamReader(fis))
-        reader.useLines { sequence ->
-            sequence.toList().forEach { line ->
+        content.lineSequence().forEach { line ->
+            log.v { "m3UParserGetTracks(): line: $line" }
 
-                log.v { "m3UParserGetTracks(): line: $line" }
+            if (!(line.equals(EXTENDED_INFO_TAG, ignoreCase = true) || line.trim { it <= ' ' } == "")) {
 
-                if (!(line.equals(EXTENDED_INFO_TAG, ignoreCase = true) || line.trim { it <= ' ' } == "")) {
+                if (line.matches(RECORD_TAG.toRegex())) {
+                    log.v { "m3UParserGetTracks(): RECORD TAG ${line.replace("^(.*?),".toRegex(), "")}" }
+                } else {
+                    log.v { "m3UParserGetTracks(): ELSE ${line.replace("^(.*?),".toRegex(), "")}" }
 
-                    if (line.matches(RECORD_TAG.toRegex())) {
-                        log.v { "m3UParserGetTracks(): RECORD TAG ${line.replace("^(.*?),".toRegex(), "")}" }
+                    val trackPath = if (line.contains("/")) line else "$directoryPath/$line"
+
+                    if (isExistingFile(trackPath)) {
+                        tracksFound.add(Track.fromPath(trackPath))
                     } else {
-                        log.v { "m3UParserGetTracks(): ELSE ${line.replace("^(.*?),".toRegex(), "")}" }
-
-                        val trackFile: File
-
-                        trackFile = if (line.contains("/")) {
-                            File(line)
-                        } else {
-                            File("$directoryPath/$line")
-                        }
-
-                        if (trackFile.exists() && trackFile.isFile) {
-                            tracksFound.add(Track(trackFile))
-                        } else {
-                            notFound.add(Track(trackFile))
-                        }
+                        notFound.add(Track.fromPath(trackPath))
                     }
                 }
             }
         }
 
-        val tracksNotFound = StringBuilder()
-        for (track in notFound) {
-            tracksNotFound.append("\n")
-            tracksNotFound.append(track.name)
-        }
         return Pair(tracksFound, notFound)
     }
+
+    private fun isExistingFile(path: String) =
+        SystemFileSystem.metadataOrNull(Path(path))?.isRegularFile == true
 }

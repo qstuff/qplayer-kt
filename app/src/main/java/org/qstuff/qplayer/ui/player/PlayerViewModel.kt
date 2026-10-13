@@ -3,13 +3,11 @@ package org.qstuff.qplayer.ui.player
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.*
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
-import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,8 +16,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
@@ -27,14 +23,18 @@ import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
 import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
+import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.util.JogwheelMode
+import org.qstuff.qplayer.util.LruCache
 import org.qstuff.qplayer.util.PlayerStatus
 import co.touchlab.kermit.Logger
 
 private val log = Logger.withTag("PlayerViewModel")
 
-class  PlayerViewModel (application: Application):
-        AndroidViewModel(application), KoinComponent {
+class PlayerViewModel(
+    application: Application,
+    private val preferencesDataSource: PreferencesDataSource
+) : AndroidViewModel(application) {
 
     companion object {
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
@@ -116,10 +116,8 @@ class  PlayerViewModel (application: Application):
     private var isMediaServiceBound = false
     private var pendingTrack: Track? = null
 
-    // Update Task
-    private var updateHandler = Handler(Looper.getMainLooper())
-    private var updateRunnable: Runnable? = null
-    private var isUpdatetaskRunning = false
+    // Position timer (runs while playing / scratching)
+    private var updateJob: Job? = null
 
     // Waveform overview generation (native MediaExtractor+MediaCodec, off the main thread)
     private val waveformCache = LruCache<String, ByteArray>(32)
@@ -133,7 +131,6 @@ class  PlayerViewModel (application: Application):
     // Collectors of the media service's flows (track status, play state, system Next/Prev).
     private val serviceJobs = mutableListOf<Job>()
 
-    private val preferencesDataSource by inject<PreferencesDataSource>()
 
     private val serviceConnection = object : ServiceConnection {
 
@@ -242,7 +239,7 @@ class  PlayerViewModel (application: Application):
             pre = "  "
         }
 
-        val pitch = String.format("$pre%02.01f", diff)
+        val pitch = pre + Formatting.oneDecimal(diff)
 
         if (diff in -99.0..99.0) {
             _pitchValueText.value = "$pitch%"
@@ -540,26 +537,22 @@ class  PlayerViewModel (application: Application):
     private fun startUpdateTimer() {
         log.d { "startUpdateTimer()" }
 
-        if (isUpdatetaskRunning) return
+        if (updateJob?.isActive == true) return
 
-        updateHandler = Handler(Looper.getMainLooper())
-        updateRunnable = object : Runnable {
-            override fun run() {
+        updateJob = viewModelScope.launch {
+            while (isActive) {
                 _onTrackPositionUpdate.value = currentPositionMillis()
                 // 250ms is plenty for the progress bar/time and keeps per-tick recomposition
                 // from starving touch dispatch (which made seeking laggy during playback).
                 // Faster while scratching, so the waveform follows the wheel.
-                updateHandler.postDelayed(this, if (scratchEngine.isScratching) 100 else 250)
+                delay(if (scratchEngine.isScratching) 100 else 250)
             }
         }
-        updateHandler.post(updateRunnable as Runnable)
-        isUpdatetaskRunning = true
     }
 
     private fun resetUpdateTimer() {
-
-        updateRunnable?.let { updateHandler.removeCallbacks(it) }
-        isUpdatetaskRunning = false
+        updateJob?.cancel()
+        updateJob = null
     }
 
     override fun onCleared() {

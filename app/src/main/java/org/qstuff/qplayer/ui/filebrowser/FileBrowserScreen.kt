@@ -42,7 +42,6 @@ import org.qstuff.qplayer.util.directoryContainsSupportedFiles
 import org.qstuff.qplayer.util.isM3UList
 import org.qstuff.qplayer.util.listTracksForAddDialog
 import java.io.File
-import java.io.FileInputStream
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -161,7 +160,7 @@ fun FileBrowserScreen(
                     onClick = {
                         when {
                             file.isM3UList() -> m3uDialogFile = file
-                            file.isFile -> queueViewModel.addFile(file)
+                            file.isFile -> queueViewModel.addPath(file.absolutePath)
                             file.isDirectory -> fileBrowserViewModel.onFileItemClicked(file)
                         }
                     },
@@ -171,7 +170,7 @@ fun FileBrowserScreen(
                         }
                     },
                     onPrelistenClick = {
-                        playerViewModel.loadTrack(Track(file, true))
+                        playerViewModel.loadTrack(Track.fromPath(file.absolutePath, autoplay = true))
                     }
                 )
                 HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
@@ -197,7 +196,7 @@ fun FileBrowserScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    queueViewModel.addFileList(filesToAdd)
+                    queueViewModel.addPaths(filesToAdd.map { it.absolutePath })
                     addTracksDialogFiles = null
                 }) { Text(stringResource(R.string.dialog_ok)) }
             },
@@ -205,7 +204,7 @@ fun FileBrowserScreen(
                 Row {
                     TextButton(onClick = {
                         queueViewModel.clearTrackList()
-                        queueViewModel.addFileList(filesToAdd)
+                        queueViewModel.addPaths(filesToAdd.map { it.absolutePath })
                         addTracksDialogFiles = null
                     }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
                     TextButton(onClick = { addTracksDialogFiles = null }) {
@@ -218,7 +217,7 @@ fun FileBrowserScreen(
 
     m3uDialogFile?.let { file ->
         val parsed = remember(file) {
-            M3uUtils.m3UParserGetTracks(FileInputStream(file), file.parent ?: "")
+            M3uUtils.m3UParserGetTracks(file.readText(), file.parent ?: "")
         }
         val found = parsed.first
         val notFound = parsed.second

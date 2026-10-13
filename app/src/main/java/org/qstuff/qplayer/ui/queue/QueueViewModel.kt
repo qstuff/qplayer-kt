@@ -8,15 +8,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.util.next
 import co.touchlab.kermit.Logger
-import java.io.File
-import java.util.*
+import kotlin.random.Random
 
 private val log = Logger.withTag("QueueViewModel")
 
@@ -25,7 +22,9 @@ private val log = Logger.withTag("QueueViewModel")
  * on 2/11/19
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
-class QueueViewModel: ViewModel(), KoinComponent {
+class QueueViewModel(
+    private val preferencesDataSource: PreferencesDataSource
+) : ViewModel() {
 
     // Observables — plain UI state, exposed as read-only StateFlow.
     private val _trackList = MutableStateFlow<List<Track>>(emptyList())
@@ -61,9 +60,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
     // reordering queue entries can't desync it (an index-keyed map did).
     private val shufflePlayedUris = mutableSetOf<String>()
 
-    private val random = Random()
 
-    private val preferencesDataSource by inject<PreferencesDataSource>()
 
     private var lastRemovedSelectedIndex = -1
 
@@ -109,10 +106,9 @@ class QueueViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun addFile(file: File) {
-        if (file.isFile) {
-            addTrack(Track(file))
-        }
+    /** Add the audio file at [path] (unless it's already queued). */
+    fun addPath(path: String) {
+        addTrack(Track.fromPath(path))
     }
 
     fun removeTrack(track: Track) {
@@ -151,13 +147,10 @@ class QueueViewModel: ViewModel(), KoinComponent {
         saveTrackList()
     }
 
-    fun addFileList(files: List<File>) {
+    /** Add the audio files at [paths]. */
+    fun addPaths(paths: List<String>) {
 
-        files.forEach {
-            if (it.isFile) {
-                currentTrackList.add(Track(it))
-            }
-        }
+        paths.forEach { currentTrackList.add(Track.fromPath(it)) }
         _trackList.value = ArrayList(currentTrackList)
         saveTrackList()
     }
@@ -271,7 +264,7 @@ class QueueViewModel: ViewModel(), KoinComponent {
             candidates = currentTrackList.indices.filter { it != currentIndex }
                 .ifEmpty { listOf(currentIndex) }   // single-entry queue: replay it
         }
-        return candidates[random.nextInt(candidates.size)]
+        return candidates[Random.nextInt(candidates.size)]
     }
 
     private fun indexInQueue(track: Track?): Int =

@@ -101,8 +101,12 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
-    // Koin module injection
+    // Koin dependency injection (koin-compose-viewmodel: koinViewModel() / koinInject() in Compose)
     implementation(libs.koin.android)
+    implementation(libs.koin.compose.viewmodel)
+
+    // Multiplatform file system access (file existence for M3U playlists)
+    implementation(libs.kotlinx.io.core)
 
     // Compose
     implementation(platform(libs.compose.bom))
@@ -133,6 +137,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.multiplatform.settings.test)
+    testImplementation(libs.koin.test)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.espresso.core)
 }
