@@ -1,35 +1,14 @@
 package org.qstuff.qplayer
 
 import android.app.Application
-import android.content.Context
 import android.util.DisplayMetrics
-import androidx.room.Room
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
-import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
-import org.koin.dsl.module
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.datasource.room.QDeqDatabase
-import org.qstuff.qplayer.datasource.room.RoomDataSource
-import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
-import org.qstuff.qplayer.ui.player.PlayerViewModel
-import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
-import org.qstuff.qplayer.ui.queue.QueueViewModel
-import org.qstuff.qplayer.ui.settings.SettingsViewModel
+import org.qstuff.qplayer.di.appModules
 import org.qstuff.qplayer.util.CrashReporting
-
-/** The app's ViewModels, created by Koin (constructor injection). */
-val viewModelModule = module {
-    viewModelOf(::PlayerViewModel)
-    viewModelOf(::QueueViewModel)
-    viewModelOf(::PlaylistViewModel)
-    viewModelOf(::FileBrowserViewModel)
-    viewModelOf(::SettingsViewModel)
-}
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -48,29 +27,11 @@ class QDeqApplication : Application() {
 
         val koin = startKoin {
             androidContext(this@QDeqApplication)
-            modules(dataModule, viewModelModule)
+            modules(appModules)
         }.koin
 
         CrashReporting.apply(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
     }
-
-    //
-    // Koin Modules
-    //
-
-    private val dataModule = module {
-        single {
-            PreferencesDataSource(
-                SharedPreferencesSettings(getSharedPreferences("QDEQ", Context.MODE_PRIVATE))
-            )
-        }
-        single {
-            Room.databaseBuilder(this@QDeqApplication, QDeqDatabase::class.java, "qplayer")
-                    .build()
-        }
-        singleOf(::RoomDataSource)
-    }
-
 
     //
     // Debug
