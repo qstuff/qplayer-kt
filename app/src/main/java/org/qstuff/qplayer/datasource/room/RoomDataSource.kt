@@ -2,8 +2,6 @@ package org.qstuff.qplayer.datasource.room
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 
@@ -13,9 +11,7 @@ import org.qstuff.qplayer.datasource.model.Track
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 /** Playlist/track persistence. The DAOs are blocking, so every call switches to Dispatchers.IO. */
-class RoomDataSource: KoinComponent {
-
-    private val database by inject<QDeqDatabase>()
+class RoomDataSource(private val database: QDeqDatabase) {
 
     suspend fun getAllPlaylists(): List<Playlist> = withContext(Dispatchers.IO) {
         database.playlistDao().getAll()

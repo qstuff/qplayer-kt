@@ -5,13 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.isSupported
 import co.touchlab.kermit.Logger
 import java.io.File
-import java.util.*
 
 
 private val log = Logger.withTag("FileBrowserViewModel")
@@ -37,15 +34,15 @@ data class FileBrowserState(
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 class FileBrowserViewModel(
-    application: Application
-) : AndroidViewModel(application), KoinComponent {
+    application: Application,
+    private val preferencesDataSource: PreferencesDataSource
+) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(FileBrowserState())
     val state: StateFlow<FileBrowserState> = _state.asStateFlow()
 
     /** The browsed directory; null while the storage list is shown. */
     private var currentDir: File? = null
-    private val preferencesDataSource by inject<PreferencesDataSource>()
 
 
     init {
@@ -118,11 +115,7 @@ class FileBrowserViewModel(
             return
         }
 
-        val supportedFiles = arrayListOf<File>()
-
-        Collections.sort(files, FileItemsComparator())
-
-        supportedFiles.addAll(files.filter { it.isSupported() })
+        val supportedFiles = files.sortedWith(FileItemsComparator()).filter { it.isSupported() }
         _state.value = FileBrowserState(directoryName = displayName(dir), files = supportedFiles)
     }
 

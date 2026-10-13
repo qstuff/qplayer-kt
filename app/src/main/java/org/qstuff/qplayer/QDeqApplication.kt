@@ -9,11 +9,27 @@ import co.touchlab.kermit.Severity
 import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.RoomDataSource
+import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.ui.player.PlayerViewModel
+import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
+import org.qstuff.qplayer.ui.queue.QueueViewModel
+import org.qstuff.qplayer.ui.settings.SettingsViewModel
 import org.qstuff.qplayer.util.CrashReporting
+
+/** The app's ViewModels, created by Koin (constructor injection). */
+val viewModelModule = module {
+    viewModelOf(::PlayerViewModel)
+    viewModelOf(::QueueViewModel)
+    viewModelOf(::PlaylistViewModel)
+    viewModelOf(::FileBrowserViewModel)
+    viewModelOf(::SettingsViewModel)
+}
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -32,7 +48,7 @@ class QDeqApplication : Application() {
 
         val koin = startKoin {
             androidContext(this@QDeqApplication)
-            modules(preferencesDataSource, roomDatabaseModule, roomDataSource)
+            modules(dataModule, viewModelModule)
         }.koin
 
         CrashReporting.apply(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
@@ -42,26 +58,19 @@ class QDeqApplication : Application() {
     // Koin Modules
     //
 
-    private val preferencesDataSource = module {
+    private val dataModule = module {
         single {
             PreferencesDataSource(
                 SharedPreferencesSettings(getSharedPreferences("QDEQ", Context.MODE_PRIVATE))
             )
         }
-    }
-
-    private val roomDatabaseModule = module {
         single {
             Room.databaseBuilder(this@QDeqApplication, QDeqDatabase::class.java, "qplayer")
                     .build()
         }
+        singleOf(::RoomDataSource)
     }
 
-    private val roomDataSource = module {
-        single {
-            RoomDataSource()
-        }
-    }
 
     //
     // Debug

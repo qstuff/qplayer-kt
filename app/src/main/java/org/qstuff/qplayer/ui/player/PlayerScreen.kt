@@ -37,7 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
-import org.koin.java.KoinJavaComponent.getKoin
+import org.koin.compose.koinInject
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
@@ -52,8 +52,8 @@ import org.qstuff.qplayer.ui.player.components.WaveformSeekbar
 import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
+import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.util.PlayerStatus
-import java.util.concurrent.TimeUnit
 
 /**
  * The player screen. This composable owns all the hoisted state (observers, remembered values
@@ -75,7 +75,7 @@ fun PlayerScreen(
     onOpenImprint: () -> Unit,
     onOpenLicenses: () -> Unit
 ) {
-    val preferencesDataSource: PreferencesDataSource = remember { getKoin().get() }
+    val preferencesDataSource: PreferencesDataSource = koinInject()
 
     val playerStatus by playerViewModel.playerStatus.collectAsStateWithLifecycle()
     // Current track + status as an immutable snapshot. Its `revision` makes every emission
@@ -403,10 +403,4 @@ fun PlayerScreen(
     }
 }
 
-private fun getDurationHumanReadable(time: Long) =
-    String.format(
-        "%02d:%02d:%02d",
-        TimeUnit.MILLISECONDS.toHours(time),
-        TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)),
-        TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time))
-    )
+private fun getDurationHumanReadable(time: Long) = Formatting.hoursMinutesSeconds(time)

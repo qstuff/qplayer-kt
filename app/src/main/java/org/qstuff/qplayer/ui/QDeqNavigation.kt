@@ -5,7 +5,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -17,6 +16,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import org.koin.compose.viewmodel.koinViewModel
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlayerScreen
@@ -102,7 +102,7 @@ fun QDeqNavigation(
                 DisposableEffect(Unit) { onDispose(onSettingsClosed) }
                 val context = LocalContext.current
                 SettingsScreen(
-                    settingsViewModel = viewModel(),
+                    settingsViewModel = koinViewModel(),
                     appVersion = remember { context.appVersionString() },
                     deviceInfo = remember { deviceInfoString() },
                     canVibrate = remember { JogwheelHaptics.isSupported(context) },

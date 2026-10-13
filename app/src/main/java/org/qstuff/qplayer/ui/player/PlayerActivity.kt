@@ -10,10 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
@@ -36,10 +36,11 @@ private val log = Logger.withTag("PlayerActivity")
  */
 class PlayerActivity : AppCompatActivity() {
 
-    private lateinit var playerViewModel: PlayerViewModel
-    private lateinit var queueViewModel: QueueViewModel
-    private lateinit var playlistViewModel: PlaylistViewModel
-    private lateinit var fileBrowserViewModel: FileBrowserViewModel
+    // Activity-scoped, created by Koin (see QDeqApplication); the activity wires them together.
+    private val playerViewModel: PlayerViewModel by viewModel()
+    private val queueViewModel: QueueViewModel by viewModel()
+    private val playlistViewModel: PlaylistViewModel by viewModel()
+    private val fileBrowserViewModel: FileBrowserViewModel by viewModel()
 
     private val preferencesDataSource: PreferencesDataSource by inject()
 
@@ -50,11 +51,7 @@ class PlayerActivity : AppCompatActivity() {
         // configChanges keep the activity alive when this rotates it — onDestroy stops playback.
         lockOrientationForDevice(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
-        playerViewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         playerViewModel.startMediaService()
-        queueViewModel = ViewModelProvider(this).get(QueueViewModel::class.java)
-        playlistViewModel = ViewModelProvider(this).get(PlaylistViewModel::class.java)
-        fileBrowserViewModel = ViewModelProvider(this).get(FileBrowserViewModel::class.java)
 
         // Cross-ViewModel wiring. Deliberately NOT gated on the STARTED state (plain lifecycleScope
         // instead of repeatOnLifecycle): auto-advance must load and start the next track while the

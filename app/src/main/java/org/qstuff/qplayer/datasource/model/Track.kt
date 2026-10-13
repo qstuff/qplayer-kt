@@ -5,7 +5,7 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import java.io.File
+import org.qstuff.qplayer.util.AudioFiles
 
 /**
  * Created by Claus Chierici (github@antamauna.net) on 2/19/15
@@ -26,17 +26,10 @@ data class Track(
         var isAutoplay: Boolean = false,
         var playlistName: String = "") {
 
-    @Ignore
-    constructor(file: File): this() {
-        this.uri = file.absolutePath
-        this.name = file.name
-    }
-
-    @Ignore
-    constructor(file: File, autoplay: Boolean): this() {
-        this.uri = file.absolutePath
-        this.name = file.name
-        this.isAutoplay = autoplay
+    companion object {
+        /** A track for the file at [path], named after the file. */
+        fun fromPath(path: String, autoplay: Boolean = false) =
+            Track(name = AudioFiles.nameOf(path), uri = path, isAutoplay = autoplay)
     }
 
     // Runtime-only playback status: neither in the database nor in the stored queue.
