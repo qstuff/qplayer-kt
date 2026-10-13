@@ -34,7 +34,7 @@ private val log = Logger.withTag("PlayerActivity")
  */
 class PlayerActivity : AppCompatActivity() {
 
-    // Activity-scoped, created by Koin (see QDeqApplication); PlaybackCoordinator wires them together.
+    // Activity-scoped, created by Koin (see di/ViewModelModule); PlaybackCoordinator wires them together.
     private val playerViewModel: PlayerViewModel by viewModel()
     private val queueViewModel: QueueViewModel by viewModel()
     private val playlistViewModel: PlaylistViewModel by viewModel()
@@ -55,7 +55,7 @@ class PlayerActivity : AppCompatActivity() {
         // configChanges keep the activity alive when this rotates it — onDestroy stops playback.
         lockOrientationForDevice(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
-        playerViewModel.startMediaService()
+        playerViewModel.connectPlayer()
 
         // Wiring between player and queue, settings, restore — see PlaybackCoordinator. Started in
         // lifecycleScope: it runs in the background too and ends when the activity is destroyed.
@@ -106,7 +106,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         playbackCoordinator.saveState()
-        playerViewModel.stopMediaService()
+        playerViewModel.disconnectPlayer()
     }
 
     @Suppress("DEPRECATION")

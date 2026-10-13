@@ -1,10 +1,6 @@
 package org.qstuff.qplayer.ui.player
 
-import android.annotation.SuppressLint
-import android.app.Application
-import android.content.*
-import android.os.IBinder
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,14 +12,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.qstuff.qplayer.QDeqApplication
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
 import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
-import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
 import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.LruCache
@@ -32,10 +25,17 @@ import co.touchlab.kermit.Logger
 
 private val log = Logger.withTag("PlayerViewModel")
 
+/**
+ * The deck: track loading and status, play/pause, pitch, cue, waveform and scratching. Talks to the
+ * playback engine only through [AudioPlayer]; no Android dependencies besides ScratchEngine (next
+ * step of the KMP migration).
+ */
 class PlayerViewModel(
-    application: Application,
+    private val audioPlayer: AudioPlayer,
+    private val scratchEngine: ScratchEngine,
+    private val waveformGenerator: WaveformGenerator,
     private val preferencesDataSource: PreferencesDataSource
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     companion object {
         val PITCH_RANGE_FACTORS = floatArrayOf(62.5f, 33.3f, 10f, 5f)
@@ -57,14 +57,14 @@ class PlayerViewModel(
     val playerTrackState: StateFlow<PlayerTrackState?> = _playerTrackState.asStateFlow()
 
     // One-shot event: the current track finished playing (playback is already stopped). The
-    // activity forwards it to the queue to decide what follows. An event, not state — it must
+    // PlaybackCoordinator forwards it to the queue to decide what follows. An event, not state — it must
     // fire once per completion, also while the app is in the background.
     private val _trackCompleted = MutableSharedFlow<Track>(extraBufferCapacity = 1)
     val trackCompleted: SharedFlow<Track> = _trackCompleted.asSharedFlow()
     private var trackStateRevision = 0
 
     // One-shot events: Next/Prev pressed in system media controls (notification, lock screen,
-    // headset, Bluetooth). The activity routes them to the queue, like the on-screen buttons.
+    // headset, Bluetooth). The PlaybackCoordinator routes them to the queue, like the on-screen buttons.
     private val _transportCommands =
         MutableSharedFlow<TransportCommand>(extraBufferCapacity = 4)
     val transportCommands: SharedFlow<TransportCommand> =
@@ -116,11 +116,8 @@ class PlayerViewModel(
     private var autoStart = false
     private var isStopPlaybackOnSettingCuepointEnabled = false
 
-    // MediaService
-    @SuppressLint("StaticFieldLeak")
-    private lateinit var mediaService: QMediaPlayerService
-    private var isMediaServiceRunning = false
-    private var isMediaServiceBound = false
+    // Playback engine. A track loaded before the engine is connected is loaded once it is.
+    private val isConnected get() = audioPlayer.isConnected.value
     private var pendingTrack: Track? = null
 
     // Position timer (runs while playing / scratching)
@@ -130,66 +127,35 @@ class PlayerViewModel(
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
 
-    // Jog wheel SCRATCH mode: takes over the audio from ExoPlayer while the wheel is touched.
-    private val scratchEngine = ScratchEngine(application)
+    // Jog wheel SCRATCH mode: takes over the audio from the player while the wheel is touched.
     private var isScratchModeEnabled = false
     private var wasPlayingBeforeScratch = false
-
-    // Collectors of the media service's flows (track status, play state, system Next/Prev).
-    private val serviceJobs = mutableListOf<Job>()
-
-
-    private val serviceConnection = object : ServiceConnection {
-
-        override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            log.d { "onServiceConnected(): ${name.toShortString()}" }
-
-            mediaService = (binder as QMediaPlayerService.MyBinder).service
-
-            serviceJobs.forEach { it.cancel() }
-            serviceJobs.clear()
-            serviceJobs += viewModelScope.launch {
-                mediaService.trackStatus.collect { track ->
-                    emitTrackState(track, track.trackStatus)
-                }
-            }
-            // The player's real play state is the source of truth for PLAYING/PAUSED and the
-            // position timer — play/pause can also come from system media controls.
-            serviceJobs += viewModelScope.launch {
-                mediaService.playing.collect { playing ->
-                    // While scratching ExoPlayer is paused on purpose; the deck keeps its state.
-                    if (scratchEngine.isScratching) return@collect
-                    _playerStatus.value = if (playing) PlayerStatus.PLAYING else PlayerStatus.PAUSED
-                    if (playing) startUpdateTimer() else resetUpdateTimer()
-                }
-            }
-            serviceJobs += viewModelScope.launch {
-                mediaService.transportCommands.collect { _transportCommands.tryEmit(it) }
-            }
-
-            isMediaServiceRunning = true
-            isMediaServiceBound = true
-
-            if (pendingTrack != null) {
-                this@PlayerViewModel.loadTrack(pendingTrack)
-                pendingTrack = null
-            }
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            log.d { "onServiceDisconnected(): ${name.toShortString()}" }
-
-            mediaService.stop()
-            mediaService.player.destroy()
-
-            serviceJobs.forEach { it.cancel() }
-            serviceJobs.clear()
-        }
-    }
 
     init {
         loadStates()
         loadSettings()
+
+        viewModelScope.launch {
+            audioPlayer.trackStatus.collect { track -> emitTrackState(track, track.trackStatus) }
+        }
+        // The player's real play state is the source of truth for PLAYING/PAUSED and the position
+        // timer — play/pause can also come from system media controls.
+        viewModelScope.launch {
+            audioPlayer.playing.collect { playing ->
+                // While scratching the player is paused on purpose; the deck keeps its state.
+                if (scratchEngine.isScratching) return@collect
+                _playerStatus.value = if (playing) PlayerStatus.PLAYING else PlayerStatus.PAUSED
+                if (playing) startUpdateTimer() else resetUpdateTimer()
+            }
+        }
+        viewModelScope.launch {
+            audioPlayer.transportCommands.collect { _transportCommands.tryEmit(it) }
+        }
+        viewModelScope.launch {
+            audioPlayer.isConnected.collect { connected ->
+                if (connected) pendingTrack?.let { track -> pendingTrack = null; loadTrack(track) }
+            }
+        }
     }
 
     //
@@ -197,21 +163,21 @@ class PlayerViewModel(
     //
 
     // Play/pause only command the player; playerStatus and the position timer follow the player's
-    // real play state (see the `playing` collector in serviceConnection).
+    // real play state (see the `playing` collector in init).
 
     fun playPause() {
-        if (!isMediaServiceBound) return
+        if (!isConnected) return
 
-        if (_playerStatus.value == PlayerStatus.PLAYING) mediaService.pause() else mediaService.play()
+        if (_playerStatus.value == PlayerStatus.PLAYING) audioPlayer.pause() else audioPlayer.play()
     }
 
     fun playFromCue(track: Track?) {
 
-        if (!isMediaServiceBound) return
+        if (!isConnected) return
         if (track == null) return
 
-        mediaService.seekTo(track.cuePosition.toDouble(), true)
-        mediaService.play()
+        audioPlayer.seekTo(track.cuePosition, true)
+        audioPlayer.play()
     }
 
     fun toggleMasterTempo() {
@@ -265,20 +231,20 @@ class PlayerViewModel(
 
         currentTrackSpeed = 1.0f + diff / 100
 
-        if (isMediaServiceRunning) {
-            mediaService.setTrackSpeed(currentTrackSpeed, _masterTempo.value)
+        if (isConnected) {
+            audioPlayer.setSpeed(currentTrackSpeed, _masterTempo.value)
         }
     }
 
     fun toggleCue(track: Track, enable: Boolean) {
         _cueActive.value = enable
 
-        if (isMediaServiceRunning) {
+        if (isConnected) {
             if (enable) {
-                if (isStopPlaybackOnSettingCuepointEnabled && mediaService.isPlaying()) {
+                if (isStopPlaybackOnSettingCuepointEnabled && audioPlayer.isPlaying) {
                     playPause()
                 }
-                track.cuePosition = mediaService.getCurrentPositionMillis()
+                track.cuePosition = audioPlayer.positionMs
             } else {
                 track.cuePosition = 0
             }
@@ -294,36 +260,12 @@ class PlayerViewModel(
     }
 
     //
-    // MediaService
+    // Playback engine
     //
 
-    // The service only needs to be bound: Media3 itself starts it as a foreground service while
-    // playback is ongoing. ACTION_BIND_LOCAL selects the in-process binder (other bind intents are
-    // Media3 controller connections).
+    fun connectPlayer() = audioPlayer.connect()
 
-    fun startMediaService() {
-
-        if(!isMediaServiceRunning) {
-            val app = getApplication<QDeqApplication>()
-            val intent = Intent(app, QMediaPlayerService::class.java)
-                .setAction(QMediaPlayerService.ACTION_BIND_LOCAL)
-            app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-        }
-    }
-
-    fun stopMediaService() {
-
-        val app = getApplication<QDeqApplication>()
-
-        if (isMediaServiceBound) {
-            app.unbindService(serviceConnection)
-            isMediaServiceBound = false
-        }
-        if (isMediaServiceRunning) {
-            app.stopService(Intent(app, QMediaPlayerService::class.java))
-            isMediaServiceRunning = false
-        }
-    }
+    fun disconnectPlayer() = audioPlayer.disconnect()
 
     //
     // Track handling
@@ -332,7 +274,7 @@ class PlayerViewModel(
     fun loadTrack(track: Track?) {
         log.d { "loadTrack(): $track" }
 
-        if (!isMediaServiceBound) {
+        if (!isConnected) {
             pendingTrack = track
             return
         }
@@ -345,7 +287,7 @@ class PlayerViewModel(
 
         val currentTrack = _playerTrackState.value?.track
 
-        mediaService.pause()
+        audioPlayer.pause()
 
         if (currentTrack?.uri == track.uri) {
             log.d { "loadTrack(): same track: $track" }
@@ -356,7 +298,7 @@ class PlayerViewModel(
 
         } else {
             log.d { "loadTrack(): new track: $track" }
-            mediaService.loadTrackASync(track)
+            audioPlayer.loadTrack(track)
             emitTrackState(track, Track.TrackStatus.LOADING)
         }
 
@@ -386,14 +328,14 @@ class PlayerViewModel(
      * play() (not the playPause() toggle), since the reported play state may lag a load.
      */
     private fun onTrackPrepared(track: Track) {
-        if (!isMediaServiceBound) return
+        if (!isConnected) return
         seekTo(track.playPosition.toDouble(), false)
         if (track.isAutoplay) {
-            mediaService.play()
+            audioPlayer.play()
         } else {
             // Not continuing (e.g. auto-advanced with autostart off): drop the foreground hold
             // the service took when the previous track ended.
-            mediaService.releaseForegroundHold()
+            audioPlayer.releaseForegroundHold()
         }
     }
 
@@ -403,7 +345,7 @@ class PlayerViewModel(
      * queue's decision — a loaded track that should auto-play starts via [onTrackPrepared].
      */
     private fun onTrackCompleted(track: Track) {
-        if (isMediaServiceBound) mediaService.pause()
+        if (isConnected) audioPlayer.pause()
         track.playPosition = 0
         _trackCompleted.tryEmit(track)
     }
@@ -413,9 +355,9 @@ class PlayerViewModel(
      * leave the foreground.
      */
     fun stopAfterCompletion() {
-        if (!isMediaServiceBound) return
+        if (!isConnected) return
         seekTo(0.0, true)
-        mediaService.releaseForegroundHold()
+        audioPlayer.releaseForegroundHold()
     }
 
     /**
@@ -436,7 +378,7 @@ class PlayerViewModel(
         _onWaveformDataUpdate.value = null
         waveformJob?.cancel()
         waveformJob = viewModelScope.launch {
-            val bytes = WaveformAnalyzer.analyze(getApplication(), uri)
+            val bytes = waveformGenerator.generate(uri)
             if (bytes != null && isActive) {
                 waveformCache.put(uri, bytes)
                 // Only publish if this is still the current track.
@@ -462,17 +404,17 @@ class PlayerViewModel(
     }
 
     /**
-     * Jog wheel touched in SCRATCH mode: hand the audio from ExoPlayer to the scratch engine at the
+     * Jog wheel touched in SCRATCH mode: hand the audio from the player to the scratch engine at the
      * current position. Returns false if scratching isn't possible (yet) — e.g. the track hasn't
      * been decoded up to the position.
      */
     fun startScratch(): Boolean {
-        if (!isMediaServiceBound || !isScratchModeEnabled) return false
-        if (!scratchEngine.start(mediaService.getCurrentPositionMillis(), _jogwheelSensitivity.value)) {
+        if (!isConnected || !isScratchModeEnabled) return false
+        if (!scratchEngine.start(audioPlayer.positionMs, _jogwheelSensitivity.value)) {
             return false
         }
         wasPlayingBeforeScratch = _playerStatus.value == PlayerStatus.PLAYING
-        mediaService.pause()
+        audioPlayer.pause()
         startUpdateTimer()
         return true
     }
@@ -480,20 +422,20 @@ class PlayerViewModel(
     fun scratchTo(rotationRad: Double) = scratchEngine.scratchTo(rotationRad)
 
     /**
-     * Jog wheel released: ExoPlayer takes over where the scratch ended, playing again only if it
+     * Jog wheel released: the player takes over where the scratch ended, playing again only if it
      * was playing before.
      */
     fun endScratch() {
         if (!scratchEngine.isScratching) return
         val position = scratchEngine.stop()
         seekTo(position.toDouble(), false)
-        if (wasPlayingBeforeScratch) mediaService.play() else resetUpdateTimer()
+        if (wasPlayingBeforeScratch) audioPlayer.play() else resetUpdateTimer()
     }
 
     fun seekTo(position: Double, andStop: Boolean) {
-        if (!isMediaServiceBound) return
+        if (!isConnected) return
 
-        mediaService.seekTo(position, andStop)
+        audioPlayer.seekTo(position.toLong(), andStop)
         _onTrackPositionUpdate.value = position.toLong()
     }
 
@@ -509,14 +451,14 @@ class PlayerViewModel(
     }
 
     fun getTrackPosition(): Long {
-        if (!isMediaServiceBound) return 0
+        if (!isConnected) return 0
 
         return currentPositionMillis()
     }
 
     private fun currentPositionMillis() =
         if (scratchEngine.isScratching) scratchEngine.positionMs
-        else mediaService.getCurrentPositionMillis()
+        else audioPlayer.positionMs
 
     //
     // Private
