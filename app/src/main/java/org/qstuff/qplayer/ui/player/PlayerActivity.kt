@@ -11,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.qstuff.qplayer.BuildConfig
@@ -20,7 +19,6 @@ import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.QDeqNavigation
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.lockOrientationForDevice
-import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
@@ -36,13 +34,19 @@ private val log = Logger.withTag("PlayerActivity")
  */
 class PlayerActivity : AppCompatActivity() {
 
-    // Activity-scoped, created by Koin (see QDeqApplication); the activity wires them together.
+    // Activity-scoped, created by Koin (see QDeqApplication); PlaybackCoordinator wires them together.
     private val playerViewModel: PlayerViewModel by viewModel()
     private val queueViewModel: QueueViewModel by viewModel()
     private val playlistViewModel: PlaylistViewModel by viewModel()
     private val fileBrowserViewModel: FileBrowserViewModel by viewModel()
 
     private val preferencesDataSource: PreferencesDataSource by inject()
+
+    private val playbackCoordinator by lazy {
+        PlaybackCoordinator(
+            playerViewModel, queueViewModel, playlistViewModel, fileBrowserViewModel, preferencesDataSource
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,43 +57,9 @@ class PlayerActivity : AppCompatActivity() {
 
         playerViewModel.startMediaService()
 
-        // Cross-ViewModel wiring. Deliberately NOT gated on the STARTED state (plain lifecycleScope
-        // instead of repeatOnLifecycle): auto-advance must load and start the next track while the
-        // app is in the background, too. The collectors stop when the activity is destroyed.
-        //
-        // queue track selection → player load. Collecting starts right here (lifecycleScope runs on
-        // Main.immediate), before readSelectedTrack() below emits the track restored on start.
-        lifecycleScope.launch {
-            queueViewModel.trackSelected.collect { track -> playerViewModel.loadTrack(track) }
-        }
-        // track finished → the queue decides what follows (repeat/shuffle); if nothing does,
-        // rewind so Play starts the finished track again
-        lifecycleScope.launch {
-            playerViewModel.trackCompleted.collect { track ->
-                if (!queueViewModel.onTrackCompleted(track)) {
-                    playerViewModel.stopAfterCompletion()
-                }
-            }
-        }
-        // Next/Prev from system media controls (notification, lock screen, headset, Bluetooth)
-        // → same behavior as the on-screen buttons (Prev is position-aware)
-        lifecycleScope.launch {
-            playerViewModel.transportCommands.collect { command ->
-                val current = playerViewModel.playerTrackState.value?.track
-                when (command) {
-                    QMediaPlayerService.TransportCommand.NEXT ->
-                        queueViewModel.nextTrack(current)
-                    QMediaPlayerService.TransportCommand.PREVIOUS ->
-                        if (!playerViewModel.restartCurrentTrackIfPlayed()) {
-                            queueViewModel.previousTrack(current)
-                        }
-                }
-            }
-        }
-        queueViewModel.readTrackList()
-        queueViewModel.readSelectedTrack()
-        queueViewModel.loadStates()
-        playlistViewModel.loadPlaylists()
+        // Wiring between player and queue, settings, restore — see PlaybackCoordinator. Started in
+        // lifecycleScope: it runs in the background too and ends when the activity is destroyed.
+        playbackCoordinator.start(lifecycleScope)
 
         val versionName = try {
             packageManager.getPackageInfo(packageName, 0).versionName
@@ -113,8 +83,7 @@ class PlayerActivity : AppCompatActivity() {
                     queueViewModel = queueViewModel,
                     playlistViewModel = playlistViewModel,
                     fileBrowserViewModel = fileBrowserViewModel,
-                    titleSuffix = titleSuffix,
-                    onSettingsClosed = ::loadSettings
+                    titleSuffix = titleSuffix
                 )
 
                 if (showCrashReportingOptIn) {
@@ -129,33 +98,15 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        loadSettings()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        playerViewModel.saveState()
-    }
-
     override fun onStop() {
         super.onStop()
-        // formerly in FileBrowserFragment.onStop
-        fileBrowserViewModel.saveLastBrowsedDir()
+        playbackCoordinator.saveState()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // formerly in QueueFragment.onDestroyView
-        queueViewModel.saveStates()
+        playbackCoordinator.saveState()
         playerViewModel.stopMediaService()
-    }
-
-    /** Apply the (possibly changed) settings to the player and the queue. */
-    private fun loadSettings() {
-        playerViewModel.loadSettings()
-        queueViewModel.loadSettings()
     }
 
     @Suppress("DEPRECATION")

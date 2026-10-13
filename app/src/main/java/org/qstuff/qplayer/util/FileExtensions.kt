@@ -31,24 +31,22 @@ fun File.directoryContainsSupportedFiles(): Boolean {
     return false
 }
 
-fun File.listTracks(): List<File> {
-    val ret = arrayListOf<File>()
-    val files = this.listFiles() ?: return ret
-    files.forEach {
-        if (it.isFile && it.isSupported()) {
-            ret.add(it)
-        }
-    }
-    return ret
-}
+/** The audio files directly in this folder (no playlists), in [fileBrowserOrder]. */
+fun File.listTracksForAddDialog(): List<File> =
+    listFiles().orEmpty()
+        .filter { it.isFile && it.isSupported() && !it.isM3UList() }
+        .sortedWith(fileBrowserOrder)
 
-fun File.listTracksForAddDialog(): List<File> {
-    val ret = arrayListOf<File>()
-    val files = this.listFiles() ?: return ret
-    files.forEach {
-        if (it.isFile && it.isSupported() && !it.isM3UList()) {
-            ret.add(it)
+/**
+ * File browser order: folders, then M3U playlists, then audio files — each alphabetically, ignoring
+ * case. Also used when adding a whole folder, so the queue gets the order shown in the browser
+ * (listFiles() itself has no defined order).
+ */
+val fileBrowserOrder: Comparator<File> =
+    compareBy<File> {
+        when {
+            it.isDirectory -> 0
+            it.isM3UList() -> 1
+            else -> 2
         }
-    }
-    return ret
-}
+    }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }

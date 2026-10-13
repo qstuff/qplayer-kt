@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.util.fileBrowserOrder
 import org.qstuff.qplayer.util.isSupported
 import co.touchlab.kermit.Logger
 import java.io.File
@@ -115,7 +116,7 @@ class FileBrowserViewModel(
             return
         }
 
-        val supportedFiles = files.sortedWith(FileItemsComparator()).filter { it.isSupported() }
+        val supportedFiles = files.filter { it.isSupported() }.sortedWith(fileBrowserOrder)
         _state.value = FileBrowserState(directoryName = displayName(dir), files = supportedFiles)
     }
 
@@ -131,35 +132,6 @@ class FileBrowserViewModel(
         return roots.firstOrNull {
             val rootPath = it.dir.absolutePath
             path == rootPath || path.startsWith("$rootPath/")
-        }
-    }
-
-    /**
-     * Sorts:
-     * - Alphabetically
-     * - Directories before Files
-     * - M3U lists before audio files
-     */
-    private class FileItemsComparator : Comparator<File> {
-
-        override fun compare(file1: File, file2: File): Int {
-
-            if (file1.isDirectory && file2.isFile) {
-                return -1
-            }
-
-            if (file1.isDirectory && file2.isDirectory) {
-                return String.CASE_INSENSITIVE_ORDER.compare(file1.name, file2.name)
-            }
-
-            return if (file1.isFile && file2.isFile) {
-
-                if (file2.name.endsWith(".m3u") || file1.name.endsWith(".m3u")) {
-                    -1
-                } else {
-                    String.CASE_INSENSITIVE_ORDER.compare(file1.name, file2.name)
-                }
-            } else 1
         }
     }
 }
