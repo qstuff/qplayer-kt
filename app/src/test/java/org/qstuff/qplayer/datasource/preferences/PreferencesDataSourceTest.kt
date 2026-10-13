@@ -1,6 +1,9 @@
 package org.qstuff.qplayer.datasource.preferences
 
 import com.russhwolf.settings.MapSettings
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -52,6 +55,24 @@ class PreferencesDataSourceTest {
         val settings = MapSettings(PreferencesDataSource.PREF_QUEUE_LIST to "not json")
 
         assertNull(PreferencesDataSource(settings).readTrackList(PreferencesDataSource.PREF_QUEUE_LIST))
+    }
+
+    @Test
+    fun `settings changes are signalled, state changes are not`() = runTest {
+        val prefs = PreferencesDataSource(MapSettings())
+        var signals = 0
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            prefs.settingsChanged.collect { signals++ }
+        }
+
+        prefs.setJogWheelMode(2)
+        prefs.setAutostartEnabled(true)
+        assertEquals(2, signals)
+
+        prefs.savePitchValue(600)
+        prefs.saveShuffleMode(true)
+        prefs.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, arrayListOf())
+        assertEquals(2, signals)
     }
 
     @Test

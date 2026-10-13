@@ -21,6 +21,7 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.player.mediaservice.QMediaPlayerService
+import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
 import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
 import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
 import org.qstuff.qplayer.util.Formatting
@@ -41,6 +42,8 @@ class PlayerViewModel(
 
         /** Prev restarts the current track if it has played longer than this, else goes back. */
         const val PREV_RESTART_THRESHOLD_MS = 3000L
+
+        private const val PITCH_SAVE_DELAY_MS = 300L
     }
 
     // Overview waveform for the current track (generated in-VM; null while decoding / on change).
@@ -63,8 +66,8 @@ class PlayerViewModel(
     // One-shot events: Next/Prev pressed in system media controls (notification, lock screen,
     // headset, Bluetooth). The activity routes them to the queue, like the on-screen buttons.
     private val _transportCommands =
-        MutableSharedFlow<QMediaPlayerService.TransportCommand>(extraBufferCapacity = 4)
-    val transportCommands: SharedFlow<QMediaPlayerService.TransportCommand> =
+        MutableSharedFlow<TransportCommand>(extraBufferCapacity = 4)
+    val transportCommands: SharedFlow<TransportCommand> =
         _transportCommands.asSharedFlow()
 
     // Observables — plain UI state, exposed as read-only StateFlow.
@@ -102,6 +105,10 @@ class PlayerViewModel(
     // States
     var pitchFactor = PITCH_RANGE_FACTORS[0]
     private var currentPitchProgress = 0
+    // Pitch is saved shortly after it stops changing (not on every fader frame) — not only in
+    // saveState(): a killed process (new install from the IDE, low memory, crash) gets no
+    // lifecycle callback, and the pitch was then restored from an old value.
+    private var pitchSaveJob: Job? = null
     private var currentTrackSpeed = 0.0f
     private var showRemainingTrackTime = true
 
@@ -225,6 +232,11 @@ class PlayerViewModel(
 
     fun onPitchChanged(progress: Int) {
         currentPitchProgress = progress
+        pitchSaveJob?.cancel()
+        pitchSaveJob = viewModelScope.launch {
+            delay(PITCH_SAVE_DELAY_MS)
+            preferencesDataSource.savePitchValue(progress)
+        }
 
         val diff = (progress - 500).toFloat() / pitchFactor
         var pre = if (diff > 0) "+" else ""

@@ -1,7 +1,6 @@
 package org.qstuff.qplayer.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -62,7 +61,7 @@ private val navSavedStateConfiguration = SavedStateConfiguration {
  * The player ViewModels are activity-scoped (the activity wires them together); Settings gets its
  * own ViewModel, cleared when the screen leaves the back stack.
  *
- * @param onSettingsClosed leaving Settings: apply changed settings to the player.
+ * Changed settings reach the player through PreferencesDataSource.settingsChanged.
  */
 @Composable
 fun QDeqNavigation(
@@ -70,8 +69,7 @@ fun QDeqNavigation(
     queueViewModel: QueueViewModel,
     playlistViewModel: PlaylistViewModel,
     fileBrowserViewModel: FileBrowserViewModel,
-    titleSuffix: String,
-    onSettingsClosed: () -> Unit
+    titleSuffix: String
 ) {
     val backStack = rememberNavBackStack(navSavedStateConfiguration, Screen.Player)
     val navigateBack: () -> Unit = { backStack.removeLastOrNull() }
@@ -98,8 +96,6 @@ fun QDeqNavigation(
                 )
             }
             entry<Screen.Settings> {
-                // However Settings is left (back arrow, system back), the player picks up changes.
-                DisposableEffect(Unit) { onDispose(onSettingsClosed) }
                 val context = LocalContext.current
                 SettingsScreen(
                     settingsViewModel = koinViewModel(),

@@ -42,9 +42,6 @@ class QMediaPlayerService : MediaSessionService() {
         const val ACTION_BIND_LOCAL = "org.qstuff.qplayer.action.BIND_LOCAL_PLAYER_SERVICE"
     }
 
-    /** Skip commands from system media controls, to be routed to the app's queue. */
-    enum class TransportCommand { NEXT, PREVIOUS }
-
     lateinit var player: QDeqPlayer
     private val binder = MyBinder()
     private var mediaSession: MediaSession? = null

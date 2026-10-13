@@ -2,6 +2,10 @@ package org.qstuff.qplayer.datasource.preferences
 
 import co.touchlab.kermit.Logger
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.qstuff.qplayer.datasource.model.Track
@@ -55,6 +59,19 @@ class PreferencesDataSource(private val settings: Settings) {
 
 
     private val log = Logger.withTag("PreferencesDataSource")
+
+    // Emits after every change of a user setting (the Settings screen setters below), so the
+    // player can apply it right away. Not for state like pitch or the queue.
+    private val _settingsChanged = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val settingsChanged: SharedFlow<Unit> = _settingsChanged.asSharedFlow()
+
+    private fun putSetting(write: Settings.() -> Unit) {
+        settings.write()
+        _settingsChanged.tryEmit(Unit)
+    }
 
     // Also reads queues stored by the former Gson code: they contain Track.trackStatus, which is
     // no longer persisted.
@@ -150,27 +167,27 @@ class PreferencesDataSource(private val settings: Settings) {
     fun getJogWheelModeEnum() = JogwheelMode.entries[settings.getString(PREFS_JOG_WHEEL_MODE, "0").toInt()]
 
     fun setAutostartEnabled(enabled: Boolean) =
-            settings.putBoolean(PREFS_TRACK_AUTOSTART, enabled)
+            putSetting { putBoolean(PREFS_TRACK_AUTOSTART, enabled) }
 
     fun setProceedToNextTrackEnabled(enabled: Boolean) =
-            settings.putBoolean(PREFS_PROCEED_TO_NEXT_TRACK, enabled)
+            putSetting { putBoolean(PREFS_PROCEED_TO_NEXT_TRACK, enabled) }
 
     fun setShowClearQueueWarningEnabled(enabled: Boolean) =
-            settings.putBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, enabled)
+            putSetting { putBoolean(PREFS_SHOW_CLEAR_QUEUE_DIALOG, enabled) }
 
     fun setStopPlaybackOnSettingCuepointEnabled(enabled: Boolean) =
-            settings.putBoolean(PREFS_STOP_PLAYBACK_ON_CUE, enabled)
+            putSetting { putBoolean(PREFS_STOP_PLAYBACK_ON_CUE, enabled) }
 
     fun setCrashreportingEnabled(enabled: Boolean) =
-            settings.putBoolean(PREFS_ENABLE_CRASHREPORTING, enabled)
+            putSetting { putBoolean(PREFS_ENABLE_CRASHREPORTING, enabled) }
 
     // Jog wheel values are stored as Strings (format of the former ListPreference)
     fun setJogWheelSensitivity(sensitivity: Int) =
-            settings.putString(PREFS_JOG_WHEEL_SENSITIVITY, sensitivity.toString())
+            putSetting { putString(PREFS_JOG_WHEEL_SENSITIVITY, sensitivity.toString()) }
 
     fun setJogWheelMode(mode: Int) =
-            settings.putString(PREFS_JOG_WHEEL_MODE, mode.toString())
+            putSetting { putString(PREFS_JOG_WHEEL_MODE, mode.toString()) }
 
     fun setJogWheelHapticLevel(level: Int) =
-            settings.putInt(PREFS_JOG_WHEEL_HAPTICS, level)
+            putSetting { putInt(PREFS_JOG_WHEEL_HAPTICS, level) }
 }
