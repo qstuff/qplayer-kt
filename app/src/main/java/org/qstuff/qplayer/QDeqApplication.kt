@@ -8,7 +8,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.di.appModules
-import org.qstuff.qplayer.util.CrashReporting
+import org.qstuff.qplayer.util.CrashReporter
 
 /*
  * Created by Claus Chierici (claus@qstuff.org) 
@@ -30,7 +30,7 @@ class QDeqApplication : Application() {
             modules(appModules)
         }.koin
 
-        CrashReporting.apply(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
+        koin.get<CrashReporter>().setEnabled(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
     }
 
     //

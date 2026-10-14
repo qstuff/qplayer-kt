@@ -23,7 +23,7 @@ import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
 import org.qstuff.qplayer.ui.theme.QDeqTheme
-import org.qstuff.qplayer.util.CrashReporting
+import org.qstuff.qplayer.util.CrashReporter
 import co.touchlab.kermit.Logger
 
 private val log = Logger.withTag("PlayerActivity")
@@ -41,6 +41,7 @@ class PlayerActivity : AppCompatActivity() {
     private val fileBrowserViewModel: FileBrowserViewModel by viewModel()
 
     private val preferencesDataSource: PreferencesDataSource by inject()
+    private val crashReporter: CrashReporter by inject()
 
     private val playbackCoordinator by lazy {
         PlaybackCoordinator(
@@ -90,7 +91,7 @@ class PlayerActivity : AppCompatActivity() {
                     CrashReportingOptInDialog { enabled ->
                         preferencesDataSource.setCrashreportingEnabled(enabled)
                         preferencesDataSource.setCrashreportingEnabledDialogShown(true)
-                        CrashReporting.apply(enabled)
+                        crashReporter.setEnabled(enabled)
                         showCrashReportingOptIn = false
                     }
                 }

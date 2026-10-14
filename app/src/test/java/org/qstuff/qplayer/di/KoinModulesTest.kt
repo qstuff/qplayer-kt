@@ -8,7 +8,8 @@ import org.qstuff.qplayer.datasource.room.RoomDataSource
 import org.qstuff.qplayer.ui.filebrowser.StorageProvider
 import org.qstuff.qplayer.ui.player.AudioPlayer
 import org.qstuff.qplayer.ui.player.WaveformGenerator
-import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
+import org.qstuff.qplayer.ui.player.Scratcher
+import org.qstuff.qplayer.util.CrashReporter
 
 class KoinModulesTest {
 
@@ -24,9 +25,10 @@ class KoinModulesTest {
                 PreferencesDataSource::class,
                 RoomDataSource::class,
                 AudioPlayer::class,
-                ScratchEngine::class,
+                Scratcher::class,
                 WaveformGenerator::class,
-                StorageProvider::class
+                StorageProvider::class,
+                CrashReporter::class
             )
         )
     }
