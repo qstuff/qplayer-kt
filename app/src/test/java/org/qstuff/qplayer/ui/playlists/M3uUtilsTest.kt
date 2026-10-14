@@ -27,6 +27,17 @@ class M3uUtilsTest {
     }
 
     @Test
+    fun `relative entries with subfolders, parent folders and Windows separators`() {
+        val dir = "/music/sets"
+        assertEquals("/music/sets/2019/b.mp3", M3uUtils.resolvePath("2019/b.mp3", dir))
+        assertEquals("/music/other/c.mp3", M3uUtils.resolvePath("../other/c.mp3", dir))
+        assertEquals("/music/sets/2019/d.mp3", M3uUtils.resolvePath("2019\\d.mp3", dir))
+        assertEquals("/music/sets/e.mp3", M3uUtils.resolvePath("./e.mp3", dir))
+        assertEquals("/storage/x/f.mp3", M3uUtils.resolvePath("/storage/x/f.mp3", dir))
+        assertEquals("/storage/x/g.mp3", M3uUtils.resolvePath("file:///storage/x/g.mp3", dir))
+    }
+
+    @Test
     fun `file name rules`() {
         assertEquals(true, AudioFiles.isSupported("Track.mp3"))
         assertEquals(true, AudioFiles.isSupported("set.m3u"))

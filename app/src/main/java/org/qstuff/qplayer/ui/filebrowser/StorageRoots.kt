@@ -5,13 +5,7 @@ import android.os.storage.StorageManager
 import androidx.core.content.ContextCompat
 import java.io.File
 
-/** A mounted storage volume the file browser can browse (internal storage, SD card, …). */
-data class StorageRoot(
-    val dir: File,
-    val label: String,
-    val isRemovable: Boolean
-)
-
+/** Android: the mounted storage volumes (internal storage, SD card, …) as [StorageRoot]s. */
 object StorageRoots {
 
     private const val APP_DIR_MARKER = "/Android/data/"
@@ -35,11 +29,11 @@ object StorageRoots {
                 val root = File(path.substring(0, markerIndex))
                 val volume = storageManager?.getStorageVolume(root)
                 StorageRoot(
-                    dir = root,
+                    id = root.absolutePath,
                     label = volume?.getDescription(context) ?: root.name,
                     isRemovable = volume?.isRemovable ?: false
                 )
             }
-            .distinctBy { it.dir.absolutePath }
+            .distinctBy { it.id }
     }
 }
