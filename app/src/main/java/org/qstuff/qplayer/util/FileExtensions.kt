@@ -8,7 +8,7 @@ import java.io.File
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 
-// java.io.File helpers for the Android file browser; the rules themselves are in AudioFiles.
+// java.io.File helpers for the Android file browser (FileStorageProvider); the rules are in AudioFiles.
 
 fun File.isM3UList() = AudioFiles.isM3uPlaylist(name)
 
@@ -16,19 +16,6 @@ fun File.isSupported(): Boolean = when {
     isDirectory -> !AudioFiles.isHidden(name)
     isFile -> AudioFiles.isSupported(name)
     else -> false
-}
-
-fun File.directoryContainsSupportedFiles(): Boolean {
-    val files = this.listFiles() ?: return false
-    if (files.isNotEmpty()) {
-        files.forEach {
-            if (it.isFile && it.isSupported()) {
-                return true
-            }
-        }
-    }
-
-    return false
 }
 
 /** The audio files directly in this folder (no playlists), in [fileBrowserOrder]. */

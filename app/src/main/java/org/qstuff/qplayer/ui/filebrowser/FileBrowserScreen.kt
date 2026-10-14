@@ -35,13 +35,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.ui.playlists.M3uUtils
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.player.PlayerViewModel
-import org.qstuff.qplayer.util.directoryContainsSupportedFiles
-import org.qstuff.qplayer.util.isM3UList
-import org.qstuff.qplayer.util.listTracksForAddDialog
-import java.io.File
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -90,13 +85,13 @@ fun FileBrowserScreen(
     }
 
     val state by fileBrowserViewModel.state.collectAsStateWithLifecycle()
-    val files = state.files
+    val items = state.items
     val directoryName = state.directoryName
     // Non-null: show the storage list (internal storage, SD card, …) instead of a directory.
     val storageRoots = state.storageRoots
 
-    var addTracksDialogFiles by remember { mutableStateOf<List<File>?>(null) }
-    var m3uDialogFile by remember { mutableStateOf<File?>(null) }
+    var addTracksDialogItems by remember { mutableStateOf<List<BrowserItem>?>(null) }
+    var m3uDialogItem by remember { mutableStateOf<BrowserItem?>(null) }
 
     Column(
         modifier = Modifier
@@ -143,7 +138,7 @@ fun FileBrowserScreen(
 
         storageRoots?.let { roots ->
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(roots, key = { it.dir.absolutePath }) { root ->
+                items(roots, key = { it.id }) { root ->
                     StorageRootItem(
                         root = root,
                         onClick = { fileBrowserViewModel.onStorageRootClicked(root) }
@@ -154,23 +149,23 @@ fun FileBrowserScreen(
         }
 
         if (storageRoots == null) LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(files, key = { it.absolutePath }) { file ->
+            items(items, key = { it.id }) { item ->
                 FileListItem(
-                    file = file,
+                    item = item,
                     onClick = {
-                        when {
-                            file.isM3UList() -> m3uDialogFile = file
-                            file.isFile -> queueViewModel.addPath(file.absolutePath)
-                            file.isDirectory -> fileBrowserViewModel.onFileItemClicked(file)
+                        when (item.kind) {
+                            BrowserItem.Kind.PLAYLIST -> m3uDialogItem = item
+                            BrowserItem.Kind.TRACK -> queueViewModel.addPath(item.id)
+                            BrowserItem.Kind.FOLDER -> fileBrowserViewModel.onItemClicked(item)
                         }
                     },
                     onLongClick = {
-                        if (file.isDirectory && file.directoryContainsSupportedFiles()) {
-                            addTracksDialogFiles = file.listTracksForAddDialog()
+                        if (item.kind == BrowserItem.Kind.FOLDER) {
+                            addTracksDialogItems = fileBrowserViewModel.tracksIn(item).ifEmpty { null }
                         }
                     },
                     onPrelistenClick = {
-                        playerViewModel.loadTrack(Track.fromPath(file.absolutePath, autoplay = true))
+                        playerViewModel.loadTrack(Track.fromPath(item.id, autoplay = true))
                     }
                 )
                 HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
@@ -178,15 +173,15 @@ fun FileBrowserScreen(
         }
     }
 
-    addTracksDialogFiles?.let { filesToAdd ->
+    addTracksDialogItems?.let { tracksToAdd ->
         AlertDialog(
-            onDismissRequest = { addTracksDialogFiles = null },
+            onDismissRequest = { addTracksDialogItems = null },
             title = { Text(stringResource(R.string.filebrowser_dialog_add_tracks_to_queue_title)) },
             text = {
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                    items(filesToAdd) { file ->
+                    items(tracksToAdd) { track ->
                         Text(
-                            text = file.name,
+                            text = track.name,
                             modifier = Modifier.padding(vertical = 4.dp),
                             fontSize = 15.sp,
                             color = Color.White
@@ -196,18 +191,18 @@ fun FileBrowserScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    queueViewModel.addPaths(filesToAdd.map { it.absolutePath })
-                    addTracksDialogFiles = null
+                    queueViewModel.addPaths(tracksToAdd.map { it.id })
+                    addTracksDialogItems = null
                 }) { Text(stringResource(R.string.dialog_ok)) }
             },
             dismissButton = {
                 Row {
                     TextButton(onClick = {
                         queueViewModel.clearTrackList()
-                        queueViewModel.addPaths(filesToAdd.map { it.absolutePath })
-                        addTracksDialogFiles = null
+                        queueViewModel.addPaths(tracksToAdd.map { it.id })
+                        addTracksDialogItems = null
                     }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
-                    TextButton(onClick = { addTracksDialogFiles = null }) {
+                    TextButton(onClick = { addTracksDialogItems = null }) {
                         Text(stringResource(R.string.dialog_cancel))
                     }
                 }
@@ -215,21 +210,19 @@ fun FileBrowserScreen(
         )
     }
 
-    m3uDialogFile?.let { file ->
-        val parsed = remember(file) {
-            M3uUtils.m3UParserGetTracks(file.readText(), file.parent ?: "")
-        }
+    m3uDialogItem?.let { playlist ->
+        val parsed = remember(playlist) { fileBrowserViewModel.playlistTracks(playlist) }
         val found = parsed.first
         val notFound = parsed.second
 
         AlertDialog(
-            onDismissRequest = { m3uDialogFile = null },
+            onDismissRequest = { m3uDialogItem = null },
             title = {
                 Text(
                     if (found.isEmpty())
-                        stringResource(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, file.name)
+                        stringResource(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, playlist.name)
                     else
-                        stringResource(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, file.name)
+                        stringResource(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, playlist.name)
                 )
             },
             text = {
@@ -253,10 +246,10 @@ fun FileBrowserScreen(
                 if (found.isNotEmpty()) {
                     TextButton(onClick = {
                         queueViewModel.addTrackList(found)
-                        m3uDialogFile = null
+                        m3uDialogItem = null
                     }) { Text(stringResource(R.string.dialog_ok)) }
                 } else {
-                    TextButton(onClick = { m3uDialogFile = null }) { Text(stringResource(R.string.dialog_ok)) }
+                    TextButton(onClick = { m3uDialogItem = null }) { Text(stringResource(R.string.dialog_ok)) }
                 }
             },
             dismissButton = {
@@ -265,9 +258,9 @@ fun FileBrowserScreen(
                         TextButton(onClick = {
                             queueViewModel.clearTrackList()
                             queueViewModel.addTrackList(found)
-                            m3uDialogFile = null
+                            m3uDialogItem = null
                         }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
-                        TextButton(onClick = { m3uDialogFile = null }) {
+                        TextButton(onClick = { m3uDialogItem = null }) {
                             Text(stringResource(R.string.dialog_cancel))
                         }
                     }
@@ -310,7 +303,7 @@ private fun StorageRootItem(root: StorageRoot, onClick: () -> Unit) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FileListItem(
-    file: File,
+    item: BrowserItem,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onPrelistenClick: () -> Unit
@@ -324,10 +317,10 @@ private fun FileListItem(
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val icon = when {
-            file.isDirectory -> Icons.Default.Folder
-            file.isM3UList() -> Icons.AutoMirrored.Filled.PlaylistPlay
-            else -> Icons.Default.MusicNote
+        val icon = when (item.kind) {
+            BrowserItem.Kind.FOLDER -> Icons.Default.Folder
+            BrowserItem.Kind.PLAYLIST -> Icons.AutoMirrored.Filled.PlaylistPlay
+            BrowserItem.Kind.TRACK -> Icons.Default.MusicNote
         }
         Icon(
             imageVector = icon,
@@ -337,7 +330,7 @@ private fun FileListItem(
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = file.name,
+            text = item.name,
             color = Color.White,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
@@ -345,7 +338,7 @@ private fun FileListItem(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
-        if (file.isFile && !file.isM3UList()) {
+        if (item.kind == BrowserItem.Kind.TRACK) {
             IconButton(
                 onClick = onPrelistenClick,
                 modifier = Modifier.size(28.dp)

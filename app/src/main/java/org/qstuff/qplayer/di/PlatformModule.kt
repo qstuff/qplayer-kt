@@ -2,6 +2,9 @@ package org.qstuff.qplayer.di
 
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import org.qstuff.qplayer.ui.filebrowser.FileStorageProvider
+import org.qstuff.qplayer.ui.filebrowser.StorageProvider
+import org.qstuff.qplayer.ui.filebrowser.StorageRoots
 import org.qstuff.qplayer.ui.player.AudioPlayer
 import org.qstuff.qplayer.ui.player.WaveformGenerator
 import org.qstuff.qplayer.ui.player.mediaservice.MediaServiceAudioPlayer
@@ -14,4 +17,8 @@ val platformModule = module {
     factory<AudioPlayer> { MediaServiceAudioPlayer(androidContext()) }
     factory { ScratchEngine(androidContext()) }
     single<WaveformGenerator> { AndroidWaveformGenerator(androidContext()) }
+    single<StorageProvider> {
+        val context = androidContext()
+        FileStorageProvider { StorageRoots.find(context) }
+    }
 }

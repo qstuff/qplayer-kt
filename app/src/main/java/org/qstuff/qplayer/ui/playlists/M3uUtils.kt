@@ -57,7 +57,7 @@ object M3uUtils {
                 } else {
                     log.v { "m3UParserGetTracks(): ELSE ${line.replace("^(.*?),".toRegex(), "")}" }
 
-                    val trackPath = if (line.contains("/")) line else "$directoryPath/$line"
+                    val trackPath = resolvePath(line, directoryPath)
 
                     if (isExistingFile(trackPath)) {
                         tracksFound.add(Track.fromPath(trackPath))
@@ -69,6 +69,25 @@ object M3uUtils {
         }
 
         return Pair(tracksFound, notFound)
+    }
+
+    /**
+     * An entry's absolute path: entries starting with "/" (or file:// URLs) are absolute, everything
+     * else is relative to the playlist's folder — also with subfolders ("set/b.mp3") or "..".
+     * Windows separators ("\") are accepted.
+     */
+    internal fun resolvePath(entry: String, directoryPath: String): String {
+        val path = entry.trim().removePrefix("file://").replace('\\', '/')
+        val joined = if (path.startsWith("/")) path else "$directoryPath/$path"
+        val segments = ArrayDeque<String>()
+        joined.split('/').forEach { segment ->
+            when (segment) {
+                "", "." -> {}
+                ".." -> segments.removeLastOrNull()
+                else -> segments.addLast(segment)
+            }
+        }
+        return "/" + segments.joinToString("/")
     }
 
     private fun isExistingFile(path: String) =
