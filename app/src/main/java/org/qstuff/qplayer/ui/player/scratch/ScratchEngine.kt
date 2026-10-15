@@ -10,6 +10,7 @@ import android.os.Process
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.qstuff.qplayer.ui.player.Scratcher
 import org.qstuff.qplayer.ui.player.audio.AudioDecoder
 import co.touchlab.kermit.Logger
 import java.io.Closeable
@@ -41,7 +42,7 @@ private val log = Logger.withTag("ScratchEngine")
  *
  * [start], [scratchTo], [stop], [prepare] and [release] are called from the main thread.
  */
-class ScratchEngine(private val context: Context) {
+class ScratchEngine(private val context: Context) : Scratcher {
 
     companion object {
         /** Audio covered by one wheel rotation at sensitivity 10 (= a 33⅓ rpm record). */
@@ -126,14 +127,14 @@ class ScratchEngine(private val context: Context) {
     private var startFrame = 0.0
     private var framesPerRadian = 0.0
 
-    val isScratching: Boolean get() = running
+    override val isScratching: Boolean get() = running
 
     /** The read head's position while scratching / where the last scratch ended. */
-    val positionMs: Long
+    override val positionMs: Long
         get() = source?.let { (positionFrame * 1000 / it.sampleRate).toLong() } ?: 0L
 
     /** Decode [uri] in the background so it can be scratched. No-op if already prepared. */
-    fun prepare(scope: CoroutineScope, uri: String) {
+    override fun prepare(scope: CoroutineScope, uri: String) {
         if (uri == preparedUri) return
         stop()
         decodeJob?.cancel()
@@ -142,7 +143,7 @@ class ScratchEngine(private val context: Context) {
     }
 
     /** Stop scratching, drop the decoded track (freeing its disk space) and the audio output. */
-    fun release() {
+    override fun release() {
         stop()
         decodeJob?.cancel()
         decodeJob = null
@@ -165,7 +166,7 @@ class ScratchEngine(private val context: Context) {
      * (or the audio output can't be opened) — the caller then leaves ExoPlayer alone.
      * [sensitivity] (the jog wheel setting, 10 = default) scales the audio per rotation.
      */
-    fun start(positionMs: Long, sensitivity: Int): Boolean {
+    override fun start(positionMs: Long, sensitivity: Int): Boolean {
         if (running) return true
         val src = source ?: return false
         val frame = positionMs / 1000.0 * src.sampleRate
@@ -187,12 +188,12 @@ class ScratchEngine(private val context: Context) {
     }
 
     /** Move the record: [rotationRad] is the wheel's rotation since touch-down (clockwise > 0). */
-    fun scratchTo(rotationRad: Double) {
+    override fun scratchTo(rotationRad: Double) {
         if (running) targetFrame = startFrame + rotationRad * framesPerRadian
     }
 
     /** Stop scratching (with a short fade-out); returns the final position in ms. */
-    fun stop(): Long {
+    override fun stop(): Long {
         if (running) {
             running = false
             renderThread?.join(200)

@@ -16,7 +16,6 @@ import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
-import org.qstuff.qplayer.ui.player.scratch.ScratchEngine
 import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.LruCache
@@ -26,13 +25,13 @@ import co.touchlab.kermit.Logger
 private val log = Logger.withTag("PlayerViewModel")
 
 /**
- * The deck: track loading and status, play/pause, pitch, cue, waveform and scratching. Talks to the
- * playback engine only through [AudioPlayer]; no Android dependencies besides ScratchEngine (next
- * step of the KMP migration).
+ * The deck: track loading and status, play/pause, pitch, cue, waveform and scratching. Platform
+ * independent: talks to the platform only through [AudioPlayer], [Scratcher] and
+ * [WaveformGenerator].
  */
 class PlayerViewModel(
     private val audioPlayer: AudioPlayer,
-    private val scratchEngine: ScratchEngine,
+    private val scratchEngine: Scratcher,
     private val waveformGenerator: WaveformGenerator,
     private val preferencesDataSource: PreferencesDataSource
 ) : ViewModel() {

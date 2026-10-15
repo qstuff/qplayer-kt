@@ -1,10 +1,5 @@
 package org.qstuff.qplayer.ui.filebrowser
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,13 +20,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
@@ -40,50 +33,24 @@ import org.qstuff.qplayer.ui.player.PlayerViewModel
 
 private val QOrangeDivider = Color(0x60FC7614)
 
+/** The file browser tab; asks for the storage permission first (see StoragePermissionGate). */
 @Composable
 fun FileBrowserScreen(
     fileBrowserViewModel: FileBrowserViewModel,
     queueViewModel: QueueViewModel,
     playerViewModel: PlayerViewModel
 ) {
-    val context = LocalContext.current
-
-    val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        Manifest.permission.READ_MEDIA_AUDIO
-    else
-        Manifest.permission.READ_EXTERNAL_STORAGE
-
-    var hasPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, storagePermission) == PackageManager.PERMISSION_GRANTED
-        )
+    StoragePermissionGate {
+        FileBrowserContent(fileBrowserViewModel, queueViewModel, playerViewModel)
     }
+}
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted -> hasPermission = granted }
-
-    LaunchedEffect(Unit) {
-        if (!hasPermission) permissionLauncher.launch(storagePermission)
-    }
-
-    if (!hasPermission) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(Color.Black),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Please grant storage permission to browse files",
-                color = Color.White,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        return
-    }
-
+@Composable
+private fun FileBrowserContent(
+    fileBrowserViewModel: FileBrowserViewModel,
+    queueViewModel: QueueViewModel,
+    playerViewModel: PlayerViewModel
+) {
     val state by fileBrowserViewModel.state.collectAsStateWithLifecycle()
     val items = state.items
     val directoryName = state.directoryName

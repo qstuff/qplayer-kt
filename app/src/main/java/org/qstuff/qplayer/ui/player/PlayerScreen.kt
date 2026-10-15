@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringArrayResource
@@ -49,6 +48,7 @@ import org.qstuff.qplayer.ui.player.components.PlayerTabs
 import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
 import org.qstuff.qplayer.ui.player.components.TrackInfoSection
 import org.qstuff.qplayer.ui.player.components.WaveformSeekbar
+import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
 import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
@@ -186,8 +186,8 @@ fun PlayerScreen(
 
     val pitchRangeValues = stringArrayResource(R.array.pitch_range_values)
 
-    val context = LocalContext.current
-    val jogwheelHaptics = remember { JogwheelHaptics(context) }
+    val hapticFeedback: HapticFeedback = koinInject()
+    val jogwheelHaptics = remember { JogwheelHaptics(hapticFeedback) }
     SideEffect { jogwheelHaptics.level = jogwheelHapticLevel }
 
     BoxWithConstraints(

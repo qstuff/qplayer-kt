@@ -2,7 +2,6 @@ package org.qstuff.qplayer.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -15,19 +14,19 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlayerScreen
 import org.qstuff.qplayer.ui.player.PlayerViewModel
-import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
+import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.settings.InfoPageScreen
 import org.qstuff.qplayer.ui.settings.LicensesScreen
 import org.qstuff.qplayer.ui.settings.SettingsScreen
-import org.qstuff.qplayer.ui.settings.appVersionString
-import org.qstuff.qplayer.ui.settings.deviceInfoString
+import org.qstuff.qplayer.util.PlatformInfo
 
 /** The app's screens — the keys on the Navigation 3 back stack. */
 @Serializable
@@ -96,12 +95,13 @@ fun QDeqNavigation(
                 )
             }
             entry<Screen.Settings> {
-                val context = LocalContext.current
+                val platformInfo: PlatformInfo = koinInject()
+                val hapticFeedback: HapticFeedback = koinInject()
                 SettingsScreen(
                     settingsViewModel = koinViewModel(),
-                    appVersion = remember { context.appVersionString() },
-                    deviceInfo = remember { deviceInfoString() },
-                    canVibrate = remember { JogwheelHaptics.isSupported(context) },
+                    appVersion = platformInfo.appVersion,
+                    deviceInfo = platformInfo.deviceInfo,
+                    canVibrate = hapticFeedback.isSupported,
                     onBack = navigateBack
                 )
             }

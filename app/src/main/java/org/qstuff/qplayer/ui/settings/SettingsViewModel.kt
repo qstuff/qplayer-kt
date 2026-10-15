@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.util.CrashReporting
+import org.qstuff.qplayer.util.CrashReporter
 
 data class SettingsUiState(
     val autostart: Boolean,
@@ -20,7 +20,8 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(
-    private val preferencesDataSource: PreferencesDataSource
+    private val preferencesDataSource: PreferencesDataSource,
+    private val crashReporter: CrashReporter
 ) : ViewModel() {
 
 
@@ -64,7 +65,7 @@ class SettingsViewModel(
 
     fun setCrashreporting(enabled: Boolean) {
         preferencesDataSource.setCrashreportingEnabled(enabled)
-        CrashReporting.apply(enabled)
+        crashReporter.setEnabled(enabled)
         _uiState.update { it.copy(crashreporting = enabled) }
     }
 
