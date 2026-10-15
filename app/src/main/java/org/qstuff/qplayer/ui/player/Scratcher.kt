@@ -14,8 +14,15 @@ interface Scratcher {
     /** The read head's position while scratching / where the last scratch ended. */
     val positionMs: Long
 
-    /** Get the track at [uri] ready for scratching (in [scope], in the background). */
-    fun prepare(scope: CoroutineScope, uri: String)
+    /**
+     * Get the track at [uri] ready for scratching (in [scope], in the background). The decode also
+     * yields the track's overview waveform (as [WaveformGenerator] would), so in scratch mode the
+     * track is decoded only once: [onWaveform] receives it (null if the track can't be decoded) on
+     * [scope]'s dispatcher when the decode is done — right away if [uri] is already decoded. A
+     * later call for the same [uri] replaces a still pending [onWaveform]; a call for another
+     * track or [release] drops it.
+     */
+    fun prepare(scope: CoroutineScope, uri: String, onWaveform: ((ByteArray?) -> Unit)? = null)
 
     /** Stop scratching and drop the prepared track. */
     fun release()

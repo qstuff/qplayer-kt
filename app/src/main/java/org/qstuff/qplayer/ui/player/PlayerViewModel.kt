@@ -125,6 +125,7 @@ class PlayerViewModel(
     // Waveform overview generation (native MediaExtractor+MediaCodec, off the main thread)
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
+    private var waveformJobUri: String? = null
 
     // Jog wheel SCRATCH mode: takes over the audio from the player while the wheel is touched.
     private var isScratchModeEnabled = false
@@ -301,8 +302,7 @@ class PlayerViewModel(
             emitTrackState(track, Track.TrackStatus.LOADING)
         }
 
-        generateWaveform(track)
-        prepareScratch()
+        prepareTrack()
     }
 
     /**
@@ -360,47 +360,58 @@ class PlayerViewModel(
     }
 
     /**
-     * Generate (or serve from cache) the overview waveform for [track] and publish it via
-     * [onWaveformDataUpdate]. Decoding runs on a background dispatcher; the previous job is
-     * cancelled when a new track is loaded, and stale results for an already-changed track are
-     * discarded. viewModelScope cancels any in-flight job when the ViewModel is cleared.
+     * Get the current track's overview waveform (published via [onWaveformDataUpdate]) and, in
+     * SCRATCH mode, its scratch decode. In SCRATCH mode the scratch engine's decode delivers the
+     * waveform too, so the track is decoded once; otherwise the engine is released and
+     * [waveformGenerator] decodes. Waveforms are cached; what's done or in progress isn't started
+     * again, so this also runs on every settings load (and follows a jog wheel mode change).
      */
-    private fun generateWaveform(track: Track) {
+    private fun prepareTrack() {
+        val track = _playerTrackState.value?.track
+        if (!isScratchModeEnabled) scratchEngine.release()
+        if (track == null) return
         val uri = track.uri
 
-        waveformCache.get(uri)?.let { cached ->
-            _onWaveformDataUpdate.value = TrackData(track, cached)
+        val cached = waveformCache.get(uri)
+        if (cached != null) {
+            val shown = _onWaveformDataUpdate.value
+            if (shown?.track !== track || shown.bytes !== cached) {
+                _onWaveformDataUpdate.value = TrackData(track, cached)
+            }
+            if (isScratchModeEnabled) scratchEngine.prepare(viewModelScope, uri)
             return
         }
 
-        // Clear any previous waveform while the new one is decoding.
-        _onWaveformDataUpdate.value = null
-        waveformJob?.cancel()
-        waveformJob = viewModelScope.launch {
-            val bytes = waveformGenerator.generate(uri)
-            if (bytes != null && isActive) {
-                waveformCache.put(uri, bytes)
-                // Only publish if this is still the current track.
-                if (_playerTrackState.value?.track?.uri == uri) {
-                    _onWaveformDataUpdate.value = TrackData(track, bytes)
-                }
+        // Clear the previous track's waveform while the new one is decoding.
+        if (_onWaveformDataUpdate.value?.track?.uri != uri) _onWaveformDataUpdate.value = null
+
+        if (isScratchModeEnabled) {
+            waveformJob?.cancel()
+            waveformJob = null
+            waveformJobUri = null
+            scratchEngine.prepare(viewModelScope, uri) { bytes -> onWaveformDecoded(track, bytes) }
+        } else if (waveformJobUri != uri) {
+            waveformJob?.cancel()
+            waveformJobUri = uri
+            waveformJob = viewModelScope.launch {
+                val bytes = waveformGenerator.generate(uri)
+                if (isActive) onWaveformDecoded(track, bytes)
             }
+        }
+    }
+
+    /** Cache a decoded waveform; publish it if [track] is still the current one. */
+    private fun onWaveformDecoded(track: Track, bytes: ByteArray?) {
+        if (bytes == null) return
+        waveformCache.put(track.uri, bytes)
+        if (_playerTrackState.value?.track?.uri == track.uri) {
+            _onWaveformDataUpdate.value = TrackData(track, bytes)
         }
     }
 
     //
     // Scratching (jog wheel SCRATCH mode)
     //
-
-    /** Decode the current track for scratching if SCRATCH mode is on, else free the engine. */
-    private fun prepareScratch() {
-        val track = _playerTrackState.value?.track
-        if (!isScratchModeEnabled) {
-            scratchEngine.release()
-        } else if (track != null) {
-            scratchEngine.prepare(viewModelScope, track.uri)
-        }
-    }
 
     /**
      * Jog wheel touched in SCRATCH mode: hand the audio from the player to the scratch engine at the
@@ -484,7 +495,7 @@ class PlayerViewModel(
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
         _jogwheelHapticLevel.value = preferencesDataSource.getJogWheelHapticLevel()
         isScratchModeEnabled = preferencesDataSource.getJogWheelModeEnum() == JogwheelMode.SCRATCH
-        prepareScratch()
+        prepareTrack()
     }
 
     private fun startUpdateTimer() {

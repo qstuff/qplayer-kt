@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -61,8 +62,20 @@ class PlayerViewModelTest {
         override var isScratching = false
         override var positionMs = 0L
         var startPossible = true
-        override fun prepare(scope: CoroutineScope, uri: String) {}
-        override fun release() {}
+        var preparedUri: String? = null
+        var onWaveform: ((ByteArray?) -> Unit)? = null
+        override fun prepare(scope: CoroutineScope, uri: String, onWaveform: ((ByteArray?) -> Unit)?) {
+            if (uri != preparedUri) this.onWaveform = null
+            preparedUri = uri
+            if (onWaveform != null) this.onWaveform = onWaveform
+        }
+        override fun release() { preparedUri = null; onWaveform = null }
+
+        /** The decode is done. */
+        fun decoded(waveform: ByteArray?) {
+            onWaveform?.invoke(waveform)
+            onWaveform = null
+        }
         override fun start(positionMs: Long, sensitivity: Int): Boolean {
             if (!startPossible) return false
             isScratching = true
@@ -78,8 +91,13 @@ class PlayerViewModelTest {
     private val scratcher = FakeScratcher()
     private val prefs = PreferencesDataSource(MapSettings())
     private val originalLocale = Locale.getDefault()
+    /** Uris the waveform generator decoded; it yields [generatedWaveform]. */
+    private val generated = mutableListOf<String>()
+    private val generatedWaveform = byteArrayOf(1, 2, 3)
 
-    private fun viewModel() = PlayerViewModel(player, scratcher, { null }, prefs)
+    private fun viewModel() = PlayerViewModel(
+        player, scratcher, { uri -> generated += uri; generatedWaveform }, prefs
+    )
 
     @Before
     fun setUp() {
@@ -213,5 +231,63 @@ class PlayerViewModelTest {
 
         assertFalse(vm.startScratch())
         assertEquals(emptyList<String>(), player.calls)
+    }
+
+    @Test
+    fun `outside scratch mode the waveform generator decodes the track`() {
+        val vm = viewModel()
+        player.connect()
+
+        vm.loadTrack(Track.fromPath("/music/a.mp3"))
+
+        assertEquals(listOf("/music/a.mp3"), generated)
+        assertEquals(null, scratcher.preparedUri)
+        assertSame(generatedWaveform, vm.onWaveformDataUpdate.value?.bytes)
+    }
+
+    @Test
+    fun `in scratch mode the scratch decode delivers the waveform`() {
+        prefs.setJogWheelMode(2)        // SCRATCH
+        val vm = viewModel()
+        player.connect()
+        val waveform = byteArrayOf(9)
+
+        vm.loadTrack(Track.fromPath("/music/a.mp3"))
+        assertEquals("/music/a.mp3", scratcher.preparedUri)
+        assertEquals(null, vm.onWaveformDataUpdate.value)
+
+        scratcher.decoded(waveform)
+
+        assertEquals(emptyList<String>(), generated)
+        assertSame(waveform, vm.onWaveformDataUpdate.value?.bytes)
+    }
+
+    @Test
+    fun `leaving scratch mode during the scratch decode lets the generator take over`() {
+        prefs.setJogWheelMode(2)        // SCRATCH
+        val vm = viewModel()
+        player.connect()
+        vm.loadTrack(Track.fromPath("/music/a.mp3"))
+
+        prefs.setJogWheelMode(0)
+        vm.loadSettings()
+
+        assertEquals(null, scratcher.preparedUri)
+        assertEquals(listOf("/music/a.mp3"), generated)
+        assertSame(generatedWaveform, vm.onWaveformDataUpdate.value?.bytes)
+    }
+
+    @Test
+    fun `a cached waveform is not decoded again`() {
+        val vm = viewModel()
+        player.connect()
+        vm.loadTrack(Track.fromPath("/music/a.mp3"))
+        vm.loadTrack(Track.fromPath("/music/b.mp3"))
+
+        vm.loadTrack(Track.fromPath("/music/a.mp3"))
+        vm.loadSettings()
+
+        assertEquals(listOf("/music/a.mp3", "/music/b.mp3"), generated)
+        assertEquals("/music/a.mp3", vm.onWaveformDataUpdate.value?.track?.uri)
     }
 }

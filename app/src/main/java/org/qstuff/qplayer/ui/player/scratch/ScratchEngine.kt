@@ -8,13 +8,20 @@ import android.media.AudioTrack
 import android.os.Build
 import android.os.Process
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.qstuff.qplayer.ui.player.Scratcher
 import org.qstuff.qplayer.ui.player.audio.AudioDecoder
+import org.qstuff.qplayer.ui.player.waveform.WaveformAnalyzer
+import org.qstuff.qplayer.ui.player.waveform.WaveformPeaks
 import co.touchlab.kermit.Logger
 import java.io.Closeable
 import java.io.File
+import java.io.IOException
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -35,7 +42,9 @@ private val log = Logger.withTag("ScratchEngine")
  *   file (~10 MB per minute) — off the Java heap. Only the prepared track's file exists; it is
  *   unlinked right after creation and closed explicitly when the track changes or the engine is
  *   released, so its disk space is freed immediately (and by the OS if the process dies).
- *   Scratching works as soon as the decoder has passed the playback position.
+ *   Scratching works as soon as the decoder has passed the playback position. The decoder writes
+ *   in [WRITE_BATCH_BYTES] batches and computes the overview waveform on the way, so in scratch
+ *   mode the track is decoded once for both.
  * - A render thread plays the PCM through a low-latency [AudioTrack] at the device's native rate.
  *   Its read head follows the wheel with a critically damped follower (forward, backward or
  *   standing still) and reads with linear interpolation, so pitch follows speed like on vinyl.
@@ -55,6 +64,11 @@ class ScratchEngine(private val context: Context) : Scratcher {
         /** Fade in/out at start/stop so the hand-over to/from ExoPlayer doesn't click. */
         private const val FADE_FRAMES = 256
         private const val DC_BLOCK_HZ = 20.0
+        /**
+         * The decoder collects this much PCM (~3 s of 44.1 kHz stereo) per file write: fewer, larger
+         * writes; the scratchable range lags the decoder by at most one batch.
+         */
+        private const val WRITE_BATCH_BYTES = 512 * 1024
         /** Frames the read head can move within one block, either way (+ interpolation). */
         private val WINDOW_REACH = (MAX_RATE * BLOCK_FRAMES).toInt() + 2
     }
@@ -118,6 +132,11 @@ class ScratchEngine(private val context: Context) : Scratcher {
     @Volatile private var preparedUri: String? = null
     private var decodeJob: Job? = null
 
+    // The prepared track's overview waveform from the decode (main thread only).
+    private var waveform: ByteArray? = null
+    private var waveformDone = false
+    private var onWaveform: ((ByteArray?) -> Unit)? = null
+
     private var audioTrack: AudioTrack? = null
     private var renderThread: Thread? = null
 
@@ -133,12 +152,21 @@ class ScratchEngine(private val context: Context) : Scratcher {
     override val positionMs: Long
         get() = source?.let { (positionFrame * 1000 / it.sampleRate).toLong() } ?: 0L
 
-    /** Decode [uri] in the background so it can be scratched. No-op if already prepared. */
-    override fun prepare(scope: CoroutineScope, uri: String) {
-        if (uri == preparedUri) return
+    /**
+     * Decode [uri] in the background so it can be scratched; [onWaveform] gets its overview waveform
+     * when done. Only hands over [onWaveform] if [uri] is already prepared.
+     */
+    override fun prepare(scope: CoroutineScope, uri: String, onWaveform: ((ByteArray?) -> Unit)?) {
+        if (uri == preparedUri) {
+            if (onWaveform != null) {
+                if (waveformDone) onWaveform(waveform) else this.onWaveform = onWaveform
+            }
+            return
+        }
         stop()
         decodeJob?.cancel()
         closeSource(newUri = uri)
+        this.onWaveform = onWaveform
         decodeJob = scope.launch { decode(uri) }
     }
 
@@ -148,6 +176,7 @@ class ScratchEngine(private val context: Context) : Scratcher {
         decodeJob?.cancel()
         decodeJob = null
         closeSource(newUri = null)
+        onWaveform = null
         audioTrack?.release()
         audioTrack = null
     }
@@ -159,6 +188,8 @@ class ScratchEngine(private val context: Context) : Scratcher {
             source.also { source = null }
         }
         old?.close()
+        waveform = null
+        waveformDone = false
     }
 
     /**
@@ -208,11 +239,18 @@ class ScratchEngine(private val context: Context) : Scratcher {
 
     private suspend fun decode(uri: String) {
         var pcm: PcmSource? = null
-        // Reused staging buffer for the frames of one decoder chunk (grown as needed).
-        var staging = ByteBuffer.allocateDirect(64 * 1024).order(ByteOrder.nativeOrder())
+        val peaks = WaveformPeaks()
+        // Collects decoder chunks (reduced to the source's channels) for one batched write.
+        var batch = ByteBuffer.allocateDirect(WRITE_BATCH_BYTES).order(ByteOrder.nativeOrder())
+
+        fun flush(p: PcmSource) {
+            batch.flip()
+            p.append(batch)
+            batch.clear()
+        }
 
         try {
-            AudioDecoder.decode(
+            val decoded = AudioDecoder.decode(
                 context, uri,
                 onFormat = { sampleRate, channels, _ ->
                     val created = PcmSource(context.cacheDir, sampleRate, channels.coerceAtMost(2))
@@ -222,23 +260,43 @@ class ScratchEngine(private val context: Context) : Scratcher {
                     if (current) pcm = created else created.close()
                 },
                 onPcm = chunk@{ shorts, channels ->
+                    peaks.add(shorts, channels)
                     val p = pcm ?: return@chunk
                     val frames = (shorts.limit() - shorts.position()) / channels
                     val bytes = frames * p.channels * 2
-                    if (staging.capacity() < bytes) {
-                        staging = ByteBuffer.allocateDirect(bytes).order(ByteOrder.nativeOrder())
+                    if (batch.remaining() < bytes) flush(p)
+                    if (batch.capacity() < bytes) {
+                        batch = ByteBuffer.allocateDirect(bytes).order(ByteOrder.nativeOrder())
                     }
-                    staging.clear()
-                    val out = staging.asShortBuffer()
-                    var i = shorts.position()
-                    repeat(frames) {
-                        for (c in 0 until p.channels) out.put(shorts.get(i + c))
-                        i += channels
+                    val out = batch.asShortBuffer()
+                    if (channels == p.channels) {
+                        out.put(shorts.duplicate().also { it.limit(it.position() + frames * channels) })
+                    } else {
+                        var i = shorts.position()
+                        repeat(frames) {
+                            for (c in 0 until p.channels) out.put(shorts.get(i + c))
+                            i += channels
+                        }
                     }
-                    staging.limit(bytes)
-                    p.append(staging)
+                    batch.position(batch.position() + bytes)
                 }
             )
+            // The rest (also of a failed decode); fails if superseded meanwhile (source closed).
+            pcm?.let { p ->
+                if (batch.position() > 0) withContext(Dispatchers.IO) {
+                    try { flush(p) } catch (_: IOException) {}
+                }
+            }
+
+            // Back on the scope's (main) thread. Hand the waveform over unless superseded meanwhile.
+            if (preparedUri == uri && currentCoroutineContext().isActive) {
+                waveform = if (decoded) peaks.overview(WaveformAnalyzer.DEFAULT_POINTS) else null
+                waveformDone = true
+                onWaveform?.let { callback ->
+                    onWaveform = null
+                    callback(waveform)
+                }
+            }
         } finally {
             // Superseded meanwhile (track changed / released): don't leave its file open.
             pcm?.let { p -> if (synchronized(lock) { source !== p }) p.close() }
