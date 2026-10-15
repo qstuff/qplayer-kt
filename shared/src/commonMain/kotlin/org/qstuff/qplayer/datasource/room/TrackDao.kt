@@ -1,0 +1,35 @@
+package org.qstuff.qplayer.datasource.room
+
+import androidx.room.*
+
+import org.qstuff.qplayer.datasource.model.Track
+
+
+/*
+ * Created by Claus Chierici (claus@qstuff.org)
+ * on 4/22/18
+ * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
+ */
+@Dao
+interface TrackDao {
+
+    @Query("SELECT * FROM Tracks; ")
+    suspend fun getAll(): List<Track>
+
+    @Query("SELECT * FROM Tracks " +
+            "WHERE playlistName = :playlistName " +
+            "AND name IS NOT NULL;")
+    suspend fun getTracksForPlaylist(playlistName: String): List<Track>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(tracklist: List<Track>)
+
+    @Delete
+    suspend fun delete(tracks: List<Track>)
+
+    @Query("DELETE FROM Tracks WHERE playlistName = :playlistName;")
+    suspend fun deleteTracksForPlaylist(playlistName: String)
+
+    @Query("DELETE FROM Tracks;")
+    suspend fun deleteAll()
+}

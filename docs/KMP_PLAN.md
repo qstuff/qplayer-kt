@@ -1,6 +1,6 @@
 # Kotlin Multiplatform migration plan
 
-Status: **planned, not started** (October 2026)
+Status: **Phase 0 done, Phase 1 in progress** (October 2026; integration branch `kmp-migration`)
 
 ## Goal
 
@@ -64,11 +64,18 @@ persistence is Room plus SharedPreferences.
 
 ### Phase 1: multiplatform module (2–3 PRs, Android only)
 
-- Convert `app` into a KMP module with `commonMain` and `androidMain`.
-- Move code package by package: models and data → ViewModels → UI.
-- Move resources to Compose Multiplatform resources (German stays the default, English in
-  `values-en`).
-- Switch to Room KMP.
+- Module layout: `shared` (KMP: `commonMain`, `androidMain`, `iosMain`) and `androidApp` (the
+  former `app`; AGP 9 doesn't allow the Android app module to be a KMP module). `iosApp` follows in
+  Phase 2.
+- **1a (done):** models, settings, Room KMP database (suspending DAOs, same `qplayer` file),
+  ViewModels, `PlaybackCoordinator`, platform interfaces and helpers in `shared/commonMain`; their
+  unit tests in `androidHostTest`. The iOS targets are compiled from now on, so platform code can't
+  slip into `commonMain`. The Android implementations (media service, scratch engine, decoder,
+  file storage, Firebase, Koin `platformModule`/`dataModule`) stay in `androidApp`.
+- **1b:** Compose Multiplatform plugin, UI and resources: strings and arrays (German stays the
+  default, English in `values-en`), drawables, the privacy/imprint HTML. The tablet dimensions
+  (`values-sw600dp`/`-sw720dp`) become sizes chosen in code by window width, since Compose
+  Multiplatform resources have no screen-width qualifiers.
 
 Result: the Android app is "KMP inside" and behaves exactly as before.
 
