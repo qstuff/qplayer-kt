@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "qplayer-kt"
-include(":app")
+include(":androidApp", ":shared")
