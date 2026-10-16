@@ -23,13 +23,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.player.jogwheel.JogWheel
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
+import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
  * The upper deck: a vertical pitch fader on the left and the square jog wheel filling the width
@@ -61,7 +60,7 @@ fun PitchJogSection(
     modifier: Modifier = Modifier,
     fitHeight: Boolean = false
 ) {
-    val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
+    val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     val jogState = remember {
         object {
             var capturedPitchProgress = 500
@@ -79,7 +78,7 @@ fun PitchJogSection(
             .padding(top = 4.dp),  // 4dp below the duration row
         contentAlignment = Alignment.TopCenter
     ) {
-        val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
+        val pitchbarWidth = LocalDimens.current.pitchbarWidth
         // The jog wheel is square and fills the width to the right of the pitch fader, so the
         // row height = that width. The pitch fader uses fillMaxHeight for the same top/height.
         val jogSize = if (fitHeight) {

@@ -12,8 +12,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import org.qstuff.qplayer.R
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.navigate_back
 
 /** Black screen with a top bar (back arrow + [title]), used by Licenses and the info pages. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +33,7 @@ fun SubScreenScaffold(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.navigate_back)
+                            contentDescription = stringResource(Res.string.navigate_back)
                         )
                     }
                 },

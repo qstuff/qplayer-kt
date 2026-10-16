@@ -16,6 +16,8 @@ targetSdk = "34"
 activityCompose = "1.13.0"
 appcompat = "1.7.1"
 composeBom = "2026.09.00"
+# Compose Multiplatform (the shared module; on Android it resolves to the Jetpack Compose artifacts)
+composeMultiplatform = "1.12.2"
 # Material icons are no longer part of the Compose BOM (frozen at 1.7.x)
 composeMaterialIcons = "1.7.8"
 coreKtx = "1.19.1"
@@ -52,6 +54,9 @@ navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref =
 
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
+compose-mp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+compose-mp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+compose-mp-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
@@ -92,6 +97,7 @@ android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.
 # Only to pin the Kotlin version AGP's built-in Kotlin uses (never applied to a module)
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

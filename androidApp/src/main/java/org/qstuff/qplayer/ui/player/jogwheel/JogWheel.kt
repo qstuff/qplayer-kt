@@ -20,13 +20,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.theme.QOrange
 import kotlin.math.PI
 import kotlin.math.atan2
+import org.jetbrains.compose.resources.painterResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.qpl_btn_wheel_ohne_rand01
 
 @Composable
 fun JogWheel(
@@ -40,7 +41,7 @@ fun JogWheel(
     val currentOnDown by rememberUpdatedState(onDown)
     val currentOnMove by rememberUpdatedState(onMove)
     val currentOnUp by rememberUpdatedState(onUp)
-    val painter = painterResource(R.drawable.qpl_btn_wheel_ohne_rand01)
+    val painter = painterResource(Res.drawable.qpl_btn_wheel_ohne_rand01)
     
     Canvas(
         modifier = modifier

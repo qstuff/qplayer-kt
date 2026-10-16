@@ -12,9 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserScreen
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlayerViewModel
@@ -23,6 +21,11 @@ import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueScreen
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.filebrowser_title
+import org.qstuff.qplayer.resources.playlists_title
+import org.qstuff.qplayer.resources.queue_title
 
 /**
  * The Queue / Files / Playlists tabs and their pager. Used inside the phone's draggable
@@ -45,9 +48,9 @@ fun PlayerTabs(
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 3 })
     val tabTitles = listOf(
-        stringResource(R.string.queue_title),
-        stringResource(R.string.filebrowser_title),
-        stringResource(R.string.playlists_title)
+        stringResource(Res.string.queue_title),
+        stringResource(Res.string.filebrowser_title),
+        stringResource(Res.string.playlists_title)
     )
 
     Column(modifier = modifier) {

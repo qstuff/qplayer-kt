@@ -72,10 +72,15 @@ persistence is Room plus SharedPreferences.
   unit tests in `androidHostTest`. The iOS targets are compiled from now on, so platform code can't
   slip into `commonMain`. The Android implementations (media service, scratch engine, decoder,
   file storage, Firebase, Koin `platformModule`/`dataModule`) stay in `androidApp`.
-- **1b:** Compose Multiplatform plugin, UI and resources: strings and arrays (German stays the
-  default, English in `values-en`), drawables, the privacy/imprint HTML. The tablet dimensions
-  (`values-sw600dp`/`-sw720dp`) become sizes chosen in code by window width, since Compose
-  Multiplatform resources have no screen-width qualifiers.
+- **1b (resources):** Compose Multiplatform plugin; strings and arrays (German stays the default,
+  English in `values-en`), drawables and the privacy/imprint HTML as Compose Multiplatform
+  resources in `shared` (`Res.*`). Only the launcher icon, theme, notification icon and strings
+  stay Android resources. The tablet dimensions (`values-sw600dp`/`-sw720dp`) became `Dimens`,
+  chosen in code by the screen's smallest width, since Compose Multiplatform resources have no
+  screen-width qualifiers.
+- **1c (screens):** the Compose UI moves to `shared/commonMain` (JetBrains builds of Navigation 3
+  and lifecycle-viewmodel-navigation3); the remaining Android-only parts of the UI (permission
+  gate, crash reporting opt-in, haptics/platform info lookups) go behind small platform functions.
 
 Result: the Android app is "KMP inside" and behaves exactly as before.
 

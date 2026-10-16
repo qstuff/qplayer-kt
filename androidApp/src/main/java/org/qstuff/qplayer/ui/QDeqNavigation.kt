@@ -2,7 +2,6 @@ package org.qstuff.qplayer.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -16,7 +15,6 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlayerScreen
 import org.qstuff.qplayer.ui.player.PlayerViewModel
@@ -27,6 +25,10 @@ import org.qstuff.qplayer.ui.settings.InfoPageScreen
 import org.qstuff.qplayer.ui.settings.LicensesScreen
 import org.qstuff.qplayer.ui.settings.SettingsScreen
 import org.qstuff.qplayer.util.PlatformInfo
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.more_menu_imprint
+import org.qstuff.qplayer.resources.more_menu_privacy
 
 /** The app's screens — the keys on the Navigation 3 back stack. */
 @Serializable
@@ -110,15 +112,15 @@ fun QDeqNavigation(
             }
             entry<Screen.Privacy> {
                 InfoPageScreen(
-                    title = stringResource(R.string.more_menu_privacy),
-                    assetName = "privacy.html",
+                    title = stringResource(Res.string.more_menu_privacy),
+                    file = "files/privacy.html",
                     onBack = navigateBack
                 )
             }
             entry<Screen.Imprint> {
                 InfoPageScreen(
-                    title = stringResource(R.string.more_menu_imprint),
-                    assetName = "imprint.html",
+                    title = stringResource(Res.string.more_menu_imprint),
+                    file = "files/imprint.html",
                     onBack = navigateBack
                 )
             }

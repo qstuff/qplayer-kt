@@ -17,9 +17,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.TrackRepeatStatus
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.button_loop
+import org.qstuff.qplayer.resources.button_loop1_selected
+import org.qstuff.qplayer.resources.button_loop_selected
+import org.qstuff.qplayer.resources.button_next
+import org.qstuff.qplayer.resources.button_pause_selected
+import org.qstuff.qplayer.resources.button_play_selected
+import org.qstuff.qplayer.resources.button_previous
+import org.qstuff.qplayer.resources.button_shuffle
+import org.qstuff.qplayer.resources.button_shuffle_selected
+import org.qstuff.qplayer.resources.ic_keyboard_arrow_left_white_24px
+import org.qstuff.qplayer.resources.ic_keyboard_arrow_right_white_24px
 
 /**
  * The two transport/pitch control button rows, built from [ControlChip]s.
@@ -35,7 +46,7 @@ fun PlayerControls(
     cueActive: Boolean,
     masterTempo: Boolean,
     pitchValueText: String,
-    pitchRangeValues: Array<String>,
+    pitchRangeValues: List<String>,
     pitchFactorIndex: Int,
     onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
@@ -61,19 +72,19 @@ fun PlayerControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconControlChip(
-                R.drawable.button_previous,
+                Res.drawable.button_previous,
                 "Previous",
                 onPrevious,
                 tint = QOrange   // white drawable → tint to the accent
             )
             IconControlChip(
-                iconRes = if (isPlaying) R.drawable.button_pause_selected
-                else R.drawable.button_play_selected,
+                iconRes = if (isPlaying) Res.drawable.button_pause_selected
+                else Res.drawable.button_play_selected,
                 contentDescription = "Play/Pause",
                 onClick = onPlayPause   // drawable is already QOrange
             )
             IconControlChip(
-                R.drawable.button_next,
+                Res.drawable.button_next,
                 "Next",
                 onNext,
                 tint = QOrange   // white drawable → tint to the accent
@@ -82,10 +93,10 @@ fun PlayerControls(
                 // Repeat icons encode state via their own color (white = off, orange = on) and the
                 // "1" glyph, so no tint — see IconControlChip's default.
                 iconRes = when (repeat) {
-                    TrackRepeatStatus.NONE -> R.drawable.button_loop
-                    TrackRepeatStatus.ONE -> R.drawable.button_loop1_selected
-                    TrackRepeatStatus.ALL -> R.drawable.button_loop_selected
-                    else -> R.drawable.button_loop
+                    TrackRepeatStatus.NONE -> Res.drawable.button_loop
+                    TrackRepeatStatus.ONE -> Res.drawable.button_loop1_selected
+                    TrackRepeatStatus.ALL -> Res.drawable.button_loop_selected
+                    else -> Res.drawable.button_loop
                 },
                 contentDescription = "Repeat",
                 onClick = onToggleRepeat
@@ -93,8 +104,8 @@ fun PlayerControls(
             IconControlChip(
                 // Shuffle drawables also carry their own on/off colors — no tint.
                 iconRes =
-                    if (shuffle) R.drawable.button_shuffle_selected
-                    else R.drawable.button_shuffle,
+                    if (shuffle) Res.drawable.button_shuffle_selected
+                    else Res.drawable.button_shuffle,
                 contentDescription = "Shuffle",
                 onClick = onToggleShuffle
             )
@@ -115,12 +126,12 @@ fun PlayerControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconControlChip(
-                R.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
+                Res.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
                 tint = QOrange   // white drawable → tint to the accent
             )
             TextControlChip(text = pitchValueText)
             IconControlChip(
-                R.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
+                Res.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
                 tint = QOrange   // white drawable → tint to the accent
             )
             // Pitch range chip hosts its own dropdown menu.

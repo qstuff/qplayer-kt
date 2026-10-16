@@ -18,17 +18,27 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.SwipeToRemove
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.dialog_cancel
+import org.qstuff.qplayer.resources.dialog_ok
+import org.qstuff.qplayer.resources.queue_dialog_add_tracks_to_existing_playlist_append
+import org.qstuff.qplayer.resources.queue_dialog_add_tracks_to_existing_playlist_message
+import org.qstuff.qplayer.resources.queue_dialog_add_tracks_to_existing_playlist_overwrite
+import org.qstuff.qplayer.resources.queue_dialog_add_tracks_to_existing_playlist_title
+import org.qstuff.qplayer.resources.queue_dialog_confirm_clear_message
+import org.qstuff.qplayer.resources.queue_dialog_confirm_clear_title
+import org.qstuff.qplayer.resources.queue_dialog_save_tracks_as_playlist_message
+import org.qstuff.qplayer.resources.queue_dialog_save_tracks_as_playlist_title
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -129,17 +139,17 @@ fun QueueScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text(stringResource(R.string.queue_dialog_confirm_clear_title)) },
-            text = { Text(stringResource(R.string.queue_dialog_confirm_clear_message)) },
+            title = { Text(stringResource(Res.string.queue_dialog_confirm_clear_title)) },
+            text = { Text(stringResource(Res.string.queue_dialog_confirm_clear_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     queueViewModel.clearTrackList()
                     showClearDialog = false
-                }) { Text(stringResource(R.string.dialog_ok)) }
+                }) { Text(stringResource(Res.string.dialog_ok)) }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel))
+                    Text(stringResource(Res.string.dialog_cancel))
                 }
             }
         )
@@ -215,20 +225,20 @@ private fun SaveAsPlaylistDialog(
     if (selectedPlaylist != null) {
         AlertDialog(
             onDismissRequest = { selectedPlaylist = null },
-            title = { Text(stringResource(R.string.queue_dialog_add_tracks_to_existing_playlist_title)) },
-            text = { Text(stringResource(R.string.queue_dialog_add_tracks_to_existing_playlist_message)) },
+            title = { Text(stringResource(Res.string.queue_dialog_add_tracks_to_existing_playlist_title)) },
+            text = { Text(stringResource(Res.string.queue_dialog_add_tracks_to_existing_playlist_message)) },
             confirmButton = {
                 TextButton(onClick = { onOverwriteExisting(selectedPlaylist!!) }) {
-                    Text(stringResource(R.string.queue_dialog_add_tracks_to_existing_playlist_overwrite))
+                    Text(stringResource(Res.string.queue_dialog_add_tracks_to_existing_playlist_overwrite))
                 }
             },
             dismissButton = {
                 Row {
                     TextButton(onClick = { onAppendToExisting(selectedPlaylist!!) }) {
-                        Text(stringResource(R.string.queue_dialog_add_tracks_to_existing_playlist_append))
+                        Text(stringResource(Res.string.queue_dialog_add_tracks_to_existing_playlist_append))
                     }
                     TextButton(onClick = { selectedPlaylist = null }) {
-                        Text(stringResource(R.string.dialog_cancel))
+                        Text(stringResource(Res.string.dialog_cancel))
                     }
                 }
             }
@@ -238,10 +248,10 @@ private fun SaveAsPlaylistDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.queue_dialog_save_tracks_as_playlist_title)) },
+        title = { Text(stringResource(Res.string.queue_dialog_save_tracks_as_playlist_title)) },
         text = {
             Column {
-                Text(stringResource(R.string.queue_dialog_save_tracks_as_playlist_message))
+                Text(stringResource(Res.string.queue_dialog_save_tracks_as_playlist_message))
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = newName,
@@ -277,10 +287,10 @@ private fun SaveAsPlaylistDialog(
             TextButton(
                 onClick = { if (newName.isNotBlank()) onSaveAsNew(newName) },
                 enabled = newName.isNotBlank()
-            ) { Text(stringResource(R.string.dialog_ok)) }
+            ) { Text(stringResource(Res.string.dialog_ok)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) }
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.dialog_cancel)) }
         }
     )
 }

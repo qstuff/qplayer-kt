@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.compose.multiplatform)
 }
 
 kotlin {
@@ -18,6 +20,10 @@ kotlin {
             jvmTarget = JvmTarget.JVM_17
         }
         withHostTest {}
+        // Compose Multiplatform resources are packaged as Android assets
+        androidResources {
+            enable = true
+        }
     }
 
     // Compiled already, so platform-specific code can't slip into commonMain unnoticed.
@@ -40,6 +46,9 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.io.core)
             implementation(libs.kermit)
+            api(libs.compose.mp.runtime)
+            api(libs.compose.mp.ui)
+            api(libs.compose.mp.resources)
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.junit)
@@ -47,6 +56,14 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
     }
+}
+
+// Texts, drawables and the privacy / imprint pages (src/commonMain/composeResources). Public, as
+// long as the screens using them are still in :androidApp.
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "org.qstuff.qplayer.resources"
+    generateResClass = always
 }
 
 // Room: generate the database implementation for every platform.

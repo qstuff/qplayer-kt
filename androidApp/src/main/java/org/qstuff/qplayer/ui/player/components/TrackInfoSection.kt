@@ -28,15 +28,14 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.math.roundToInt
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
  * Track title (marquee when it overflows) plus the duration row (total on the left, the
@@ -51,7 +50,7 @@ fun TrackInfoSection(
     onToggleTimeDisplay: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
+    val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
 
     Column(
         modifier = modifier.padding(vertical = 4.dp),
@@ -60,10 +59,10 @@ fun TrackInfoSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.textview_height))
+                .height(LocalDimens.current.textviewHeight)
                 .background(Color.Black, roundedShape)
                 .padding(
-                    start = dimensionResource(R.dimen.textview_padding_start),
+                    start = LocalDimens.current.textviewPaddingStart,
                     top = 4.dp
                 ),
             contentAlignment = Alignment.CenterStart
@@ -77,7 +76,7 @@ fun TrackInfoSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.textview_height))
+                .height(LocalDimens.current.textviewHeight)
                 .background(Color.Black, roundedShape),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -85,13 +84,13 @@ fun TrackInfoSection(
             Text(
                 text = totalDurationText,
                 color = Color.White,
-                modifier = Modifier.padding(start = dimensionResource(R.dimen.textview_padding_start))
+                modifier = Modifier.padding(start = LocalDimens.current.textviewPaddingStart)
             )
             Text(
                 text = dynamicTimeText,
                 color = QOrange,
                 modifier = Modifier
-                    .padding(end = dimensionResource(R.dimen.textview_padding_end))
+                    .padding(end = LocalDimens.current.textviewPaddingEnd)
                     .graphicsLayer { alpha = dynamicTimeAlpha }
                     .clickable { onToggleTimeDisplay() }
             )

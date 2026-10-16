@@ -33,11 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
 import org.koin.compose.koinInject
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
@@ -54,6 +51,10 @@ import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.util.PlayerStatus
+import org.jetbrains.compose.resources.stringArrayResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.pitch_range_values
+import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
  * The player screen. This composable owns all the hoisted state (observers, remembered values
@@ -184,7 +185,7 @@ fun PlayerScreen(
         else -> currentTrack.name
     }
 
-    val pitchRangeValues = stringArrayResource(R.array.pitch_range_values)
+    val pitchRangeValues = stringArrayResource(Res.array.pitch_range_values)
 
     val hapticFeedback: HapticFeedback = koinInject()
     val jogwheelHaptics = remember { JogwheelHaptics(hapticFeedback) }
@@ -321,10 +322,10 @@ fun PlayerScreen(
             if (!isTwoPane) controls()
         }
 
-        val pitchbarWidth = dimensionResource(R.dimen.pitchbar_width)
-        val titleBarHeight = dimensionResource(R.dimen.title_textview_height)
-        val textviewHeight = dimensionResource(R.dimen.textview_height)
-        val seekbarHeight = dimensionResource(R.dimen.seekbar_height)
+        val pitchbarWidth = LocalDimens.current.pitchbarWidth
+        val titleBarHeight = LocalDimens.current.titleTextviewHeight
+        val textviewHeight = LocalDimens.current.textviewHeight
+        val seekbarHeight = LocalDimens.current.seekbarHeight
 
         if (isTwoPane) {
             // The jog wheel gets all the height below the waveform (title bar incl. 4dp top
@@ -359,7 +360,7 @@ fun PlayerScreen(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius)))
+                            .clip(RoundedCornerShape(LocalDimens.current.roundedShapeRadius))
                             .background(Color.Black)
                     )
                     controls()

@@ -5,10 +5,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
-import org.qstuff.qplayer.R
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.more_menu_licenses
 
 /**
  * Open source licenses of all libraries the app uses. The list is generated at build time by the
@@ -17,7 +18,7 @@ import org.qstuff.qplayer.R
  */
 @Composable
 fun LicensesScreen(onBack: () -> Unit) {
-    SubScreenScaffold(title = stringResource(R.string.more_menu_licenses), onBack = onBack) { padding ->
+    SubScreenScaffold(title = stringResource(Res.string.more_menu_licenses), onBack = onBack) { padding ->
         // Loaded off the main thread from the JSON the plugin generated at build time.
         val libraries by produceLibraries()
         LibrariesContainer(
