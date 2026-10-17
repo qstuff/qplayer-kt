@@ -98,6 +98,13 @@ Application Support (bundled SQLite driver), the file browser on the app's Docum
 reporting. Build and run: open `iosApp/iosApp.xcodeproj` in Xcode, pick a simulator, Run (the
 build phase calls `./gradlew :shared:embedAndSignAppleFrameworkForXcode`).
 
+**2b (done): iOS player.** `IosAudioPlayer` on AVAudioEngine (player node → varispeed →
+time-pitch: vinyl pitch or master tempo), seeking by rescheduling the file, background audio,
+lock screen / headset controls and Now Playing info, pause on interruptions. `IosWaveformGenerator`
+reads the file with AVAudioFile (same overview as Android). Track and folder ids on iOS are
+virtual paths (`/Documents/…`, `IosPaths`), because the app container's real path changes with
+every install and app update.
+
 Still to do:
 
 - `iosApp` Xcode project hosting the shared Compose UI (`ComposeUIViewController`).

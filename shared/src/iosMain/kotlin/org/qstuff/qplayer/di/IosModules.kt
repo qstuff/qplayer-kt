@@ -14,9 +14,10 @@ import org.qstuff.qplayer.platform.IosPlatformInfo
 import org.qstuff.qplayer.platform.NoCrashReporter
 import org.qstuff.qplayer.platform.NoHapticFeedback
 import org.qstuff.qplayer.platform.NoScratcher
-import org.qstuff.qplayer.platform.PreviewAudioPlayer
+import org.qstuff.qplayer.platform.IosAudioPlayer
+import org.qstuff.qplayer.platform.IosWaveformGenerator
 import org.qstuff.qplayer.platform.appDataDirectory
-import org.qstuff.qplayer.platform.documentsDirectory
+import org.qstuff.qplayer.platform.IosPaths
 import org.qstuff.qplayer.ui.filebrowser.PathStorageProvider
 import org.qstuff.qplayer.ui.filebrowser.StorageProvider
 import org.qstuff.qplayer.ui.filebrowser.StorageRoot
@@ -41,18 +42,22 @@ private val iosDataModule = module {
 }
 
 /**
- * iOS implementations of the platform interfaces. Preview stage: the file browser shows the app's
- * Documents folder, everything audio-related is a placeholder until the iOS player exists.
+ * iOS implementations of the platform interfaces: AVAudioEngine player and AVAudioFile waveform,
+ * the file browser on the app's Documents folder. Still placeholders: scratching (Phase 3),
+ * haptics, crash reporting.
  */
 private val iosPlatformModule = module {
-    factory<AudioPlayer> { PreviewAudioPlayer() }
+    factory<AudioPlayer> { IosAudioPlayer() }
     factory<Scratcher> { NoScratcher() }
-    single<WaveformGenerator> { WaveformGenerator { null } }
+    single<WaveformGenerator> { IosWaveformGenerator() }
     single<HapticFeedback> { NoHapticFeedback }
     single<CrashReporter> { NoCrashReporter }
     single<PlatformInfo> { IosPlatformInfo() }
     single<StorageProvider> {
-        PathStorageProvider { listOf(StorageRoot(id = documentsDirectory(), label = "qdeq", isRemovable = false)) }
+        PathStorageProvider(
+            findRoots = { listOf(StorageRoot(id = IosPaths.DOCUMENTS, label = "qdeq", isRemovable = false)) },
+            toFilePath = IosPaths::toFilePath
+        )
     }
 }
 
