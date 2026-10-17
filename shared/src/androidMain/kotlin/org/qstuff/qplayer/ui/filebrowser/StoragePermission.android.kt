@@ -23,13 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 
-/**
- * Shows [content] once the app may read the music files, asking for the permission first
- * (Android 13+: READ_MEDIA_AUDIO, before: READ_EXTERNAL_STORAGE). Android-specific — becomes a
- * platform function in the KMP module (iOS needs no permission for its own folders).
- */
+// Android 13+: READ_MEDIA_AUDIO, before: READ_EXTERNAL_STORAGE.
 @Composable
-fun StoragePermissionGate(content: @Composable () -> Unit) {
+actual fun StoragePermissionGate(content: @Composable () -> Unit) {
     val context = LocalContext.current
 
     val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)

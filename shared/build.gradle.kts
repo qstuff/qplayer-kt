@@ -49,6 +49,21 @@ kotlin {
             api(libs.compose.mp.runtime)
             api(libs.compose.mp.ui)
             api(libs.compose.mp.resources)
+            implementation(libs.compose.mp.foundation)
+            implementation(libs.compose.mp.material3)
+            implementation(libs.compose.mp.material.icons.extended)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
+            implementation(libs.jetbrains.lifecycle.viewmodel.compose)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
+            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+        }
+        androidMain.dependencies {
+            // Storage permission request, licenses screen
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.aboutlibraries.compose.m3)
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.junit)
@@ -58,10 +73,8 @@ kotlin {
     }
 }
 
-// Texts, drawables and the privacy / imprint pages (src/commonMain/composeResources). Public, as
-// long as the screens using them are still in :androidApp.
+// Texts, drawables and the privacy / imprint pages (src/commonMain/composeResources).
 compose.resources {
-    publicResClass = true
     packageOfResClass = "org.qstuff.qplayer.resources"
     generateResClass = always
 }

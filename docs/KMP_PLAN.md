@@ -72,15 +72,18 @@ persistence is Room plus SharedPreferences.
   unit tests in `androidHostTest`. The iOS targets are compiled from now on, so platform code can't
   slip into `commonMain`. The Android implementations (media service, scratch engine, decoder,
   file storage, Firebase, Koin `platformModule`/`dataModule`) stay in `androidApp`.
-- **1b (resources):** Compose Multiplatform plugin; strings and arrays (German stays the default,
+- **1b (resources, done):** Compose Multiplatform plugin; strings and arrays (German stays the default,
   English in `values-en`), drawables and the privacy/imprint HTML as Compose Multiplatform
   resources in `shared` (`Res.*`). Only the launcher icon, theme, notification icon and strings
   stay Android resources. The tablet dimensions (`values-sw600dp`/`-sw720dp`) became `Dimens`,
   chosen in code by the screen's smallest width, since Compose Multiplatform resources have no
   screen-width qualifiers.
-- **1c (screens):** the Compose UI moves to `shared/commonMain` (JetBrains builds of Navigation 3
-  and lifecycle-viewmodel-navigation3); the remaining Android-only parts of the UI (permission
-  gate, crash reporting opt-in, haptics/platform info lookups) go behind small platform functions.
+- **1c (screens, done):** the Compose UI is in `shared/commonMain` (JetBrains builds of Material 3,
+  Navigation 3 and lifecycle; on Android the Jetpack versions stay). Platform functions
+  (`expect`/`actual`): the storage permission gate and the licenses screen (AboutLibraries list on
+  Android, placeholder on iOS). The privacy / imprint HTML is converted by a small common function
+  instead of Android's `AnnotatedString.fromHtml`. `androidApp` keeps only the activity, application,
+  Koin platform modules and the Android implementations.
 
 Result: the Android app is "KMP inside" and behaves exactly as before.
 
