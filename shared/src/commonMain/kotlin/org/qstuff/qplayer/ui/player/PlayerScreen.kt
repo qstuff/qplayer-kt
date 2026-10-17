@@ -96,9 +96,6 @@ fun PlayerScreen(
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
-    val pitchProgressState = remember { mutableStateOf(pitchValue) }
-    var pitchProgress by pitchProgressState
-
     var isTrackPrepared by remember { mutableStateOf(false) }
     var isBlinkActive by remember { mutableStateOf(false) }
     // Progress uses two separate states so the position timer and the user's drag never
@@ -109,8 +106,6 @@ fun PlayerScreen(
     var seekProgress by remember { mutableStateOf<Float?>(null) }
     val displayedProgress = seekProgress ?: playbackProgress
     var cueProgressPos by remember { mutableStateOf(0) }
-
-    LaunchedEffect(pitchValue) { pitchProgressState.value = pitchValue }
 
     // UI-state resets only. The playback side effects of these transitions (seek/auto-play on
     // PREPARED, stop + auto-advance on COMPLETED) live in PlayerViewModel / PlayerActivity, so
@@ -240,24 +235,17 @@ fun PlayerScreen(
                 },
                 onPitchDecrease = {
                     val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-                    val new = pitchProgress - delta
-                    pitchProgressState.value = new
-                    playerViewModel.onPitchChanged(new)
+                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value - delta)
                 },
                 onPitchIncrease = {
                     val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-                    val new = pitchProgress + delta
-                    pitchProgressState.value = new
-                    playerViewModel.onPitchChanged(new)
+                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value + delta)
                 },
                 onPitchRangeSelected = { index -> playerViewModel.onPitchRangeSelected(index) },
-                onReset = {
-                    pitchProgressState.value = 500
-                    playerViewModel.onPitchChanged(500)
-                },
+                onReset = { playerViewModel.onPitchChanged(500) },
                 onToggleMasterTempo = {
                     playerViewModel.toggleMasterTempo()
-                    playerViewModel.onPitchChanged(pitchProgress)
+                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value)
                 }
             )
         }
@@ -300,11 +288,10 @@ fun PlayerScreen(
             )
 
             PitchJogSection(
-                pitchProgress = pitchProgress,
-                onPitchChange = { v ->
-                    pitchProgressState.value = v
-                    playerViewModel.onPitchChanged(v)
-                },
+                pitchProgress = pitchValue,
+                // Read at touch-down: the current value, not the one of the last composition.
+                getPitchProgress = { playerViewModel.pitchValue.value },
+                onPitchChange = playerViewModel::onPitchChanged,
                 getSensitivity = { playerViewModel.jogwheelSensitivity.value },
                 getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() },
                 onScratchStart = playerViewModel::startScratch,
