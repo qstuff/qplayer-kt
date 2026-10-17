@@ -115,16 +115,26 @@ Still to do:
   part in Swift.
 - iPhone and iPad layout fine-tuning, app icon from the existing vector, TestFlight.
 
-## Open decisions (before Phase 2)
+## Decisions
 
-1. **iOS music source:** the app's Documents folder plus folders picked in the Files app
-   (recommended, closest to today's file browser), or the Music library (only non-DRM tracks are
-   playable, so most Apple Music downloads won't work).
-2. **Crash reporting on iOS:** Crashlytics for iOS, or Sentry on both platforms. Either way the
-   privacy statement (`assets/privacy.html`) needs an update.
-3. **Apple developer account and Mac with Xcode:** a free account can run the app on your own
-   device, but the installed app expires after 7 days. TestFlight and the App Store need the paid
-   membership.
+1. **iOS music source: Files** (decided October 2026). The app's Documents folder (visible in the
+   Files app and Finder, already in the preview app) plus folders the user links with the system
+   folder picker (`UIDocumentPickerViewController`): iCloud Drive, USB drives, network shares,
+   other file providers. Access to linked folders is kept with security-scoped bookmarks; each
+   linked folder becomes an entry in the file browser's storage list (`StorageProvider.roots()`).
+   Full access to the audio data, so pitch, master tempo, scratching and waveform work as on
+   Android; M3U playlists keep working.
+   - Not chosen for now: the Music library (MediaPlayer framework). Only downloaded tracks without
+     DRM are playable (purchased / synced from a Mac), Apple Music subscription tracks are not.
+     Can be added later as another source. Apple Music via MusicKit is ruled out: playback only
+     through Apple's player (no pitch, no scratching, no access to the audio).
+
+## Open decisions
+
+1. **Crash reporting on iOS:** Crashlytics for iOS, or Sentry on both platforms. Either way the
+   privacy statement (`files/privacy.html`) needs an update.
+2. **Apple developer account:** a free account can run the app on your own device, but the
+   installed app expires after 7 days. TestFlight and the App Store need the paid membership.
 
 ## Testing
 
