@@ -5,32 +5,25 @@ import android.os.Build
 import android.os.Bundle
 import android.content.pm.PackageManager
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.qstuff.qplayer.BuildConfig
 import org.qstuff.qplayer.QDeqApplication
+import org.qstuff.qplayer.ui.QDeqApp
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.ui.QDeqNavigation
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.lockOrientationForDevice
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
-import org.qstuff.qplayer.ui.settings.CrashReportingOptInDialog
-import org.qstuff.qplayer.ui.theme.QDeqTheme
-import org.qstuff.qplayer.util.CrashReporter
 import co.touchlab.kermit.Logger
 
 private val log = Logger.withTag("PlayerActivity")
 
 /**
- * The app's only activity: hosts the Compose UI (player, Settings, Licenses, info pages — see
- * QDeqNavigation), the cross-ViewModel wiring and the media service lifecycle.
+ * The app's only activity: hosts the shared Compose UI (QDeqApp), the cross-ViewModel wiring and
+ * the media service lifecycle.
  */
 class PlayerActivity : AppCompatActivity() {
 
@@ -41,7 +34,6 @@ class PlayerActivity : AppCompatActivity() {
     private val fileBrowserViewModel: FileBrowserViewModel by viewModel()
 
     private val preferencesDataSource: PreferencesDataSource by inject()
-    private val crashReporter: CrashReporter by inject()
 
     private val playbackCoordinator by lazy {
         PlaybackCoordinator(
@@ -73,29 +65,13 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         setContent {
-            // Crash reporting opt-in: asked once, then changeable in Settings.
-            var showCrashReportingOptIn by remember {
-                mutableStateOf(!preferencesDataSource.isCrashreportingEnabledDialogShown())
-            }
-
-            QDeqTheme {
-                QDeqNavigation(
-                    playerViewModel = playerViewModel,
-                    queueViewModel = queueViewModel,
-                    playlistViewModel = playlistViewModel,
-                    fileBrowserViewModel = fileBrowserViewModel,
-                    titleSuffix = titleSuffix
-                )
-
-                if (showCrashReportingOptIn) {
-                    CrashReportingOptInDialog { enabled ->
-                        preferencesDataSource.setCrashreportingEnabled(enabled)
-                        preferencesDataSource.setCrashreportingEnabledDialogShown(true)
-                        crashReporter.setEnabled(enabled)
-                        showCrashReportingOptIn = false
-                    }
-                }
-            }
+            QDeqApp(
+                playerViewModel = playerViewModel,
+                queueViewModel = queueViewModel,
+                playlistViewModel = playlistViewModel,
+                fileBrowserViewModel = fileBrowserViewModel,
+                titleSuffix = titleSuffix
+            )
         }
     }
 

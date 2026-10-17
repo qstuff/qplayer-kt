@@ -89,6 +89,17 @@ Result: the Android app is "KMP inside" and behaves exactly as before.
 
 ### Phase 2: iOS app (largest phase)
 
+**2a (done): first iOS app.** `iosApp/` (SwiftUI shell, project generated with XcodeGen from
+`iosApp/project.yml`; the `.xcodeproj` is committed) hosts the shared UI via `MainViewController()`
+(`shared/src/iosMain`). Koin `iosModules`: settings in NSUserDefaults, the Room database in
+Application Support (bundled SQLite driver), the file browser on the app's Documents folder
+(`PathStorageProvider`, kotlinx-io; visible in the Files app / Finder). Placeholders: player
+(no audio — tracks load, play/pause only switch the state), scratching, waveform, haptics, crash
+reporting. Build and run: open `iosApp/iosApp.xcodeproj` in Xcode, pick a simulator, Run (the
+build phase calls `./gradlew :shared:embedAndSignAppleFrameworkForXcode`).
+
+Still to do:
+
 - `iosApp` Xcode project hosting the shared Compose UI (`ComposeUIViewController`).
 - iOS implementations of the platform interfaces:
   - player and decoder (AVAudioEngine, AVAudioFile);

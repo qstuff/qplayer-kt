@@ -26,9 +26,13 @@ kotlin {
         }
     }
 
-    // Compiled already, so platform-specific code can't slip into commonMain unnoticed.
-    iosArm64()
-    iosSimulatorArm64()
+    // The framework the iOS app (iosApp/) links; built by Xcode via embedAndSignAppleFrameworkForXcode.
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+        }
+    }
 
     compilerOptions {
         // Room's generated database constructor is an expect/actual object (Beta in Kotlin).
@@ -58,6 +62,9 @@ kotlin {
             implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqlite.bundled)
         }
         androidMain.dependencies {
             // Storage permission request, licenses screen
