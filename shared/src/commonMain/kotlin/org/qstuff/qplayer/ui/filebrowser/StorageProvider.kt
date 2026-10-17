@@ -36,8 +36,9 @@ interface StorageProvider {
 
     /**
      * The folder's supported entries in browser order (folders, playlists, tracks — each
-     * alphabetically). Null if it isn't a folder or has no entries at all: the browser then stays
-     * where it is.
+     * alphabetically). Null if it can't be browsed: the browser then stays where it is. Android
+     * also returns null for a folder without any entries; iOS opens it (an empty Documents folder
+     * is the normal state after installing).
      */
     fun list(folderId: String): List<BrowserItem>?
 
