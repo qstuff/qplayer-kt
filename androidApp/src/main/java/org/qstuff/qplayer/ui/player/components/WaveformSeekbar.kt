@@ -25,12 +25,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.TrackData
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
  * The seekbar area: the overview waveform, a "calculating…" hint while the overview is still
@@ -55,7 +54,7 @@ fun WaveformSeekbar(
     onSeekCommit: (fraction: Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
+    val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     // The seek gesture runs in pointerInput(Unit), which is launched once and captures these
     // lambdas from the first composition — so route through rememberUpdatedState to always call
     // the latest ones (they close over the current track/duration).
@@ -65,13 +64,13 @@ fun WaveformSeekbar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.seekbar_height))
+            .height(LocalDimens.current.seekbarHeight)
     ) {
         // Show the current track's overview, or nothing (on track change or while it's still
         // being generated) so a previous track's waveform never lingers.
         Waveform(
             peaks = if (waveformReady) waveformData?.bytes else null,
-            verticalInset = dimensionResource(R.dimen.waveform_top_margin),
+            verticalInset = LocalDimens.current.waveformTopMargin,
             modifier = Modifier
                 .fillMaxSize()
                 .clip(roundedShape)
@@ -123,8 +122,8 @@ fun WaveformSeekbar(
         if (cueActive) {
             CueMarker(
                 position = cueProgressPos / 1000f,
-                markerWidth = dimensionResource(R.dimen.cue_marker_width),
-                markerOverhang = dimensionResource(R.dimen.cue_marker_top_margin),
+                markerWidth = LocalDimens.current.cueMarkerWidth,
+                markerOverhang = LocalDimens.current.cueMarkerTopMargin,
                 modifier = Modifier.fillMaxSize()
             )
         }

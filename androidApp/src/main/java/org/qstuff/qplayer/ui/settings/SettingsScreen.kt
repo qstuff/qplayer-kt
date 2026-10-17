@@ -36,12 +36,42 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.qstuff.qplayer.R
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.dialog_cancel
+import org.qstuff.qplayer.resources.jogwheel_haptics_entries
+import org.qstuff.qplayer.resources.jogwheel_mode_entries
+import org.qstuff.qplayer.resources.jogwheel_mode_values
+import org.qstuff.qplayer.resources.jogwheel_sensitivity_entries
+import org.qstuff.qplayer.resources.jogwheel_sensitivity_values
+import org.qstuff.qplayer.resources.more_menu_settings
+import org.qstuff.qplayer.resources.navigate_back
+import org.qstuff.qplayer.resources.settings_app_version_title
+import org.qstuff.qplayer.resources.settings_cat_dj_specific_options_title
+import org.qstuff.qplayer.resources.settings_cat_player_basic_title
+import org.qstuff.qplayer.resources.settings_cat_privacy_title
+import org.qstuff.qplayer.resources.settings_device_info_title
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_haptics_summary
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_haptics_title
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_haptics_unavailable
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_mode_summary
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_mode_title
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_sensitivity_summary
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_sensitivity_title
+import org.qstuff.qplayer.resources.settings_dj_stop_playback_on_cue_summary
+import org.qstuff.qplayer.resources.settings_dj_stop_playback_on_cue_title
+import org.qstuff.qplayer.resources.settings_privacy_crashreport_summary
+import org.qstuff.qplayer.resources.settings_privacy_crashreport_title
+import org.qstuff.qplayer.resources.settings_proceed_to_next_track_summary
+import org.qstuff.qplayer.resources.settings_proceed_to_next_track_title
+import org.qstuff.qplayer.resources.settings_show_clear_queue_summary
+import org.qstuff.qplayer.resources.settings_show_clear_queue_title
+import org.qstuff.qplayer.resources.settings_track_autostart_summary
+import org.qstuff.qplayer.resources.settings_track_autostart_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,27 +88,27 @@ fun SettingsScreen(
     var showModeDialog by rememberSaveable { mutableStateOf(false) }
     var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
 
-    val sensitivityEntries = stringArrayResource(R.array.jogwheel_sensitivity_entries)
-    val sensitivityValues = stringArrayResource(R.array.jogwheel_sensitivity_values).map { it.toInt() }
-    val modeEntries = stringArrayResource(R.array.jogwheel_mode_entries).map { it.trim() }
-    val modeValues = stringArrayResource(R.array.jogwheel_mode_values).map { it.toInt() }
+    val sensitivityEntries = stringArrayResource(Res.array.jogwheel_sensitivity_entries)
+    val sensitivityValues = stringArrayResource(Res.array.jogwheel_sensitivity_values).map { it.toInt() }
+    val modeEntries = stringArrayResource(Res.array.jogwheel_mode_entries).map { it.trim() }
+    val modeValues = stringArrayResource(Res.array.jogwheel_mode_values).map { it.toInt() }
 
     val sensitivityIndex = sensitivityValues.indexOf(state.jogwheelSensitivity)
     val modeIndex = modeValues.indexOf(state.jogwheelMode)
 
     // Index = JogwheelHaptics.LEVEL_* (off / light / medium / strong)
-    val hapticEntries = stringArrayResource(R.array.jogwheel_haptics_entries)
+    val hapticEntries = stringArrayResource(Res.array.jogwheel_haptics_entries)
 
     Scaffold(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.more_menu_settings)) },
+                title = { Text(stringResource(Res.string.more_menu_settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.navigate_back)
+                            contentDescription = stringResource(Res.string.navigate_back)
                         )
                     }
                 },
@@ -96,75 +126,75 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            CategoryHeader(stringResource(R.string.settings_cat_player_basic_title))
+            CategoryHeader(stringResource(Res.string.settings_cat_player_basic_title))
             SwitchRow(
-                title = stringResource(R.string.settings_track_autostart_title),
-                summary = stringResource(R.string.settings_track_autostart_summary),
+                title = stringResource(Res.string.settings_track_autostart_title),
+                summary = stringResource(Res.string.settings_track_autostart_summary),
                 checked = state.autostart,
                 onCheckedChange = settingsViewModel::setAutostart
             )
             SwitchRow(
-                title = stringResource(R.string.settings_proceed_to_next_track_title),
-                summary = stringResource(R.string.settings_proceed_to_next_track_summary),
+                title = stringResource(Res.string.settings_proceed_to_next_track_title),
+                summary = stringResource(Res.string.settings_proceed_to_next_track_summary),
                 checked = state.proceedToNextTrack,
                 onCheckedChange = settingsViewModel::setProceedToNextTrack
             )
             SwitchRow(
-                title = stringResource(R.string.settings_show_clear_queue_title),
-                summary = stringResource(R.string.settings_show_clear_queue_summary),
+                title = stringResource(Res.string.settings_show_clear_queue_title),
+                summary = stringResource(Res.string.settings_show_clear_queue_summary),
                 checked = state.showClearQueueWarning,
                 onCheckedChange = settingsViewModel::setShowClearQueueWarning
             )
 
-            CategoryHeader(stringResource(R.string.settings_cat_dj_specific_options_title))
+            CategoryHeader(stringResource(Res.string.settings_cat_dj_specific_options_title))
             SwitchRow(
-                title = stringResource(R.string.settings_dj_stop_playback_on_cue_title),
-                summary = stringResource(R.string.settings_dj_stop_playback_on_cue_summary),
+                title = stringResource(Res.string.settings_dj_stop_playback_on_cue_title),
+                summary = stringResource(Res.string.settings_dj_stop_playback_on_cue_summary),
                 checked = state.stopPlaybackOnCue,
                 onCheckedChange = settingsViewModel::setStopPlaybackOnCue
             )
             ClickableRow(
-                title = stringResource(R.string.settings_dj_jogwheel_sensitivity_title),
+                title = stringResource(Res.string.settings_dj_jogwheel_sensitivity_title),
                 summary = stringResource(
-                    R.string.settings_dj_jogwheel_sensitivity_summary,
+                    Res.string.settings_dj_jogwheel_sensitivity_summary,
                     sensitivityEntries.getOrElse(sensitivityIndex) { "" }
                 ),
                 onClick = { showSensitivityDialog = true }
             )
             ClickableRow(
-                title = stringResource(R.string.settings_dj_jogwheel_mode_title),
+                title = stringResource(Res.string.settings_dj_jogwheel_mode_title),
                 summary = stringResource(
-                    R.string.settings_dj_jogwheel_mode_summary,
+                    Res.string.settings_dj_jogwheel_mode_summary,
                     // Entries are "Name:\nDescription" — the summary only shows the name
                     modeEntries.getOrElse(modeIndex) { "" }.substringBefore('\n').removeSuffix(":")
                 ),
                 onClick = { showModeDialog = true }
             )
             ClickableRow(
-                title = stringResource(R.string.settings_dj_jogwheel_haptics_title),
+                title = stringResource(Res.string.settings_dj_jogwheel_haptics_title),
                 summary = if (canVibrate) {
                     stringResource(
-                        R.string.settings_dj_jogwheel_haptics_summary,
+                        Res.string.settings_dj_jogwheel_haptics_summary,
                         hapticEntries.getOrElse(state.jogwheelHapticLevel) { "" }
                     )
-                } else stringResource(R.string.settings_dj_jogwheel_haptics_unavailable),
+                } else stringResource(Res.string.settings_dj_jogwheel_haptics_unavailable),
                 enabled = canVibrate,
                 onClick = { showHapticsDialog = true }
             )
 
-            CategoryHeader(stringResource(R.string.settings_cat_privacy_title))
+            CategoryHeader(stringResource(Res.string.settings_cat_privacy_title))
             SwitchRow(
-                title = stringResource(R.string.settings_privacy_crashreport_title),
-                summary = stringResource(R.string.settings_privacy_crashreport_summary),
+                title = stringResource(Res.string.settings_privacy_crashreport_title),
+                summary = stringResource(Res.string.settings_privacy_crashreport_summary),
                 checked = state.crashreporting,
                 onCheckedChange = settingsViewModel::setCrashreporting
             )
             InfoRow(
-                title = stringResource(R.string.settings_app_version_title),
+                title = stringResource(Res.string.settings_app_version_title),
                 value = appVersion
             )
             InfoRow(
-                title = stringResource(R.string.settings_device_info_title),
+                title = stringResource(Res.string.settings_device_info_title),
                 value = deviceInfo
             )
         }
@@ -172,7 +202,7 @@ fun SettingsScreen(
 
     if (showSensitivityDialog) {
         SingleChoiceDialog(
-            title = stringResource(R.string.settings_dj_jogwheel_sensitivity_title),
+            title = stringResource(Res.string.settings_dj_jogwheel_sensitivity_title),
             entries = sensitivityEntries.toList(),
             selectedIndex = sensitivityIndex,
             onSelect = { index ->
@@ -185,7 +215,7 @@ fun SettingsScreen(
 
     if (showHapticsDialog) {
         SingleChoiceDialog(
-            title = stringResource(R.string.settings_dj_jogwheel_haptics_title),
+            title = stringResource(Res.string.settings_dj_jogwheel_haptics_title),
             entries = hapticEntries.toList(),
             selectedIndex = state.jogwheelHapticLevel,
             onSelect = { level ->
@@ -198,7 +228,7 @@ fun SettingsScreen(
 
     if (showModeDialog) {
         SingleChoiceDialog(
-            title = stringResource(R.string.settings_dj_jogwheel_mode_title),
+            title = stringResource(Res.string.settings_dj_jogwheel_mode_title),
             entries = modeEntries,
             selectedIndex = modeIndex,
             onSelect = { index ->
@@ -319,7 +349,7 @@ private fun SingleChoiceDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )

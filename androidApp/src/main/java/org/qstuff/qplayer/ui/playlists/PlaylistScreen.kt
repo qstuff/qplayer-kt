@@ -13,18 +13,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.SwipeToRemove
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.dialog_cancel
+import org.qstuff.qplayer.resources.dialog_ok
+import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -157,16 +160,16 @@ private fun OpenPlaylistDialog(
         },
         confirmButton = {
             TextButton(onClick = onAddToQueue) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onReplaceQueue) {
-                    Text(stringResource(R.string.filebrowser_dialog_queue_overwrite))
+                    Text(stringResource(Res.string.filebrowser_dialog_queue_overwrite))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.dialog_cancel))
+                    Text(stringResource(Res.string.dialog_cancel))
                 }
             }
         }

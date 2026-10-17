@@ -28,10 +28,10 @@ private val DarkColorScheme = darkColorScheme(
     onError = Color.White
 )
 
+/** The app's colors, plus the screen-size dependent [LocalDimens]. */
 @Composable
 fun QDeqTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = DarkColorScheme,
-        content = content
-    )
+    MaterialTheme(colorScheme = DarkColorScheme) {
+        ProvideDimens(content)
+    }
 }

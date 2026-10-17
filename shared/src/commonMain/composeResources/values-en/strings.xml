@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Queue -->
+    <string name="queue_title">queue</string>
+
+    <string name="queue_dialog_confirm_clear_title">Clear queue</string>
+    <string name="queue_dialog_confirm_clear_message">Really clear the queue?</string>
+    <string name="queue_dialog_save_tracks_as_playlist_title">Save the queue as playlist</string>
+    <string name="queue_dialog_save_tracks_as_playlist_message">Create a new playlist or add the tracks to an existing playlist</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_title">Add to existing playlist</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_message">Append the tracks or overwrite the playlist?</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_append">Append</string>
+    <string name="queue_dialog_add_tracks_to_existing_playlist_overwrite">Overwriwe</string>
+
+    <!-- Playlists -->
+    <string name="playlists_title">playlists</string>
+
+    <!-- Filebrowser -->
+    <string name="filebrowser_title">filebrowser</string>
+    <string name="filebrowser_storages_title">Storage</string>
+
+    <string name="filebrowser_dialog_add_tracks_to_queue_title">Load these tracks into the queue ?</string>
+    <string name="filebrowser_dialog_queue_overwrite">Overwrite queue</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_ok">OK</string>
+    <string name="navigate_back">Back</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <string name="add_m3ulist_to_queue_dialog_tracks_found_title">Open %1$s  in Queue</string>
+    <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">Can't open %1$s</string>
+
+    <string name="dialog_crashlytics_opt_in_title">Enable crashreporting?</string>
+    <string name="dialog_crashlytics_opt_in_message">Crashreports are essential for improving the app quality. Crashreports are sent anonymized (see Privacy).\nYou can disable the sending of crashreports in the settings at any time.</string>
+    <string name="dialog_crashlytics_opt_in_enable">Enable</string>
+    <string name="dialog_crashlytics_opt_in_no_thanks">No thanks</string>
+    <!-- More Menu and Settings -->
+    <string name="more_menu_settings">Settings</string>
+    <string name="more_menu_imprint">Imprint</string>
+    <string name="more_menu_privacy">Privacy</string>
+    <string name="more_menu_licenses">Licenses</string>
+
+    <!-- Basic Playback Settings -->
+    <string name="settings_cat_player_basic_title">Playback Settings</string>
+
+    <string name="settings_track_autostart_title">Autoplay track</string>
+    <string name="settings_track_autostart_summary">If enabled, a track is played automatically when selelcted in queue or by skip button</string>
+
+    <string name="settings_proceed_to_next_track_title">Autoproceed to next track</string>
+    <string name="settings_proceed_to_next_track_summary">If enabled, after a track has completed the next track is selected.</string>
+
+    <string name="settings_show_clear_queue_title">Show warning dialog for clear-queue</string>
+    <string name="settings_show_clear_queue_summary">If enabled a warning dialog is shown before the queue is cleared</string>
+
+    <!-- DJ Specific Settings -->
+    <string name="settings_cat_dj_specific_options_title">DJ Settings</string>
+
+    <string name="settings_dj_stop_playback_on_cue_title">Stop playback on Cue</string>
+    <string name="settings_dj_stop_playback_on_cue_summary">If enabled playback stops when setting a cuepoint</string>
+
+    <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel sensitivity</string>
+    <string name="settings_dj_jogwheel_sensitivity_summary">Determines how sensitiv the jogwheel responds to action\nCurrent: %1$s</string>
+
+    <string name="settings_dj_jogwheel_mode_title">Jogwheel mode</string>
+    <string name="settings_dj_jogwheel_mode_summary">Determines which way the jogwheel responds to action\nCurrent: %1$s</string>
+
+    <string name="settings_dj_jogwheel_haptics_title">Jogwheel vibration</string>
+    <string name="settings_dj_jogwheel_haptics_summary">Short vibration when touching and spinning the jog wheel\nCurrent: %1$s</string>
+    <string name="settings_dj_jogwheel_haptics_unavailable">This device can't vibrate</string>
+
+    <!-- Privacy Settings -->
+    <string name="settings_cat_privacy_title">Common Settings</string>
+    <string name="settings_privacy_crashreport_title">Crashreports</string>
+    <string name="settings_privacy_crashreport_summary">If enabled the app sends crashreports.\nThe app needs to be restarted to make the change effective.</string>
+
+    <string name="settings_app_version_title">App Version</string>
+    <string name="settings_device_info_title">Device Info</string>
+</resources>

@@ -21,14 +21,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.ic_more_vert_white_24dp
+import org.qstuff.qplayer.resources.more_menu_imprint
+import org.qstuff.qplayer.resources.more_menu_licenses
+import org.qstuff.qplayer.resources.more_menu_privacy
+import org.qstuff.qplayer.resources.more_menu_settings
+import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
  * Top title bar: the "qdeq" wordmark (+ optional version [titleSuffix]) and a "more" overflow
@@ -44,12 +49,12 @@ fun PlayerTitleBar(
     modifier: Modifier = Modifier
 ) {
     var showMoreMenu by remember { mutableStateOf(false) }
-    val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
+    val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.title_textview_height))
+            .height(LocalDimens.current.titleTextviewHeight)
             .background(Color.Black, roundedShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -63,15 +68,15 @@ fun PlayerTitleBar(
             },
             modifier = Modifier
                 .weight(1f)
-                .padding(start = dimensionResource(R.dimen.textview_padding_start))
+                .padding(start = LocalDimens.current.textviewPaddingStart)
         )
         Box {
             IconButton(
                 onClick = { showMoreMenu = true },
-                modifier = Modifier.size(dimensionResource(R.dimen.kebabbutton_size))
+                modifier = Modifier.size(LocalDimens.current.kebabbuttonSize)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_more_vert_white_24dp),
+                    painter = painterResource(Res.drawable.ic_more_vert_white_24dp),
                     contentDescription = "More",
                     tint = Color.White
                 )
@@ -81,19 +86,19 @@ fun PlayerTitleBar(
                 onDismissRequest = { showMoreMenu = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.more_menu_settings)) },
+                    text = { Text(stringResource(Res.string.more_menu_settings)) },
                     onClick = { showMoreMenu = false; onOpenSettings() }
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.more_menu_privacy)) },
+                    text = { Text(stringResource(Res.string.more_menu_privacy)) },
                     onClick = { showMoreMenu = false; onOpenPrivacy() }
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.more_menu_imprint)) },
+                    text = { Text(stringResource(Res.string.more_menu_imprint)) },
                     onClick = { showMoreMenu = false; onOpenImprint() }
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.more_menu_licenses)) },
+                    text = { Text(stringResource(Res.string.more_menu_licenses)) },
                     onClick = { showMoreMenu = false; onOpenLicenses() }
                 )
             }

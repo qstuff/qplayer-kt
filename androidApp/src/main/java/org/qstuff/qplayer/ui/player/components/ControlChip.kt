@@ -14,9 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
-import org.qstuff.qplayer.R
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
  * The shared player control chip: a full-height black rounded box that takes an equal share of
@@ -33,7 +33,7 @@ fun RowScope.ControlChip(
     onLongClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val roundedShape = RoundedCornerShape(dimensionResource(R.dimen.rounded_shape_radius))
+    val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     val clickModifier = if (onClick != null || onLongClick != null) {
         Modifier.combinedClickable(
             onClick = { onClick?.invoke() },
@@ -45,7 +45,7 @@ fun RowScope.ControlChip(
     Box(
         modifier = modifier
             .weight(1f)
-            .height(dimensionResource(R.dimen.textview_height))
+            .height(LocalDimens.current.textviewHeight)
             .background(Color.Black, roundedShape)
             .then(clickModifier),
         contentAlignment = Alignment.Center,
@@ -61,7 +61,7 @@ fun RowScope.ControlChip(
  */
 @Composable
 fun RowScope.IconControlChip(
-    iconRes: Int,
+    iconRes: DrawableResource,
     contentDescription: String,
     onClick: () -> Unit,
     tint: Color = Color.Unspecified

@@ -12,28 +12,24 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.ui.theme.QOrange
 
 /**
- * A text page (privacy statement, imprint) from a simple HTML file in the assets, rendered with
- * Compose — no WebView. Links (https, mailto) open in the matching app.
+ * A text page (privacy statement, imprint) from a simple HTML file in the resources
+ * ([file], e.g. "files/privacy.html"), rendered with Compose — no WebView. Links (https, mailto)
+ * open in the matching app.
  */
 @Composable
-fun InfoPageScreen(title: String, assetName: String, onBack: () -> Unit) {
-    val context = LocalContext.current
-    val html by produceState(initialValue = "", assetName) {
-        value = withContext(Dispatchers.IO) {
-            context.assets.open(assetName).bufferedReader().use { it.readText() }
-        }
+fun InfoPageScreen(title: String, file: String, onBack: () -> Unit) {
+    val html by produceState(initialValue = "", file) {
+        value = Res.readBytes(file).decodeToString()
     }
     val text = remember(html) {
         AnnotatedString.fromHtml(

@@ -20,16 +20,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.qstuff.qplayer.R
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.player.PlayerViewModel
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.add_m3ulist_to_queue_dialog_no_tracks_found_title
+import org.qstuff.qplayer.resources.add_m3ulist_to_queue_dialog_tracks_found_title
+import org.qstuff.qplayer.resources.dialog_cancel
+import org.qstuff.qplayer.resources.dialog_ok
+import org.qstuff.qplayer.resources.filebrowser_dialog_add_tracks_to_queue_title
+import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
+import org.qstuff.qplayer.resources.filebrowser_storages_title
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -67,7 +74,7 @@ private fun FileBrowserContent(
     ) {
         Text(
             text = if (storageRoots != null) {
-                stringResource(R.string.filebrowser_storages_title)
+                stringResource(Res.string.filebrowser_storages_title)
             } else directoryName,
             color = Color.White,
             fontSize = 15.sp,
@@ -143,7 +150,7 @@ private fun FileBrowserContent(
     addTracksDialogItems?.let { tracksToAdd ->
         AlertDialog(
             onDismissRequest = { addTracksDialogItems = null },
-            title = { Text(stringResource(R.string.filebrowser_dialog_add_tracks_to_queue_title)) },
+            title = { Text(stringResource(Res.string.filebrowser_dialog_add_tracks_to_queue_title)) },
             text = {
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                     items(tracksToAdd) { track ->
@@ -160,7 +167,7 @@ private fun FileBrowserContent(
                 TextButton(onClick = {
                     queueViewModel.addPaths(tracksToAdd.map { it.id })
                     addTracksDialogItems = null
-                }) { Text(stringResource(R.string.dialog_ok)) }
+                }) { Text(stringResource(Res.string.dialog_ok)) }
             },
             dismissButton = {
                 Row {
@@ -168,9 +175,9 @@ private fun FileBrowserContent(
                         queueViewModel.clearTrackList()
                         queueViewModel.addPaths(tracksToAdd.map { it.id })
                         addTracksDialogItems = null
-                    }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
+                    }) { Text(stringResource(Res.string.filebrowser_dialog_queue_overwrite)) }
                     TextButton(onClick = { addTracksDialogItems = null }) {
-                        Text(stringResource(R.string.dialog_cancel))
+                        Text(stringResource(Res.string.dialog_cancel))
                     }
                 }
             }
@@ -187,9 +194,9 @@ private fun FileBrowserContent(
             title = {
                 Text(
                     if (found.isEmpty())
-                        stringResource(R.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, playlist.name)
+                        stringResource(Res.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, playlist.name)
                     else
-                        stringResource(R.string.add_m3ulist_to_queue_dialog_tracks_found_title, playlist.name)
+                        stringResource(Res.string.add_m3ulist_to_queue_dialog_tracks_found_title, playlist.name)
                 )
             },
             text = {
@@ -214,9 +221,9 @@ private fun FileBrowserContent(
                     TextButton(onClick = {
                         queueViewModel.addTrackList(found)
                         m3uDialogItem = null
-                    }) { Text(stringResource(R.string.dialog_ok)) }
+                    }) { Text(stringResource(Res.string.dialog_ok)) }
                 } else {
-                    TextButton(onClick = { m3uDialogItem = null }) { Text(stringResource(R.string.dialog_ok)) }
+                    TextButton(onClick = { m3uDialogItem = null }) { Text(stringResource(Res.string.dialog_ok)) }
                 }
             },
             dismissButton = {
@@ -226,9 +233,9 @@ private fun FileBrowserContent(
                             queueViewModel.clearTrackList()
                             queueViewModel.addTrackList(found)
                             m3uDialogItem = null
-                        }) { Text(stringResource(R.string.filebrowser_dialog_queue_overwrite)) }
+                        }) { Text(stringResource(Res.string.filebrowser_dialog_queue_overwrite)) }
                         TextButton(onClick = { m3uDialogItem = null }) {
-                            Text(stringResource(R.string.dialog_cancel))
+                            Text(stringResource(Res.string.dialog_cancel))
                         }
                     }
                 }
