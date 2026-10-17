@@ -14,9 +14,11 @@
         android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
         android:minSdkVersion="34" />
 
+    <!-- No Auto Backup: a reinstall starts empty instead of restoring an old queue / playlists
+         (file paths that may no longer exist) from the Google account. -->
     <application
         android:name=".QDeqApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
