@@ -60,12 +60,14 @@ class PathStorageProviderTest {
     }
 
     @Test
-    fun `no list for files, missing and empty folders`() {
+    fun `no list for files and missing folders, an empty one for empty folders`() {
         file("Music/a.mp3")
+        file("Other/notes.txt")
         File(root, "Empty").mkdirs()
 
         assertNull(provider.list("${root.path}/Music/a.mp3"))
         assertNull(provider.list("${root.path}/missing"))
-        assertNull(provider.list("${root.path}/Empty"))
+        assertEquals(emptyList<BrowserItem>(), provider.list("${root.path}/Empty"))
+        assertEquals(emptyList<BrowserItem>(), provider.list("${root.path}/Other"))
     }
 }

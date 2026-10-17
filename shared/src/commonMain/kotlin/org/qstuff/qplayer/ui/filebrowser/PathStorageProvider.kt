@@ -9,7 +9,7 @@ import org.qstuff.qplayer.util.AudioFiles
 /**
  * [StorageProvider] on the file system via kotlinx-io: ids are absolute paths. [findRoots] supplies
  * the storages (iOS: the app's Documents folder). Same rules and order as Android's
- * FileStorageProvider.
+ * FileStorageProvider, except that empty folders can be opened.
  */
 class PathStorageProvider(private val findRoots: () -> List<StorageRoot>) : StorageProvider {
 
@@ -20,7 +20,6 @@ class PathStorageProvider(private val findRoots: () -> List<StorageRoot>) : Stor
 
     override fun list(folderId: String): List<BrowserItem>? {
         val entries = children(folderId) ?: return null
-        if (entries.isEmpty()) return null
         return entries.filter { it.isSupported() }.sortedWith(BROWSER_ORDER).map { it.toItem() }
     }
 
