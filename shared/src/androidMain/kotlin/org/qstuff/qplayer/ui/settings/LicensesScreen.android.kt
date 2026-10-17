@@ -12,12 +12,12 @@ import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.more_menu_licenses
 
 /**
- * Open source licenses of all libraries the app uses. The list is generated at build time by the
- * AboutLibraries Gradle plugin from the actual dependencies (plus config/libraries/ for code copied
- * into the app), so it can't go stale. Tapping an entry shows its full license text.
+ * The list is generated at build time by the AboutLibraries Gradle plugin (in :androidApp) from the
+ * actual dependencies (plus config/libraries/ for code copied into the app), so it can't go stale.
+ * Tapping an entry shows its full license text.
  */
 @Composable
-fun LicensesScreen(onBack: () -> Unit) {
+actual fun LicensesScreen(onBack: () -> Unit) {
     SubScreenScaffold(title = stringResource(Res.string.more_menu_licenses), onBack = onBack) { padding ->
         // Loaded off the main thread from the JSON the plugin generated at build time.
         val libraries by produceLibraries()

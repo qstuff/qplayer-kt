@@ -1,6 +1,5 @@
 package org.qstuff.qplayer.ui.player
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -62,7 +61,7 @@ import org.qstuff.qplayer.ui.theme.LocalDimens
  * [org.qstuff.qplayer.ui.player.components]: title bar, track info, waveform seekbar, the
  * pitch/jog deck, the control buttons, and the draggable tab sheet.
  */
-@SuppressLint("UnusedBoxWithConstraintsScope")
+@Suppress("UnusedBoxWithConstraintsScope")   // Android lint ID; lint honors @Suppress too
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(

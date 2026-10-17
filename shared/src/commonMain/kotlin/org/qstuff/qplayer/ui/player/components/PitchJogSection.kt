@@ -25,10 +25,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
+import kotlin.time.TimeSource
 import org.qstuff.qplayer.ui.player.jogwheel.JogWheel
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.ui.theme.LocalDimens
+
+
+/** Monotonic clock for the jog wheel's velocity mode (only time differences count). */
+private val jogClock = TimeSource.Monotonic.markNow()
 
 /**
  * The upper deck: a vertical pitch fader on the left and the square jog wheel filling the width
@@ -147,7 +152,7 @@ fun PitchJogSection(
                 onDown = {
                     onJogTouch()
                     jogState.capturedPitchProgress = pitchProgress
-                    jogState.onMoveTime = System.currentTimeMillis()
+                    jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
                     jogState.scratching =
                         getJogwheelMode() == JogwheelMode.SCRATCH && onScratchStart()
                 },
@@ -159,7 +164,7 @@ fun PitchJogSection(
                     }
                     val sensitivity = getSensitivity()
                     jogState.lastOnMoveTime = jogState.onMoveTime
-                    jogState.onMoveTime = System.currentTimeMillis()
+                    jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
                     when (getJogwheelMode()) {
                         JogwheelMode.SPEED_ANGULAR -> {
                             val delta = textureAngle * 100 * sensitivity

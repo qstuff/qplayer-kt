@@ -12,19 +12,17 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.ui.theme.QOrange
 
 /**
- * A text page (privacy statement, imprint) from a simple HTML file in the resources
- * ([file], e.g. "files/privacy.html"), rendered with Compose — no WebView. Links (https, mailto)
- * open in the matching app.
+ * A text page (privacy statement, imprint) from a simple HTML file in the resources ([file], e.g.
+ * "files/privacy.html"), rendered with Compose via [simpleHtmlToAnnotatedString] — no WebView.
+ * Links (https, mailto) open in the matching app.
  */
 @Composable
 fun InfoPageScreen(title: String, file: String, onBack: () -> Unit) {
@@ -32,9 +30,8 @@ fun InfoPageScreen(title: String, file: String, onBack: () -> Unit) {
         value = Res.readBytes(file).decodeToString()
     }
     val text = remember(html) {
-        AnnotatedString.fromHtml(
-            // The file header comment is for editors only.
-            htmlString = html.replace(Regex("<!--.*?-->", RegexOption.DOT_MATCHES_ALL), ""),
+        simpleHtmlToAnnotatedString(
+            html,
             linkStyles = TextLinkStyles(
                 style = SpanStyle(color = QOrange, textDecoration = TextDecoration.Underline)
             )
