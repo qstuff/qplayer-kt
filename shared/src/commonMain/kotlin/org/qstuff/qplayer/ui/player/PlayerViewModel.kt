@@ -191,12 +191,14 @@ class PlayerViewModel(
         preferencesDataSource.savePitchFactorIndex(index)
 
         val progress = ((currentTrackSpeed -1) * 100 * pitchFactor + 500)
-        _pitchValue.value = progress.toInt()
         onPitchChanged(progress.toInt())
     }
 
     fun onPitchChanged(progress: Int) {
         currentPitchProgress = progress
+        // The fader shows this: one source of truth for fader, text and speed (a separate UI copy
+        // went stale and showed an old value after the screen state was rebuilt).
+        _pitchValue.value = progress
         pitchSaveJob?.cancel()
         pitchSaveJob = viewModelScope.launch {
             delay(PITCH_SAVE_DELAY_MS)

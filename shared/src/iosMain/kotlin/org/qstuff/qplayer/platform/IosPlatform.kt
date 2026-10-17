@@ -1,14 +1,7 @@
 package org.qstuff.qplayer.platform
 
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.ui.player.AudioPlayer
 import org.qstuff.qplayer.ui.player.Scratcher
 import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
-import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
 import org.qstuff.qplayer.util.CrashReporter
 import org.qstuff.qplayer.util.PlatformInfo
 import kotlinx.coroutines.CoroutineScope
@@ -21,11 +14,26 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
 
-// Placeholders for the iOS preview app — replaced one by one in Phase 2 (AVAudioEngine player, haptics, …).
+// iOS folders and info, plus the remaining placeholders (scratching: Phase 3; haptics, crash reporting).
 
 /** The app's Documents folder: the user's music (visible in the Files app and in Finder). */
 fun documentsDirectory(): String =
     NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true).first() as String
+
+/**
+ * Track and folder ids on iOS are virtual paths: the app container's real path changes with every
+ * install and app update, so stored ids (queue, playlists, last folder) must not contain it.
+ */
+object IosPaths {
+    /** Id of the Documents folder; its files are "/Documents/…". */
+    const val DOCUMENTS = "/Documents"
+
+    /** The real file path of a virtual id (other ids are taken as real paths). */
+    fun toFilePath(id: String): String = when {
+        id == DOCUMENTS || id.startsWith("$DOCUMENTS/") -> documentsDirectory() + id.removePrefix(DOCUMENTS)
+        else -> id
+    }
+}
 
 /** The app's private data folder (Application Support, created if needed): the playlist database. */
 @OptIn(ExperimentalForeignApi::class)
@@ -33,36 +41,6 @@ fun appDataDirectory(): String =
     NSFileManager.defaultManager.URLForDirectory(
         NSApplicationSupportDirectory, NSUserDomainMask, appropriateForURL = null, create = true, error = null
     )?.path ?: error("No Application Support directory")
-
-/**
- * No audio yet: a loaded track is reported as prepared right away and play / pause only switch the
- * play state, so the UI can be tried out.
- */
-class PreviewAudioPlayer : AudioPlayer {
-    override val isConnected = MutableStateFlow(false)
-    override val trackStatus = MutableSharedFlow<Track>(replay = 1, extraBufferCapacity = 8)
-    override val playing: StateFlow<Boolean> = MutableStateFlow(false)
-    override val transportCommands: SharedFlow<TransportCommand> = MutableSharedFlow()
-    private var position = 0L
-
-    override fun connect() { isConnected.value = true }
-    override fun disconnect() { isConnected.value = false }
-    override fun loadTrack(track: Track) {
-        position = 0
-        track.trackStatus = Track.TrackStatus.PREPARED
-        trackStatus.tryEmit(track)
-    }
-    override fun play() { (playing as MutableStateFlow).value = true }
-    override fun pause() { (playing as MutableStateFlow).value = false }
-    override fun seekTo(positionMs: Long, andPause: Boolean) {
-        position = positionMs
-        if (andPause) pause()
-    }
-    override fun setSpeed(factor: Float, masterTempo: Boolean) {}
-    override val positionMs: Long get() = position
-    override val isPlaying: Boolean get() = playing.value
-    override fun releaseForegroundHold() {}
-}
 
 class NoScratcher : Scratcher {
     override val isScratching = false
