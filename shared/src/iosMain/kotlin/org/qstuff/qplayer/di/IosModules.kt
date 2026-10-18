@@ -55,7 +55,7 @@ private val iosPlatformModule = module {
     single<PlatformInfo> { IosPlatformInfo() }
     single<StorageProvider> {
         PathStorageProvider(
-            findRoots = { listOf(StorageRoot(id = IosPaths.DOCUMENTS, label = "qdeq", isRemovable = false)) },
+            findRoots = { listOf(StorageRoot(id = IosPaths.DOCUMENTS, label = "QdeQ", isRemovable = false)) },
             toFilePath = IosPaths::toFilePath
         )
     }

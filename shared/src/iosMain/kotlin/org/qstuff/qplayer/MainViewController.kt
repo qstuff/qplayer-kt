@@ -19,6 +19,7 @@ import org.koin.core.context.startKoin
 import org.koin.mp.KoinPlatformTools
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.di.iosModules
+import org.qstuff.qplayer.platform.IosBuild
 import org.qstuff.qplayer.ui.QDeqApp
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlaybackCoordinator
@@ -29,8 +30,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The iOS app's UI (called from Swift, see iosApp/iosApp/ContentView.swift): the shared screens
- * with the same wiring as Android's PlayerActivity. A preview for now — no playback yet (see
- * di/IosModules).
+ * with the same wiring as Android's PlayerActivity.
  */
 @Suppress("FunctionName", "unused")
 fun MainViewController(): UIViewController {
@@ -64,7 +64,7 @@ fun MainViewController(): UIViewController {
                 queueViewModel = queueViewModel,
                 playlistViewModel = playlistViewModel,
                 fileBrowserViewModel = fileBrowserViewModel,
-                titleSuffix = " iOS preview",
+                titleSuffix = IosBuild.titleSuffix,
                 askForCrashReporting = false    // no crash reporting on iOS yet
             )
         }
