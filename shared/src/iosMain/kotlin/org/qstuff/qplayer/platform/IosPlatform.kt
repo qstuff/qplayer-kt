@@ -1,11 +1,19 @@
 package org.qstuff.qplayer.platform
 
-import org.qstuff.qplayer.ui.player.Scratcher
 import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
 import org.qstuff.qplayer.util.CrashReporter
 import org.qstuff.qplayer.util.PlatformInfo
-import kotlinx.coroutines.CoroutineScope
+import co.touchlab.kermit.Logger
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
+import platform.AVFAudio.AVAudioFile
+import platform.Foundation.NSError
+import platform.Foundation.NSURL
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSBundle
 import platform.Foundation.NSDocumentDirectory
@@ -14,7 +22,7 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
 
-// iOS folders and info, plus the remaining placeholders (scratching: Phase 3; haptics, crash reporting).
+// iOS folders and info, plus the remaining placeholders (haptics, crash reporting).
 
 /** The app's Documents folder: the user's music (visible in the Files app and in Finder). */
 fun documentsDirectory(): String =
@@ -35,22 +43,34 @@ object IosPaths {
     }
 }
 
+private val log = Logger.withTag("IosPlatform")
+
+/**
+ * Opens the audio file [id] (virtual path or URL) for reading; null if that isn't possible.
+ *
+ * The AVAudioFile(forReading:) initializer returns nil for a file it can't open (deleted, renamed,
+ * an old queue entry, unsupported format), but a Kotlin constructor can't be null: the interop
+ * throws a NullPointerException for that nil, which would crash the app if not caught here.
+ */
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+fun openAudioFile(id: String): AVAudioFile? = memScoped {
+    val url = (if (id.startsWith("/")) NSURL.fileURLWithPath(IosPaths.toFilePath(id)) else NSURL.URLWithString(id))
+        ?: return null
+    val error = alloc<ObjCObjectVar<NSError?>>()
+    try {
+        AVAudioFile(forReading = url, error = error.ptr)
+    } catch (_: NullPointerException) {
+        log.w { "can't open $id: ${error.value?.localizedDescription}" }
+        null
+    }
+}
+
 /** The app's private data folder (Application Support, created if needed): the playlist database. */
 @OptIn(ExperimentalForeignApi::class)
 fun appDataDirectory(): String =
     NSFileManager.defaultManager.URLForDirectory(
         NSApplicationSupportDirectory, NSUserDomainMask, appropriateForURL = null, create = true, error = null
     )?.path ?: error("No Application Support directory")
-
-class NoScratcher : Scratcher {
-    override val isScratching = false
-    override val positionMs = 0L
-    override fun prepare(scope: CoroutineScope, uri: String) {}
-    override fun release() {}
-    override fun start(positionMs: Long, sensitivity: Int) = false
-    override fun scratchTo(rotationRad: Double) {}
-    override fun stop() = 0L
-}
 
 object NoHapticFeedback : HapticFeedback {
     override val isSupported = false

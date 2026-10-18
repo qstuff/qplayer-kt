@@ -117,6 +117,14 @@ Still to do:
 
 ### Phase 3: iOS scratch engine and polish
 
+**3a (done): iOS scratch engine.** `IosScratchEngine`: AVAudioFile decodes the track into one
+native 16-bit PCM block (the length is known up front; freed explicitly), an `AVAudioSourceNode`
+renders with the same follower / interpolation / DC blocker as Android, in Kotlin: the render
+callback reads only native memory and primitive fields. The output engine runs only while
+scratching (+2 s), so it doesn't keep the app awake in the background. If real devices show
+dropouts, the render callback moves to Swift (the fallback below).
+
+
 - **Scratch output on iOS** via `AVAudioSourceNode`. Highest-risk item: real-time audio callbacks in
   Kotlin/Native must not allocate or wait for the garbage collector. Fallback: write this small
   part in Swift.

@@ -13,7 +13,7 @@ import org.qstuff.qplayer.datasource.room.RoomDataSource
 import org.qstuff.qplayer.platform.IosPlatformInfo
 import org.qstuff.qplayer.platform.NoCrashReporter
 import org.qstuff.qplayer.platform.NoHapticFeedback
-import org.qstuff.qplayer.platform.NoScratcher
+import org.qstuff.qplayer.platform.IosScratchEngine
 import org.qstuff.qplayer.platform.IosAudioPlayer
 import org.qstuff.qplayer.platform.IosWaveformGenerator
 import org.qstuff.qplayer.platform.appDataDirectory
@@ -43,12 +43,12 @@ private val iosDataModule = module {
 
 /**
  * iOS implementations of the platform interfaces: AVAudioEngine player and AVAudioFile waveform,
- * the file browser on the app's Documents folder. Still placeholders: scratching (Phase 3),
+ * the scratch engine, the file browser on the app's Documents folder. Still placeholders:
  * haptics, crash reporting.
  */
 private val iosPlatformModule = module {
     factory<AudioPlayer> { IosAudioPlayer() }
-    factory<Scratcher> { NoScratcher() }
+    factory<Scratcher> { IosScratchEngine() }
     single<WaveformGenerator> { IosWaveformGenerator() }
     single<HapticFeedback> { NoHapticFeedback }
     single<CrashReporter> { NoCrashReporter }
