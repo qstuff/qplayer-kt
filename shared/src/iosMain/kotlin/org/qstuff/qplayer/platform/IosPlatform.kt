@@ -1,6 +1,5 @@
 package org.qstuff.qplayer.platform
 
-import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
 import org.qstuff.qplayer.util.CrashReporter
 import org.qstuff.qplayer.util.PlatformInfo
 import co.touchlab.kermit.Logger
@@ -22,7 +21,7 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
 
-// iOS folders and info, plus the remaining placeholders (haptics, crash reporting).
+// iOS folders and info, plus the remaining placeholder (crash reporting).
 
 /** The app's Documents folder: the user's music (visible in the Files app and in Finder). */
 fun documentsDirectory(): String =
@@ -71,11 +70,6 @@ fun appDataDirectory(): String =
     NSFileManager.defaultManager.URLForDirectory(
         NSApplicationSupportDirectory, NSUserDomainMask, appropriateForURL = null, create = true, error = null
     )?.path ?: error("No Application Support directory")
-
-object NoHapticFeedback : HapticFeedback {
-    override val isSupported = false
-    override fun play(effect: HapticFeedback.Effect, strength: Int) {}
-}
 
 object NoCrashReporter : CrashReporter {
     override fun setEnabled(enabled: Boolean) {}
