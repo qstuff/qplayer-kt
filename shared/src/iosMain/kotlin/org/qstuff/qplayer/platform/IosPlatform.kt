@@ -20,6 +20,8 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.Platform
 
 // iOS folders and info, plus the remaining placeholder (crash reporting).
 
@@ -76,9 +78,27 @@ object NoCrashReporter : CrashReporter {
 }
 
 class IosPlatformInfo : PlatformInfo {
-    override val appVersion: String = run {
-        val info = NSBundle.mainBundle.infoDictionary
-        "qdeq ${info?.get("CFBundleShortVersionString") ?: "?"} (${info?.get("CFBundleVersion") ?: "?"})"
-    }
+    override val appVersion: String =
+        "${if (IosBuild.isDebug) "QdeQ-dev" else "QdeQ"} ${IosBuild.versionName} (${IosBuild.buildNumber})"
     override val deviceInfo: String = UIDevice.currentDevice.let { "${it.model} ${it.systemName} ${it.systemVersion}" }
+}
+
+/** Version and build type of the running app (Info.plist, Kotlin/Native debug binary). */
+object IosBuild {
+    private val info get() = NSBundle.mainBundle.infoDictionary
+
+    val versionName: String get() = info?.get("CFBundleShortVersionString") as? String ?: "?"
+    val buildNumber: String get() = info?.get("CFBundleVersion") as? String ?: "?"
+
+    @OptIn(ExperimentalNativeApi::class)
+    val isDebug: Boolean get() = Platform.isDebugBinary
+
+    /**
+     * Shown after the wordmark in the title bar, like on Android: " v4.0.0", in debug builds
+     * "-dev 4.0.0 | iOS 26.1".
+     */
+    val titleSuffix: String
+        get() = if (isDebug) {
+            "-dev $versionName | ${UIDevice.currentDevice.systemName} ${UIDevice.currentDevice.systemVersion}"
+        } else " v$versionName"
 }

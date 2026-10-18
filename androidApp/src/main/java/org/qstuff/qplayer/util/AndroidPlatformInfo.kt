@@ -10,7 +10,7 @@ class AndroidPlatformInfo(context: Context) : PlatformInfo {
 
     override val appVersion: String = run {
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-        val prefix = if (BuildConfig.DEBUG) "qdeq-dev" else "qdeq"
+        val prefix = if (BuildConfig.DEBUG) "QdeQ-dev" else "QdeQ"
         "$prefix ${packageInfo.versionName} (${packageInfo.versionCodeCompat()})"
     }
 

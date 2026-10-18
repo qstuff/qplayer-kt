@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Android-only strings (manifest, notification); the app's texts are in shared/composeResources. -->
 <resources>
-    <string name="app_name">qdeq</string>
+    <string name="app_name">QdeQ</string>
 </resources>
