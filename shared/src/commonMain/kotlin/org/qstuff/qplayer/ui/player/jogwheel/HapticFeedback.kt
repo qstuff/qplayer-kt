@@ -1,8 +1,8 @@
 package org.qstuff.qplayer.ui.player.jogwheel
 
 /**
- * The device's vibration motor — platform independent. Android: AndroidHapticFeedback; iOS later:
- * UIImpactFeedbackGenerator / Core Haptics.
+ * The device's vibration motor — platform independent. Android: AndroidHapticFeedback; iOS:
+ * IosHapticFeedback (Taptic Engine).
  */
 interface HapticFeedback {
 
