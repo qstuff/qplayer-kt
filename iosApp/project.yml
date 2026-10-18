@@ -43,6 +43,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.qstuff.qdeq
         PRODUCT_NAME: qdeq
+        # App icon: iosApp/Assets.xcassets/AppIcon (rendered from the Android launcher icon vector)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic

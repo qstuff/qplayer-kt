@@ -21,19 +21,30 @@
 <h3>Daten auf deinem Gerät</h3>
 <p>
     Die App speichert nur lokal auf deinem Gerät: die Queue, deine Playlists, die Einstellungen
-    und den zuletzt geöffneten Ordner. Diese Daten werden nicht übertragen und beim Deinstallieren
-    der App gelöscht.
+    und den zuletzt geöffneten Ordner. Diese Daten werden nicht an uns übertragen und beim
+    Deinstallieren der App gelöscht. Auf iPhone und iPad sind sie – wie die Daten aller Apps – Teil
+    der Geräte-Sicherung (iCloud oder Computer), wenn du diese eingeschaltet hast; die Sicherung
+    verwaltet Apple in deinem Konto.
 </p>
 
 <h3>Berechtigungen</h3>
 <p>
-    Um deine Musik abzuspielen, braucht die App Lesezugriff auf Audiodateien
+    <b>Android:</b> Um deine Musik abzuspielen, braucht die App Lesezugriff auf Audiodateien
     („Musik und Audio“, bis Android 12 „Fotos, Medien und Dateien“). Die Wiedergabe im Hintergrund
     wird als Medien-Benachrichtigung angezeigt. Für die Vibration des Jogwheels nutzt die App den
     Vibrationsmotor des Geräts.
 </p>
+<p>
+    <b>iOS:</b> Die App braucht keine Berechtigungen. Sie spielt die Musik aus ihrem eigenen Ordner
+    ab, den du in der Dateien-App oder im Finder füllst. Die Wiedergabe im Hintergrund wird auf dem
+    Sperrbildschirm und im Kontrollzentrum angezeigt. Für die Vibration des Jogwheels nutzt die App
+    die Taptic Engine des iPhones.
+</p>
 
 <h3>Absturzberichte (Firebase Crashlytics)</h3>
+<p>
+    Absturzberichte gibt es derzeit nur in der Android-App; die iOS-App sendet keine.
+</p>
 <p>
     Wenn du zustimmst, sendet die App bei einem Absturz einen Bericht an den Dienst
     „Firebase Crashlytics“ von Google, damit wir Fehler finden und beheben können.
@@ -88,18 +99,27 @@
 <h3>Data on your device</h3>
 <p>
     The app only stores data locally on your device: the queue, your playlists, the settings and
-    the last opened folder. This data is never transmitted and is deleted when you uninstall
-    the app.
+    the last opened folder. This data is never transmitted to us and is deleted when you uninstall
+    the app. On iPhone and iPad it is – like the data of all apps – part of the device backup
+    (iCloud or computer) if you have turned that on; Apple manages the backup in your account.
 </p>
 
 <h3>Permissions</h3>
 <p>
-    To play your music, the app needs read access to audio files ("Music and audio", up to
-    Android 12 "Photos, media and files"). Background playback is shown as a media notification. For the jog wheel vibration the app uses
-    the device's vibration motor.
+    <b>Android:</b> to play your music, the app needs read access to audio files ("Music and
+    audio", up to Android 12 "Photos, media and files"). Background playback is shown as a media
+    notification. For the jog wheel vibration the app uses the device's vibration motor.
+</p>
+<p>
+    <b>iOS:</b> the app needs no permissions. It plays the music from its own folder, which you
+    fill in the Files app or in Finder. Background playback is shown on the lock screen and in
+    Control Center. For the jog wheel vibration the app uses the iPhone's Taptic Engine.
 </p>
 
 <h3>Crash reports (Firebase Crashlytics)</h3>
+<p>
+    Crash reports currently exist only in the Android app; the iOS app doesn't send any.
+</p>
 <p>
     If you agree, the app sends a report to Google's "Firebase Crashlytics" service when it
     crashes, so we can find and fix bugs. A report contains: the technical error trace (stack
