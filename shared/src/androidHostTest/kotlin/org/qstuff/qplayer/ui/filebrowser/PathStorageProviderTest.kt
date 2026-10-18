@@ -12,7 +12,7 @@ import java.nio.file.Files
 class PathStorageProviderTest {
 
     private val root = Files.createTempDirectory("storage").toFile()
-    private val provider = PathStorageProvider { listOf(StorageRoot(root.path, "qdeq", isRemovable = false)) }
+    private val provider = PathStorageProvider(findRoots = { listOf(StorageRoot(root.path, "qdeq", isRemovable = false)) })
 
     @After
     fun tearDown() {
@@ -69,5 +69,23 @@ class PathStorageProviderTest {
         assertNull(provider.list("${root.path}/missing"))
         assertEquals(emptyList<BrowserItem>(), provider.list("${root.path}/Empty"))
         assertEquals(emptyList<BrowserItem>(), provider.list("${root.path}/Other"))
+    }
+
+    @Test
+    fun `virtual ids are mapped to the real files and kept in the results`() {
+        file("ebm/a.mp3")
+        file("ebm/Mix.m3u", "a.mp3\n")
+        val virtual = PathStorageProvider(
+            findRoots = { listOf(StorageRoot("/Documents", "qdeq", isRemovable = false)) },
+            toFilePath = { id -> root.path + id.removePrefix("/Documents") }
+        )
+
+        assertEquals(listOf("/Documents/ebm"), virtual.list("/Documents")!!.map { it.id })
+        assertEquals(listOf("/Documents/ebm/Mix.m3u", "/Documents/ebm/a.mp3"), virtual.list("/Documents/ebm")!!.map { it.id })
+        assertEquals(listOf("/Documents/ebm/a.mp3"), virtual.tracksIn("/Documents/ebm").map { it.id })
+        assertEquals("a.mp3\n", virtual.readText("/Documents/ebm/Mix.m3u"))
+        assertTrue(virtual.exists("/Documents/ebm/a.mp3"))
+        assertEquals("/Documents", virtual.parentOf("/Documents/ebm"))
+        assertEquals("qdeq/ebm", virtual.displayName("/Documents/ebm"))
     }
 }

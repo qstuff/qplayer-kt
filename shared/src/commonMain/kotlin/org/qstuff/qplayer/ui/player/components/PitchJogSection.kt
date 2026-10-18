@@ -39,7 +39,10 @@ private val jogClock = TimeSource.Monotonic.markNow()
  * The upper deck: a vertical pitch fader on the left and the square jog wheel filling the width
  * to its right (so both share the same top edge and height). Both feed a single pitch value.
  *
- * @param pitchProgress current pitch (0..1000, 500 = neutral).
+ * @param pitchProgress current pitch (0..1000, 500 = neutral), for drawing the fader.
+ * @param getPitchProgress the current pitch at the moment it's called — the jog wheel's base on
+ *        touch-down (pitchProgress may still be the previous composition's value right after a
+ *        release, which would make a bent speed the new base).
  * @param onPitchChange emit a new pitch value (parent updates its state + the player).
  * @param getSensitivity / getJogwheelMode read at gesture time so live setting changes apply.
  * @param onScratchStart in SCRATCH mode, called on touch-down; returns whether scratching started
@@ -54,6 +57,7 @@ private val jogClock = TimeSource.Monotonic.markNow()
 @Composable
 fun PitchJogSection(
     pitchProgress: Int,
+    getPitchProgress: () -> Int,
     onPitchChange: (Int) -> Unit,
     getSensitivity: () -> Int,
     getJogwheelMode: () -> JogwheelMode,
@@ -151,8 +155,10 @@ fun PitchJogSection(
                     .background(Color.Black),
                 onDown = {
                     onJogTouch()
-                    jogState.capturedPitchProgress = pitchProgress
+                    jogState.capturedPitchProgress = getPitchProgress()
                     jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
+                    jogState.lastAngle = 0.0
+                    jogState.deltaList.clear()
                     jogState.scratching =
                         getJogwheelMode() == JogwheelMode.SCRATCH && onScratchStart()
                 },
@@ -172,6 +178,8 @@ fun PitchJogSection(
                         }
                         JogwheelMode.SPEED_VELOCITY -> {
                             val timeDiff = jogState.onMoveTime - jogState.lastOnMoveTime
+                            // Two moves within the same millisecond: no velocity (avoids ÷ 0).
+                            if (timeDiff <= 0) return@JogWheel
                             val angleDiff = textureAngle - jogState.lastAngle
                             val v = angleDiff / timeDiff * 20000
                             val delta = smoothenDelta(v * sensitivity, jogState.deltaList)

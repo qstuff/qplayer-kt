@@ -188,6 +188,24 @@ class PlayerViewModelTest {
     }
 
     @Test
+    fun `the fader value follows every pitch change and the range`() {
+        val vm = viewModel()
+        player.connect()
+
+        vm.onPitchChanged(625)
+        assertEquals(625, vm.pitchValue.value)
+
+        vm.onPitchChanged(500)
+        assertEquals(500, vm.pitchValue.value)
+        assertEquals("speed 1.0 false", player.calls.last())
+
+        vm.onPitchChanged(625)          // ±8 % (62.5 per %): +2 %
+        vm.onPitchRangeSelected(2)      // ±50 % (10 per %): same +2 % = 520
+        assertEquals(520, vm.pitchValue.value)
+        assertEquals("  +2,0%", vm.pitchValueText.value)
+    }
+
+    @Test
     fun `scratching pauses the player and hands the end position back`() {
         prefs.setJogWheelMode(2)        // SCRATCH
         val vm = viewModel()

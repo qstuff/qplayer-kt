@@ -32,6 +32,9 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIRequiresFullScreen: true
+        # Playback continues in the background / on the lock screen
+        UIBackgroundModes:
+          - audio
         # Light status bar text on the black app
         UIStatusBarStyle: UIStatusBarStyleLightContent
         UIViewControllerBasedStatusBarAppearance: false
