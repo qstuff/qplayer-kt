@@ -20,6 +20,7 @@ import org.koin.mp.KoinPlatformTools
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.di.iosModules
 import org.qstuff.qplayer.platform.IosBuild
+import org.qstuff.qplayer.platform.IosFileImport
 import org.qstuff.qplayer.ui.QDeqApp
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlaybackCoordinator
@@ -55,6 +56,12 @@ fun MainViewController(): UIViewController {
         }
         // Moving to the background: keep queue, position and settings, like Android's onStop.
         LifecycleEventEffect(Lifecycle.Event.ON_STOP) { coordinator.saveState() }
+        // Back in the foreground: files may have been added meanwhile (Files app, Finder).
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { fileBrowserViewModel.refresh() }
+        // Files handed over by other apps: show the folder they were copied to.
+        LaunchedEffect(Unit) {
+            IosFileImport.importedTo.collect { fileBrowserViewModel.openFolder(it) }
+        }
 
         // Full screen (see ContentView.swift), but the app stays clear of status bar and home
         // indicator (black there), like on Android, where it doesn't draw behind the system bars.
