@@ -9,7 +9,6 @@ import kotlinx.coroutines.withContext
 import org.qstuff.qplayer.ui.player.WaveformGenerator
 import platform.AVFAudio.AVAudioFile
 import platform.AVFAudio.AVAudioPCMBuffer
-import platform.Foundation.NSURL
 import co.touchlab.kermit.Logger
 import kotlin.math.abs
 import kotlin.time.TimeSource
@@ -30,8 +29,7 @@ class IosWaveformGenerator(private val points: Int = 1000) : WaveformGenerator {
     }
 
     override suspend fun generate(uri: String): ByteArray? = withContext(Dispatchers.Default) {
-        val url = if (uri.startsWith("/")) NSURL.fileURLWithPath(IosPaths.toFilePath(uri)) else NSURL.URLWithString(uri)
-        val file = url?.let { AVAudioFile(forReading = it, error = null) } ?: return@withContext null
+        val file = openAudioFile(uri) ?: return@withContext null
         val buffer = AVAudioPCMBuffer(pCMFormat = file.processingFormat, frameCapacity = BLOCK_FRAMES)
         val channels = file.processingFormat.channelCount.toInt()
 

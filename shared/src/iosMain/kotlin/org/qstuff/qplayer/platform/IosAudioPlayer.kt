@@ -37,7 +37,6 @@ import platform.Foundation.NSError
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSNumber
 import platform.Foundation.NSOperationQueue
-import platform.Foundation.NSURL
 import platform.MediaPlayer.MPChangePlaybackPositionCommandEvent
 import platform.MediaPlayer.MPMediaItemPropertyPlaybackDuration
 import platform.MediaPlayer.MPMediaItemPropertyTitle
@@ -144,13 +143,7 @@ class IosAudioPlayer : AudioPlayer {
         this.track = track
         stoppedFrame = 0
 
-        val opened = memScoped {
-            val error = alloc<ObjCObjectVar<NSError?>>()
-            val url = if (track.uri.startsWith("/")) NSURL.fileURLWithPath(IosPaths.toFilePath(track.uri)) else NSURL.URLWithString(track.uri)
-            val result = url?.let { AVAudioFile(forReading = it, error = error.ptr) }
-            if (result == null) log.e { "can't open ${track.uri}: ${error.value?.localizedDescription}" }
-            result
-        }
+        val opened = openAudioFile(track.uri)
         file = opened
         if (opened == null) {
             report(track, Track.TrackStatus.ERROR)
