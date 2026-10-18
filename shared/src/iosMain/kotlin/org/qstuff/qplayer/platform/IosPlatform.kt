@@ -1,7 +1,6 @@
 package org.qstuff.qplayer.platform
 
 import org.qstuff.qplayer.ui.player.Scratcher
-import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
 import org.qstuff.qplayer.util.CrashReporter
 import org.qstuff.qplayer.util.PlatformInfo
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +13,7 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
 
-// iOS folders and info, plus the remaining placeholders (scratching: Phase 3; haptics, crash reporting).
+// iOS folders and info, plus the remaining placeholders (scratching: Phase 3; crash reporting).
 
 /** The app's Documents folder: the user's music (visible in the Files app and in Finder). */
 fun documentsDirectory(): String =
@@ -50,11 +49,6 @@ class NoScratcher : Scratcher {
     override fun start(positionMs: Long, sensitivity: Int) = false
     override fun scratchTo(rotationRad: Double) {}
     override fun stop() = 0L
-}
-
-object NoHapticFeedback : HapticFeedback {
-    override val isSupported = false
-    override fun play(effect: HapticFeedback.Effect, strength: Int) {}
 }
 
 object NoCrashReporter : CrashReporter {
