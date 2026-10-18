@@ -27,6 +27,11 @@ import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.PlayerViewModel
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * The draggable bottom sheet (phone layout) holding the [PlayerTabs].
@@ -34,6 +39,8 @@ import org.qstuff.qplayer.ui.queue.QueueViewModel
  * Its height is driven in the layout phase from an [Animatable] offset (0 = expanded to
  * [expandedHeightPx], [maxSheetOffsetPx] = collapsed) so dragging only re-lays-out and the tab
  * lists' viewports track the visible height. Drag is bound to the notch handle and the TabRow.
+ * [onOpenChange] reports whether the sheet is open — anything but fully collapsed, also while
+ * it's dragged or animating.
  */
 @Composable
 fun PlayerTabSheet(
@@ -43,10 +50,17 @@ fun PlayerTabSheet(
     playlistViewModel: PlaylistViewModel,
     fileBrowserViewModel: FileBrowserViewModel,
     playerViewModel: PlayerViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenChange: (open: Boolean) -> Unit = {}
 ) {
     val sheetOffset = remember { Animatable(maxSheetOffsetPx) }
     val sheetScope = rememberCoroutineScope()
+    val currentOnOpenChange by rememberUpdatedState(onOpenChange)
+    LaunchedEffect(sheetOffset, maxSheetOffsetPx) {
+        snapshotFlow { sheetOffset.value < maxSheetOffsetPx - 0.5f }
+            .distinctUntilChanged()
+            .collect { currentOnOpenChange(it) }
+    }
     // Shared drag behavior for the collapse/expand handle areas (notch row + TabRow).
     val sheetDragModifier = Modifier.draggable(
         orientation = Orientation.Vertical,

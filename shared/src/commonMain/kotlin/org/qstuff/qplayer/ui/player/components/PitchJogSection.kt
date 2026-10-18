@@ -50,6 +50,8 @@ private val jogClock = TimeSource.Monotonic.markNow()
  *        [onScratchEnd]).
  * @param onJogTouch / onJogRotate every touch-down / rotation (since touch-down) of the jog wheel,
  *        in any mode — used for haptic feedback.
+ * @param jogEnabled false: the jog wheel ignores touches (phone: while the tab sheet is open, so a
+ *        swipe to collapse it can't hit the wheel by accident).
  * @param fitHeight false (phone): the jog wheel fills the width, the row's height follows.
  *        true (tablet pane): the jog wheel is also limited by the available height, and the
  *        fader + wheel group is centred horizontally.
@@ -67,7 +69,8 @@ fun PitchJogSection(
     onJogTouch: () -> Unit,
     onJogRotate: (rotationRad: Double) -> Unit,
     modifier: Modifier = Modifier,
-    fitHeight: Boolean = false
+    fitHeight: Boolean = false,
+    jogEnabled: Boolean = true
 ) {
     val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     val jogState = remember {
@@ -153,6 +156,7 @@ fun PitchJogSection(
                 modifier = Modifier
                     .fillMaxHeight()
                     .background(Color.Black),
+                enabled = jogEnabled,
                 onDown = {
                     onJogTouch()
                     jogState.capturedPitchProgress = getPitchProgress()
