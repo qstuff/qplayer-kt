@@ -33,6 +33,7 @@ import org.qstuff.qplayer.resources.qpl_btn_wheel_ohne_rand01
 fun JogWheel(
     modifier: Modifier = Modifier,
     borderWidth: Dp = 8.dp,
+    enabled: Boolean = true,
     onDown: () -> Unit,
     onMove: (textureAngle: Double) -> Unit,
     onUp: () -> Unit
@@ -46,7 +47,9 @@ fun JogWheel(
     Canvas(
         modifier = modifier
             .aspectRatio(1f)
-            .pointerInput(Unit) {
+            // Disabled: no gesture at all. Toggling restarts the input (an ongoing gesture ends).
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val cx = size.width / 2f
@@ -58,23 +61,27 @@ fun JogWheel(
                     var accumulated = 0.0
                     currentOnDown()
 
-                    drag(down.id) { change ->
-                        val curRad = atan2(
-                            (change.position.y - cy).toDouble(),
-                            (change.position.x - cx).toDouble()
-                        )
-                        var delta = curRad - lastRad
-                        if (delta > PI) delta -= 2 * PI
-                        if (delta < -PI) delta += 2 * PI
-                        accumulated += delta
-                        lastRad = curRad
-                        rotationDeg.value = (accumulated * 180.0 / PI).toFloat()
-                        change.consume()
-                        currentOnMove(accumulated)
+                    // finally: also when the gesture is cancelled (e.g. the wheel gets disabled
+                    // under the finger), so a bent pitch / a scratch never sticks.
+                    try {
+                        drag(down.id) { change ->
+                            val curRad = atan2(
+                                (change.position.y - cy).toDouble(),
+                                (change.position.x - cx).toDouble()
+                            )
+                            var delta = curRad - lastRad
+                            if (delta > PI) delta -= 2 * PI
+                            if (delta < -PI) delta += 2 * PI
+                            accumulated += delta
+                            lastRad = curRad
+                            rotationDeg.value = (accumulated * 180.0 / PI).toFloat()
+                            change.consume()
+                            currentOnMove(accumulated)
+                        }
+                    } finally {
+                        rotationDeg.value = 0f
+                        currentOnUp()
                     }
-
-                    rotationDeg.value = 0f
-                    currentOnUp()
                 }
             }
     ) {

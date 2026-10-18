@@ -98,6 +98,8 @@ fun PlayerScreen(
 
     var isTrackPrepared by remember { mutableStateOf(false) }
     var isBlinkActive by remember { mutableStateOf(false) }
+    // Phone: the tab sheet is open (not fully collapsed) → the jog wheel ignores touches.
+    var isTabSheetOpen by remember { mutableStateOf(false) }
     // Progress uses two separate states so the position timer and the user's drag never
     // fight over one value: `playbackProgress` is written only by the timer, `seekProgress`
     // only by the drag. The seekbar shows `seekProgress ?: playbackProgress`, so while
@@ -301,7 +303,8 @@ fun PlayerScreen(
                 onJogRotate = jogwheelHaptics::onRotate,
                 // Tablet: the wheel takes the height left below the waveform.
                 modifier = if (isTwoPane) Modifier.weight(1f) else Modifier,
-                fitHeight = isTwoPane
+                fitHeight = isTwoPane,
+                jogEnabled = isTwoPane || !isTabSheetOpen
             )
 
             // Phone: buttons below the jog wheel. Tablet: below the tabs (right pane).
@@ -384,7 +387,8 @@ fun PlayerScreen(
                 queueViewModel = queueViewModel,
                 playlistViewModel = playlistViewModel,
                 fileBrowserViewModel = fileBrowserViewModel,
-                playerViewModel = playerViewModel
+                playerViewModel = playerViewModel,
+                onOpenChange = { isTabSheetOpen = it }
             )
         }
     }
