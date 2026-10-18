@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.aboutlibraries)
 }
 
 kotlin {
@@ -62,15 +63,16 @@ kotlin {
             implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            // Licenses screen (the list: Android generated in :androidApp, iOS exported below)
+            implementation(libs.aboutlibraries.compose.m3)
         }
         iosMain.dependencies {
             implementation(libs.sqlite.bundled)
         }
         androidMain.dependencies {
-            // Storage permission request, licenses screen
+            // Storage permission request
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
-            implementation(libs.aboutlibraries.compose.m3)
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.junit)
@@ -80,10 +82,33 @@ kotlin {
     }
 }
 
+// Licenses screen on iOS: the iOS dependencies with their licenses (plus <root>/config/libraries/
+// for code copied into the app), exported at build time as an iOS resource
+// (files/aboutlibraries.json). Android generates its own list in :androidApp.
+aboutLibraries {
+    collect {
+        configPath = rootProject.layout.projectDirectory.dir("config")
+        // KMP metadata classpaths are compile classpaths, which are skipped by default.
+        all = true
+    }
+    export {
+        // The plugin doesn't see the iOS klib configurations; the iosMain metadata classpath has the
+        // same libraries (commonMain + iosMain, nothing Android-only).
+        variant = "metadataIosMain"
+        outputFile = layout.buildDirectory.file("generated/iosLicenses/files/aboutlibraries.json")
+    }
+}
+val exportIosLicenses = tasks.named("exportLibraryDefinitions")
+
 // Texts, drawables and the privacy / imprint pages (src/commonMain/composeResources).
 compose.resources {
     packageOfResClass = "org.qstuff.qplayer.resources"
     generateResClass = always
+    customDirectory(
+        sourceSetName = "iosMain",
+        // Own folder: the plugin's other variants write to generated/aboutLibraries
+        directoryProvider = exportIosLicenses.map { layout.buildDirectory.dir("generated/iosLicenses").get() }
+    )
 }
 
 // Room: generate the database implementation for every platform.
