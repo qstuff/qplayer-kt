@@ -1,0 +1,393 @@
+package org.qstuff.qplayer.ui.player
+
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import org.koin.compose.koinInject
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.ui.player.components.PitchJogSection
+import org.qstuff.qplayer.ui.player.components.PlayerControls
+import org.qstuff.qplayer.ui.player.components.PlayerTabSheet
+import org.qstuff.qplayer.ui.player.components.PlayerTabs
+import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
+import org.qstuff.qplayer.ui.player.components.TrackInfoSection
+import org.qstuff.qplayer.ui.player.components.WaveformSeekbar
+import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
+import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
+import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
+import org.qstuff.qplayer.ui.queue.QueueViewModel
+import org.qstuff.qplayer.util.Formatting
+import org.qstuff.qplayer.util.PlayerStatus
+import org.jetbrains.compose.resources.stringArrayResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.pitch_range_values
+import org.qstuff.qplayer.ui.theme.LocalDimens
+
+/**
+ * The player screen. This composable owns all the hoisted state (observers, remembered values
+ * and the track-status / position effects) and lays out the six UI sections, which live in
+ * [org.qstuff.qplayer.ui.player.components]: title bar, track info, waveform seekbar, the
+ * pitch/jog deck, the control buttons, and the draggable tab sheet.
+ */
+@Suppress("UnusedBoxWithConstraintsScope")   // Android lint ID; lint honors @Suppress too
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun PlayerScreen(
+    playerViewModel: PlayerViewModel,
+    queueViewModel: QueueViewModel,
+    playlistViewModel: PlaylistViewModel,
+    fileBrowserViewModel: FileBrowserViewModel,
+    titleSuffix: String,
+    onOpenSettings: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenImprint: () -> Unit,
+    onOpenLicenses: () -> Unit
+) {
+    val preferencesDataSource: PreferencesDataSource = koinInject()
+
+    val playerStatus by playerViewModel.playerStatus.collectAsStateWithLifecycle()
+    // Current track + status as an immutable snapshot. Its `revision` makes every emission
+    // distinct, so re-selecting the same track still recomposes and re-runs the status effect —
+    // Track.trackStatus is @Ignore and the media layer mutates the same Track in place, which
+    // plain equality dedup would otherwise swallow. See PlayerTrackState.
+    val playerTrackState by playerViewModel.playerTrackState.collectAsStateWithLifecycle()
+    val currentTrack = playerTrackState?.track
+    val trackPosition by playerViewModel.onTrackPositionUpdate.collectAsStateWithLifecycle()
+    val waveformData by playerViewModel.onWaveformDataUpdate.collectAsStateWithLifecycle()
+    val masterTempo by playerViewModel.masterTempo.collectAsStateWithLifecycle()
+    val pitchValueText by playerViewModel.pitchValueText.collectAsStateWithLifecycle()
+    val pitchValue by playerViewModel.pitchValue.collectAsStateWithLifecycle()
+    val pitchFactorIndex by playerViewModel.pitchFactorIndex.collectAsStateWithLifecycle()
+    val cueActive by playerViewModel.cueActive.collectAsStateWithLifecycle()
+    val showRemainingTime by playerViewModel.showRemainingTime.collectAsStateWithLifecycle()
+    val jogwheelHapticLevel by playerViewModel.jogwheelHapticLevel.collectAsStateWithLifecycle()
+    val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
+    val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
+
+    var isTrackPrepared by remember { mutableStateOf(false) }
+    var isBlinkActive by remember { mutableStateOf(false) }
+    // Progress uses two separate states so the position timer and the user's drag never
+    // fight over one value: `playbackProgress` is written only by the timer, `seekProgress`
+    // only by the drag. The seekbar shows `seekProgress ?: playbackProgress`, so while
+    // dragging the timer's updates aren't even read (short-circuit) — no thumb jump.
+    var playbackProgress by remember { mutableStateOf(0f) }
+    var seekProgress by remember { mutableStateOf<Float?>(null) }
+    val displayedProgress = seekProgress ?: playbackProgress
+    var cueProgressPos by remember { mutableStateOf(0) }
+
+    // UI-state resets only. The playback side effects of these transitions (seek/auto-play on
+    // PREPARED, stop + auto-advance on COMPLETED) live in PlayerViewModel / PlayerActivity, so
+    // they also run while the app is in the background.
+    LaunchedEffect(playerTrackState) {
+        playerTrackState?.let { state ->
+            isTrackPrepared = false
+            when (state.status) {
+                Track.TrackStatus.LOADING, Track.TrackStatus.UNDEFINED -> {
+                    isBlinkActive = false
+                    playbackProgress = 0f
+                    seekProgress = null
+                }
+                Track.TrackStatus.PREPARED -> {
+                    isTrackPrepared = true
+                    isBlinkActive = false
+                    playbackProgress = 0f
+                    seekProgress = null
+                }
+                Track.TrackStatus.COMPLETED -> {
+                    isBlinkActive = false
+                }
+                Track.TrackStatus.ERROR -> {}
+            }
+        }
+    }
+
+    LaunchedEffect(trackPosition) {
+        currentTrack?.let { track ->
+            if (track.duration > 0) {
+                playbackProgress = trackPosition.toFloat() / track.duration
+                isBlinkActive = (track.duration - trackPosition) in 0L..30000L
+            }
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "blink")
+    val blinkAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+        label = "blinkAlpha"
+    )
+    val dynamicTimeAlpha = if (isBlinkActive) blinkAlpha else 1.0f
+
+    // Key on duration (not the Track reference): duration is mutated in place on the same
+    // Track object once the player is ready, so keying on `currentTrack` never recomputes.
+    val totalDurationText = remember(currentTrack?.duration) {
+        currentTrack?.let { "total: ${getDurationHumanReadable(it.duration)}" } ?: ""
+    }
+    val dynamicTimeText = remember(trackPosition, currentTrack, showRemainingTime) {
+        val pos = trackPosition
+        val track = currentTrack
+        if (track != null && track.duration > 0) {
+            if (showRemainingTime) {
+                "remain: ${getDurationHumanReadable(track.duration - pos)}"
+            } else {
+                "current: ${getDurationHumanReadable(pos)}"
+            }
+        } else {
+            "remain: 00:00:00"
+        }
+    }
+    // The overview waveform is generated asynchronously; it's "ready" only once data for the
+    // current track has arrived. Until then we show the calculating indicator.
+    val waveformReady = waveformData?.let { it.bytes != null && it.track == currentTrack } == true
+    val trackTitleText = when {
+        currentTrack == null -> ""
+        playerTrackState?.status == Track.TrackStatus.LOADING
+                || playerTrackState?.status == Track.TrackStatus.UNDEFINED -> "lade…"
+        else -> currentTrack.name
+    }
+
+    val pitchRangeValues = stringArrayResource(Res.array.pitch_range_values)
+
+    val hapticFeedback: HapticFeedback = koinInject()
+    val jogwheelHaptics = remember { JogwheelHaptics(hapticFeedback) }
+    SideEffect { jogwheelHaptics.level = jogwheelHapticLevel }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .statusBarsPadding()
+    ) {
+        val colHPadding = 4.dp
+        // Tablets (locked to landscape, see PlayerActivity): deck (title … jog wheel) left,
+        // tabs + button bar permanently right.
+        val isTwoPane = maxWidth > maxHeight
+
+        // ─── Button bar: transport, cue, pitch fine-tuning, range, reset, master tempo ───
+        val controls: @Composable () -> Unit = {
+            PlayerControls(
+                isPlaying = playerStatus == PlayerStatus.PLAYING,
+                repeat = repeat,
+                shuffle = shuffle,
+                cueActive = cueActive,
+                masterTempo = masterTempo,
+                pitchValueText = pitchValueText,
+                pitchRangeValues = pitchRangeValues,
+                pitchFactorIndex = pitchFactorIndex,
+                onPrevious = {
+                    // Position-aware: restart the current track if it has played a while,
+                    // otherwise go to the previous one.
+                    if (!playerViewModel.restartCurrentTrackIfPlayed()) {
+                        queueViewModel.previousTrack(currentTrack)
+                    }
+                },
+                onPlayPause = { playerViewModel.playPause() },
+                onNext = { queueViewModel.nextTrack(currentTrack) },
+                onToggleRepeat = { queueViewModel.toggleRepeat() },
+                onToggleShuffle = { queueViewModel.toggleShuffle() },
+                onCueClick = {
+                    if (cueActive) {
+                        playerViewModel.playFromCue(currentTrack)
+                    } else {
+                        currentTrack?.also {
+                            cueProgressPos = (displayedProgress * 1000).toInt()
+                            playerViewModel.toggleCue(it, true)
+                        }
+                    }
+                },
+                onCueLongClick = {
+                    if (cueActive) {
+                        currentTrack?.also { playerViewModel.toggleCue(it, false) }
+                    }
+                },
+                onPitchDecrease = {
+                    val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value - delta)
+                },
+                onPitchIncrease = {
+                    val delta = (0.1f * playerViewModel.pitchFactor).toInt()
+                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value + delta)
+                },
+                onPitchRangeSelected = { index -> playerViewModel.onPitchRangeSelected(index) },
+                onReset = { playerViewModel.onPitchChanged(500) },
+                onToggleMasterTempo = {
+                    playerViewModel.toggleMasterTempo()
+                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value)
+                }
+            )
+        }
+
+        // ─── Player deck: title bar, track info, waveform, pitch + jog (+ buttons on phones) ───
+        val deckContent: @Composable ColumnScope.() -> Unit = {
+            PlayerTitleBar(
+                titleSuffix = titleSuffix,
+                onOpenSettings = onOpenSettings,
+                onOpenPrivacy = onOpenPrivacy,
+                onOpenImprint = onOpenImprint,
+                onOpenLicenses = onOpenLicenses,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            TrackInfoSection(
+                trackTitleText = trackTitleText,
+                totalDurationText = totalDurationText,
+                dynamicTimeText = dynamicTimeText,
+                dynamicTimeAlpha = dynamicTimeAlpha,
+                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() }
+            )
+
+            WaveformSeekbar(
+                waveformData = waveformData,
+                waveformReady = waveformReady,
+                showCalculating = currentTrack != null && !waveformReady,
+                displayedProgress = displayedProgress,
+                dynamicTimeAlpha = dynamicTimeAlpha,
+                cueActive = cueActive,
+                cueProgressPos = cueProgressPos,
+                onSeekChange = { seekProgress = it },
+                onSeekCommit = { target ->
+                    playbackProgress = target // avoid a 1-frame jump back
+                    currentTrack?.let { track ->
+                        playerViewModel.seekTo((target * track.duration).toDouble(), false)
+                    }
+                    seekProgress = null
+                }
+            )
+
+            PitchJogSection(
+                pitchProgress = pitchValue,
+                // Read at touch-down: the current value, not the one of the last composition.
+                getPitchProgress = { playerViewModel.pitchValue.value },
+                onPitchChange = playerViewModel::onPitchChanged,
+                getSensitivity = { playerViewModel.jogwheelSensitivity.value },
+                getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() },
+                onScratchStart = playerViewModel::startScratch,
+                onScratch = playerViewModel::scratchTo,
+                onScratchEnd = playerViewModel::endScratch,
+                onJogTouch = jogwheelHaptics::onTouch,
+                onJogRotate = jogwheelHaptics::onRotate,
+                // Tablet: the wheel takes the height left below the waveform.
+                modifier = if (isTwoPane) Modifier.weight(1f) else Modifier,
+                fitHeight = isTwoPane
+            )
+
+            // Phone: buttons below the jog wheel. Tablet: below the tabs (right pane).
+            if (!isTwoPane) controls()
+        }
+
+        val pitchbarWidth = LocalDimens.current.pitchbarWidth
+        val titleBarHeight = LocalDimens.current.titleTextviewHeight
+        val textviewHeight = LocalDimens.current.textviewHeight
+        val seekbarHeight = LocalDimens.current.seekbarHeight
+
+        if (isTwoPane) {
+            // The jog wheel gets all the height below the waveform (title bar incl. 4dp top
+            // padding, track info = 2 rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
+            // the button bar's own bottom gap). The deck is exactly as wide as fader + wheel, so
+            // there's no white space beside them; the right pane takes the rest of the width.
+            val deckFixedHeight = 4.dp + titleBarHeight + textviewHeight * 2 + 12.dp +
+                    seekbarHeight + 4.dp + 8.dp
+            val jogSize = maxHeight - deckFixedHeight
+            val deckWidth = (pitchbarWidth + jogSize + colHPadding * 2)
+                .coerceIn(maxWidth * 0.4f, maxWidth * 0.65f)
+
+            Row(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .width(deckWidth)
+                        .fillMaxHeight()
+                        .padding(start = colHPadding, end = colHPadding, bottom = 8.dp),
+                    content = deckContent
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(top = 4.dp, end = colHPadding)
+                ) {
+                    PlayerTabs(
+                        queueViewModel = queueViewModel,
+                        playlistViewModel = playlistViewModel,
+                        fileBrowserViewModel = fileBrowserViewModel,
+                        playerViewModel = playerViewModel,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(LocalDimens.current.roundedShapeRadius))
+                            .background(Color.Black)
+                    )
+                    controls()
+                }
+            }
+        } else {
+            val colWidth = maxWidth - colHPadding * 2
+
+            // Jog+pitch row: the jog wheel is a square filling the width to the right of the
+            // pitch fader, so its height = that width. +4.dp gap below the duration row.
+            // Mirrors PitchJogSection's inner BoxWithConstraints.
+            val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
+            val trackInfoHeight = textviewHeight * 2 + 4.dp
+            // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
+            val btnRowsHeight = textviewHeight * 2 + 24.dp
+            // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
+            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
+            val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
+
+            val density = LocalDensity.current
+            val expandedHeightPx = with(density) { expandedHeight.toPx() }
+            val maxSheetOffsetPx = with(density) { (expandedHeight - peekHeight).toPx() }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = colHPadding),
+                content = deckContent
+            )
+
+            PlayerTabSheet(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                expandedHeightPx = expandedHeightPx,
+                maxSheetOffsetPx = maxSheetOffsetPx,
+                queueViewModel = queueViewModel,
+                playlistViewModel = playlistViewModel,
+                fileBrowserViewModel = fileBrowserViewModel,
+                playerViewModel = playerViewModel
+            )
+        }
+    }
+}
+
+private fun getDurationHumanReadable(time: Long) = Formatting.hoursMinutesSeconds(time)

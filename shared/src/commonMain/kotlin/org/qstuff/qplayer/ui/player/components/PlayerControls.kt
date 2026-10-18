@@ -1,0 +1,167 @@
+package org.qstuff.qplayer.ui.player.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.util.TrackRepeatStatus
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.button_loop
+import org.qstuff.qplayer.resources.button_loop1_selected
+import org.qstuff.qplayer.resources.button_loop_selected
+import org.qstuff.qplayer.resources.button_next
+import org.qstuff.qplayer.resources.button_pause_selected
+import org.qstuff.qplayer.resources.button_play_selected
+import org.qstuff.qplayer.resources.button_previous
+import org.qstuff.qplayer.resources.button_shuffle
+import org.qstuff.qplayer.resources.button_shuffle_selected
+import org.qstuff.qplayer.resources.ic_keyboard_arrow_left_white_24px
+import org.qstuff.qplayer.resources.ic_keyboard_arrow_right_white_24px
+
+/**
+ * The two transport/pitch control button rows, built from [ControlChip]s.
+ *
+ *  Row 1: prev · play/pause · next · repeat · shuffle · cue
+ *  Row 2: pitch− · value · pitch+ · range · reset · mt
+ */
+@Composable
+fun PlayerControls(
+    isPlaying: Boolean,
+    repeat: TrackRepeatStatus?,
+    shuffle: Boolean,
+    cueActive: Boolean,
+    masterTempo: Boolean,
+    pitchValueText: String,
+    pitchRangeValues: List<String>,
+    pitchFactorIndex: Int,
+    onPrevious: () -> Unit,
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onToggleRepeat: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCueClick: () -> Unit,
+    onCueLongClick: () -> Unit,
+    onPitchDecrease: () -> Unit,
+    onPitchIncrease: () -> Unit,
+    onPitchRangeSelected: (Int) -> Unit,
+    onReset: () -> Unit,
+    onToggleMasterTempo: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // ─── Row 1: prev | play | next | repeat | shuffle | cue ───
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconControlChip(
+                Res.drawable.button_previous,
+                "Previous",
+                onPrevious,
+                tint = QOrange   // white drawable → tint to the accent
+            )
+            IconControlChip(
+                iconRes = if (isPlaying) Res.drawable.button_pause_selected
+                else Res.drawable.button_play_selected,
+                contentDescription = "Play/Pause",
+                onClick = onPlayPause   // drawable is already QOrange
+            )
+            IconControlChip(
+                Res.drawable.button_next,
+                "Next",
+                onNext,
+                tint = QOrange   // white drawable → tint to the accent
+            )
+            IconControlChip(
+                // Repeat icons encode state via their own color (white = off, orange = on) and the
+                // "1" glyph, so no tint — see IconControlChip's default.
+                iconRes = when (repeat) {
+                    TrackRepeatStatus.NONE -> Res.drawable.button_loop
+                    TrackRepeatStatus.ONE -> Res.drawable.button_loop1_selected
+                    TrackRepeatStatus.ALL -> Res.drawable.button_loop_selected
+                    else -> Res.drawable.button_loop
+                },
+                contentDescription = "Repeat",
+                onClick = onToggleRepeat
+            )
+            IconControlChip(
+                // Shuffle drawables also carry their own on/off colors — no tint.
+                iconRes =
+                    if (shuffle) Res.drawable.button_shuffle_selected
+                    else Res.drawable.button_shuffle,
+                contentDescription = "Shuffle",
+                onClick = onToggleShuffle
+            )
+            TextControlChip(
+                text = "cue",
+                color = if (cueActive) QOrange else Color.White,
+                onClick = onCueClick,
+                onLongClick = onCueLongClick
+            )
+        }
+
+        // ─── Row 2: pitch- | value | pitch+ | range | reset | mt ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconControlChip(
+                Res.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
+                tint = QOrange   // white drawable → tint to the accent
+            )
+            TextControlChip(text = pitchValueText)
+            IconControlChip(
+                Res.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
+                tint = QOrange   // white drawable → tint to the accent
+            )
+            // Pitch range chip hosts its own dropdown menu.
+            var showPitchRangeMenu by remember { mutableStateOf(false) }
+            ControlChip(onClick = { showPitchRangeMenu = true }) {
+                Text(
+                    text = pitchRangeValues.getOrElse(pitchFactorIndex) { "?" },
+                    color = Color.White
+                )
+                DropdownMenu(
+                    expanded = showPitchRangeMenu,
+                    onDismissRequest = { showPitchRangeMenu = false }
+                ) {
+                    pitchRangeValues.forEachIndexed { index, value ->
+                        DropdownMenuItem(
+                            text = { Text(value) },
+                            onClick = {
+                                onPitchRangeSelected(index)
+                                showPitchRangeMenu = false
+                            }
+                        )
+                    }
+                }
+            }
+            TextControlChip(text = "reset", onClick = onReset)
+            TextControlChip(
+                text = "mt",
+                color = if (masterTempo) QOrange else Color.White,
+                onClick = onToggleMasterTempo
+            )
+        }
+    }
+}

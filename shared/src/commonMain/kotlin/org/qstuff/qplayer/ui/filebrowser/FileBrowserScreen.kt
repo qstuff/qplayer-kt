@@ -1,0 +1,329 @@
+package org.qstuff.qplayer.ui.filebrowser
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.SdCard
+import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.ui.queue.QueueViewModel
+import org.qstuff.qplayer.ui.player.PlayerViewModel
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.add_m3ulist_to_queue_dialog_no_tracks_found_title
+import org.qstuff.qplayer.resources.add_m3ulist_to_queue_dialog_tracks_found_title
+import org.qstuff.qplayer.resources.dialog_cancel
+import org.qstuff.qplayer.resources.dialog_ok
+import org.qstuff.qplayer.resources.filebrowser_dialog_add_tracks_to_queue_title
+import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
+import org.qstuff.qplayer.resources.filebrowser_storages_title
+
+private val QOrangeDivider = Color(0x60FC7614)
+
+/** The file browser tab; asks for the storage permission first (see StoragePermissionGate). */
+@Composable
+fun FileBrowserScreen(
+    fileBrowserViewModel: FileBrowserViewModel,
+    queueViewModel: QueueViewModel,
+    playerViewModel: PlayerViewModel
+) {
+    StoragePermissionGate {
+        FileBrowserContent(fileBrowserViewModel, queueViewModel, playerViewModel)
+    }
+}
+
+@Composable
+private fun FileBrowserContent(
+    fileBrowserViewModel: FileBrowserViewModel,
+    queueViewModel: QueueViewModel,
+    playerViewModel: PlayerViewModel
+) {
+    val state by fileBrowserViewModel.state.collectAsStateWithLifecycle()
+    val items = state.items
+    val directoryName = state.directoryName
+    // Non-null: show the storage list (internal storage, SD card, …) instead of a directory.
+    val storageRoots = state.storageRoots
+
+    var addTracksDialogItems by remember { mutableStateOf<List<BrowserItem>?>(null) }
+    var m3uDialogItem by remember { mutableStateOf<BrowserItem?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        Text(
+            text = if (storageRoots != null) {
+                stringResource(Res.string.filebrowser_storages_title)
+            } else directoryName,
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 5.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .height(28.dp)
+                .padding(start = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Nothing above the storage list.
+            if (storageRoots == null) {
+                IconButton(
+                    onClick = { fileBrowserViewModel.navigateUp() },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        Icons.Default.SubdirectoryArrowLeft,
+                        contentDescription = "Navigate up",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+
+        storageRoots?.let { roots ->
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(roots, key = { it.id }) { root ->
+                    StorageRootItem(
+                        root = root,
+                        onClick = { fileBrowserViewModel.onStorageRootClicked(root) }
+                    )
+                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+                }
+            }
+        }
+
+        if (storageRoots == null) LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(items, key = { it.id }) { item ->
+                FileListItem(
+                    item = item,
+                    onClick = {
+                        when (item.kind) {
+                            BrowserItem.Kind.PLAYLIST -> m3uDialogItem = item
+                            BrowserItem.Kind.TRACK -> queueViewModel.addPath(item.id)
+                            BrowserItem.Kind.FOLDER -> fileBrowserViewModel.onItemClicked(item)
+                        }
+                    },
+                    onLongClick = {
+                        if (item.kind == BrowserItem.Kind.FOLDER) {
+                            addTracksDialogItems = fileBrowserViewModel.tracksIn(item).ifEmpty { null }
+                        }
+                    },
+                    onPrelistenClick = {
+                        playerViewModel.loadTrack(Track.fromPath(item.id, autoplay = true))
+                    }
+                )
+                HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+            }
+        }
+    }
+
+    addTracksDialogItems?.let { tracksToAdd ->
+        AlertDialog(
+            onDismissRequest = { addTracksDialogItems = null },
+            title = { Text(stringResource(Res.string.filebrowser_dialog_add_tracks_to_queue_title)) },
+            text = {
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                    items(tracksToAdd) { track ->
+                        Text(
+                            text = track.name,
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            fontSize = 15.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    queueViewModel.addPaths(tracksToAdd.map { it.id })
+                    addTracksDialogItems = null
+                }) { Text(stringResource(Res.string.dialog_ok)) }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        queueViewModel.clearTrackList()
+                        queueViewModel.addPaths(tracksToAdd.map { it.id })
+                        addTracksDialogItems = null
+                    }) { Text(stringResource(Res.string.filebrowser_dialog_queue_overwrite)) }
+                    TextButton(onClick = { addTracksDialogItems = null }) {
+                        Text(stringResource(Res.string.dialog_cancel))
+                    }
+                }
+            }
+        )
+    }
+
+    m3uDialogItem?.let { playlist ->
+        val parsed = remember(playlist) { fileBrowserViewModel.playlistTracks(playlist) }
+        val found = parsed.first
+        val notFound = parsed.second
+
+        AlertDialog(
+            onDismissRequest = { m3uDialogItem = null },
+            title = {
+                Text(
+                    if (found.isEmpty())
+                        stringResource(Res.string.add_m3ulist_to_queue_dialog_no_tracks_found_title, playlist.name)
+                    else
+                        stringResource(Res.string.add_m3ulist_to_queue_dialog_tracks_found_title, playlist.name)
+                )
+            },
+            text = {
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                    if (found.isNotEmpty()) {
+                        item { Text("Found:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
+                        items(found) { track ->
+                            Text(track.name, fontSize = 15.sp, color = Color.White, modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+                    if (notFound.isNotEmpty()) {
+                        item { Spacer(Modifier.height(8.dp)) }
+                        item { Text("Not found:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error) }
+                        items(notFound) { track ->
+                            Text(track.name, fontSize = 15.sp, color = Color(0xFF999999), modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (found.isNotEmpty()) {
+                    TextButton(onClick = {
+                        queueViewModel.addTrackList(found)
+                        m3uDialogItem = null
+                    }) { Text(stringResource(Res.string.dialog_ok)) }
+                } else {
+                    TextButton(onClick = { m3uDialogItem = null }) { Text(stringResource(Res.string.dialog_ok)) }
+                }
+            },
+            dismissButton = {
+                if (found.isNotEmpty()) {
+                    Row {
+                        TextButton(onClick = {
+                            queueViewModel.clearTrackList()
+                            queueViewModel.addTrackList(found)
+                            m3uDialogItem = null
+                        }) { Text(stringResource(Res.string.filebrowser_dialog_queue_overwrite)) }
+                        TextButton(onClick = { m3uDialogItem = null }) {
+                            Text(stringResource(Res.string.dialog_cancel))
+                        }
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun StorageRootItem(root: StorageRoot, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp)
+            .background(Color.Black)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (root.isRemovable) Icons.Default.SdCard else Icons.Default.PhoneAndroid,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = root.label,
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FileListItem(
+    item: BrowserItem,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onPrelistenClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp)
+            .background(Color.Black)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val icon = when (item.kind) {
+            BrowserItem.Kind.FOLDER -> Icons.Default.Folder
+            BrowserItem.Kind.PLAYLIST -> Icons.AutoMirrored.Filled.PlaylistPlay
+            BrowserItem.Kind.TRACK -> Icons.Default.MusicNote
+        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = item.name,
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        if (item.kind == BrowserItem.Kind.TRACK) {
+            IconButton(
+                onClick = onPrelistenClick,
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = "Pre-listen",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}

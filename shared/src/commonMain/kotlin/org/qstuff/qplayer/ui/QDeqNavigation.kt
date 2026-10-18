@@ -1,0 +1,129 @@
+package org.qstuff.qplayer.ui
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.ui.player.PlayerScreen
+import org.qstuff.qplayer.ui.player.PlayerViewModel
+import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
+import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
+import org.qstuff.qplayer.ui.queue.QueueViewModel
+import org.qstuff.qplayer.ui.settings.InfoPageScreen
+import org.qstuff.qplayer.ui.settings.LicensesScreen
+import org.qstuff.qplayer.ui.settings.SettingsScreen
+import org.qstuff.qplayer.util.PlatformInfo
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.more_menu_imprint
+import org.qstuff.qplayer.resources.more_menu_privacy
+
+/** The app's screens — the keys on the Navigation 3 back stack. */
+@Serializable
+sealed interface Screen : NavKey {
+    @Serializable data object Player : Screen
+    @Serializable data object Settings : Screen
+    @Serializable data object Licenses : Screen
+    @Serializable data object Privacy : Screen
+    @Serializable data object Imprint : Screen
+}
+
+// The back stack is saved via kotlinx.serialization. Registering every key explicitly (instead of
+// the reflection-based Android variant) also works on iOS later.
+private val navSavedStateConfiguration = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(Screen.Player::class)
+            subclass(Screen.Settings::class)
+            subclass(Screen.Licenses::class)
+            subclass(Screen.Privacy::class)
+            subclass(Screen.Imprint::class)
+        }
+    }
+}
+
+/**
+ * The app's single navigation host: the player is the start screen, Settings / Licenses / the info
+ * pages are pushed on top of it. Back on the player screen isn't handled here, so it still closes
+ * the activity (which stops playback, as before).
+ *
+ * The player ViewModels are activity-scoped (the activity wires them together); Settings gets its
+ * own ViewModel, cleared when the screen leaves the back stack.
+ *
+ * Changed settings reach the player through PreferencesDataSource.settingsChanged.
+ */
+@Composable
+fun QDeqNavigation(
+    playerViewModel: PlayerViewModel,
+    queueViewModel: QueueViewModel,
+    playlistViewModel: PlaylistViewModel,
+    fileBrowserViewModel: FileBrowserViewModel,
+    titleSuffix: String
+) {
+    val backStack = rememberNavBackStack(navSavedStateConfiguration, Screen.Player)
+    val navigateBack: () -> Unit = { backStack.removeLastOrNull() }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = navigateBack,
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            entry<Screen.Player> {
+                PlayerScreen(
+                    playerViewModel = playerViewModel,
+                    queueViewModel = queueViewModel,
+                    playlistViewModel = playlistViewModel,
+                    fileBrowserViewModel = fileBrowserViewModel,
+                    titleSuffix = titleSuffix,
+                    onOpenSettings = { backStack.add(Screen.Settings) },
+                    onOpenPrivacy = { backStack.add(Screen.Privacy) },
+                    onOpenImprint = { backStack.add(Screen.Imprint) },
+                    onOpenLicenses = { backStack.add(Screen.Licenses) }
+                )
+            }
+            entry<Screen.Settings> {
+                val platformInfo: PlatformInfo = koinInject()
+                val hapticFeedback: HapticFeedback = koinInject()
+                SettingsScreen(
+                    settingsViewModel = koinViewModel(),
+                    appVersion = platformInfo.appVersion,
+                    deviceInfo = platformInfo.deviceInfo,
+                    canVibrate = hapticFeedback.isSupported,
+                    onBack = navigateBack
+                )
+            }
+            entry<Screen.Licenses> {
+                LicensesScreen(onBack = navigateBack)
+            }
+            entry<Screen.Privacy> {
+                InfoPageScreen(
+                    title = stringResource(Res.string.more_menu_privacy),
+                    file = "files/privacy.html",
+                    onBack = navigateBack
+                )
+            }
+            entry<Screen.Imprint> {
+                InfoPageScreen(
+                    title = stringResource(Res.string.more_menu_imprint),
+                    file = "files/imprint.html",
+                    onBack = navigateBack
+                )
+            }
+        }
+    )
+}

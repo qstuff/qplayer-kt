@@ -2,6 +2,8 @@
 *.apk
 *.ap_
 .claude/
+# Kotlin 2 compiler/daemon data
+.kotlin/
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -11,8 +13,8 @@
 
 # Generated files
 
-app/release/
-app/.cxx/
+androidApp/release/
+androidApp/.cxx/
 
 bin/
 gen/

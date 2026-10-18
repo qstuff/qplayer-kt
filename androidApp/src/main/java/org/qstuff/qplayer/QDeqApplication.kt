@@ -1,0 +1,80 @@
+package org.qstuff.qplayer
+
+import android.app.Application
+import android.util.DisplayMetrics
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
+import org.qstuff.qplayer.di.appModules
+import org.qstuff.qplayer.util.CrashReporter
+
+/*
+ * Created by Claus Chierici (claus@qstuff.org) 
+ * on 2/3/19
+ * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
+ */
+class QDeqApplication : Application() {
+
+    private lateinit var metrics: DisplayMetrics
+
+    override fun onCreate() {
+        super.onCreate()
+
+        // Logging only in debug builds (as with the former Timber DebugTree).
+        Logger.setMinSeverity(if (BuildConfig.DEBUG) Severity.Verbose else Severity.Assert)
+
+        val koin = startKoin {
+            androidContext(this@QDeqApplication)
+            modules(appModules)
+        }.koin
+
+        koin.get<CrashReporter>().setEnabled(koin.get<PreferencesDataSource>().isCrashreportingEnabled())
+    }
+
+    //
+    // Debug
+    //
+
+    fun getDPI(): String {
+
+        val str = StringBuilder()
+        metrics = resources.displayMetrics
+        str.append(metrics.densityDpi)
+        str.append(" dpi ")
+
+        if (metrics.densityDpi >= DisplayMetrics.DENSITY_LOW && metrics.densityDpi < DisplayMetrics.DENSITY_MEDIUM)
+            str.append("(LDPI)")
+        if (metrics.densityDpi >= DisplayMetrics.DENSITY_MEDIUM && metrics.densityDpi < DisplayMetrics.DENSITY_HIGH)
+            str.append("(MDPI)")
+        if (metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH && metrics.densityDpi < DisplayMetrics.DENSITY_XHIGH)
+            str.append("(HDPI)")
+        if (metrics.densityDpi >= DisplayMetrics.DENSITY_XHIGH && metrics.densityDpi < DisplayMetrics.DENSITY_XXHIGH)
+            str.append("(XHDPI)")
+        if (metrics.densityDpi >= DisplayMetrics.DENSITY_XXHIGH && metrics.densityDpi < DisplayMetrics.DENSITY_XXXHIGH)
+            str.append("(XXHDPI)")
+        if (metrics.densityDpi >= DisplayMetrics.DENSITY_XXXHIGH)
+            str.append("(XXXHDPI)")
+
+        return str.toString()
+    }
+
+    fun getDisplayDPI(): Int {
+
+        metrics = resources.displayMetrics
+        return metrics.densityDpi
+    }
+
+    fun getDisplayResolution(): String {
+
+        val str = StringBuilder()
+        metrics = resources.displayMetrics
+        val width = metrics.widthPixels
+        val height = metrics.heightPixels
+        str.append(width)
+        str.append("x")
+        str.append(height)
+        return str.toString()
+    }
+}

@@ -1,6 +1,6 @@
 # Kotlin Multiplatform migration plan
 
-Status: **planned, not started** (October 2026)
+Status: **Phases 0–3 done, open tasks below** (October 2026; integration branch `kmp-migration`)
 
 ## Goal
 
@@ -64,15 +64,48 @@ persistence is Room plus SharedPreferences.
 
 ### Phase 1: multiplatform module (2–3 PRs, Android only)
 
-- Convert `app` into a KMP module with `commonMain` and `androidMain`.
-- Move code package by package: models and data → ViewModels → UI.
-- Move resources to Compose Multiplatform resources (German stays the default, English in
-  `values-en`).
-- Switch to Room KMP.
+- Module layout: `shared` (KMP: `commonMain`, `androidMain`, `iosMain`) and `androidApp` (the
+  former `app`; AGP 9 doesn't allow the Android app module to be a KMP module). `iosApp` follows in
+  Phase 2.
+- **1a (done):** models, settings, Room KMP database (suspending DAOs, same `qplayer` file),
+  ViewModels, `PlaybackCoordinator`, platform interfaces and helpers in `shared/commonMain`; their
+  unit tests in `androidHostTest`. The iOS targets are compiled from now on, so platform code can't
+  slip into `commonMain`. The Android implementations (media service, scratch engine, decoder,
+  file storage, Firebase, Koin `platformModule`/`dataModule`) stay in `androidApp`.
+- **1b (resources, done):** Compose Multiplatform plugin; strings and arrays (German stays the default,
+  English in `values-en`), drawables and the privacy/imprint HTML as Compose Multiplatform
+  resources in `shared` (`Res.*`). Only the launcher icon, theme, notification icon and strings
+  stay Android resources. The tablet dimensions (`values-sw600dp`/`-sw720dp`) became `Dimens`,
+  chosen in code by the screen's smallest width, since Compose Multiplatform resources have no
+  screen-width qualifiers.
+- **1c (screens, done):** the Compose UI is in `shared/commonMain` (JetBrains builds of Material 3,
+  Navigation 3 and lifecycle; on Android the Jetpack versions stay). Platform functions
+  (`expect`/`actual`): the storage permission gate and the licenses screen (AboutLibraries list on
+  Android, placeholder on iOS). The privacy / imprint HTML is converted by a small common function
+  instead of Android's `AnnotatedString.fromHtml`. `androidApp` keeps only the activity, application,
+  Koin platform modules and the Android implementations.
 
 Result: the Android app is "KMP inside" and behaves exactly as before.
 
 ### Phase 2: iOS app (largest phase)
+
+**2a (done): first iOS app.** `iosApp/` (SwiftUI shell, project generated with XcodeGen from
+`iosApp/project.yml`; the `.xcodeproj` is committed) hosts the shared UI via `MainViewController()`
+(`shared/src/iosMain`). Koin `iosModules`: settings in NSUserDefaults, the Room database in
+Application Support (bundled SQLite driver), the file browser on the app's Documents folder
+(`PathStorageProvider`, kotlinx-io; visible in the Files app / Finder). Placeholders: player
+(no audio — tracks load, play/pause only switch the state), scratching, waveform, haptics, crash
+reporting. Build and run: open `iosApp/iosApp.xcodeproj` in Xcode, pick a simulator, Run (the
+build phase calls `./gradlew :shared:embedAndSignAppleFrameworkForXcode`).
+
+**2b (done): iOS player.** `IosAudioPlayer` on AVAudioEngine (player node → varispeed →
+time-pitch: vinyl pitch or master tempo), seeking by rescheduling the file, background audio,
+lock screen / headset controls and Now Playing info, pause on interruptions. `IosWaveformGenerator`
+reads the file with AVAudioFile (same overview as Android). Track and folder ids on iOS are
+virtual paths (`/Documents/…`, `IosPaths`), because the app container's real path changes with
+every install and app update.
+
+Still to do:
 
 - `iosApp` Xcode project hosting the shared Compose UI (`ComposeUIViewController`).
 - iOS implementations of the platform interfaces:
@@ -84,21 +117,87 @@ Result: the Android app is "KMP inside" and behaves exactly as before.
 
 ### Phase 3: iOS scratch engine and polish
 
+**3a (done): iOS scratch engine.** `IosScratchEngine`: AVAudioFile decodes the track into one
+native 16-bit PCM block (the length is known up front; freed explicitly), an `AVAudioSourceNode`
+renders with the same follower / interpolation / DC blocker as Android, in Kotlin: the render
+callback reads only native memory and primitive fields. The output engine runs only while
+scratching (+2 s), so it doesn't keep the app awake in the background. If real devices show
+dropouts, the render callback moves to Swift (the fallback below).
+
+**3b (done): iOS polish.** Jog wheel haptics via the Taptic Engine (`IosHapticFeedback`), app
+icon from the Android launcher vector, licenses screen (AboutLibraries list of the iOS
+dependencies, exported at build time), privacy statement with Android and iOS sections.
+
 - **Scratch output on iOS** via `AVAudioSourceNode`. Highest-risk item: real-time audio callbacks in
   Kotlin/Native must not allocate or wait for the garbage collector. Fallback: write this small
   part in Swift.
-- iPhone and iPad layout fine-tuning, app icon from the existing vector, TestFlight.
+- iPhone and iPad layout fine-tuning, TestFlight.
 
-## Open decisions (before Phase 2)
+## Decisions
 
-1. **iOS music source:** the app's Documents folder plus folders picked in the Files app
-   (recommended, closest to today's file browser), or the Music library (only non-DRM tracks are
-   playable, so most Apple Music downloads won't work).
-2. **Crash reporting on iOS:** Crashlytics for iOS, or Sentry on both platforms. Either way the
-   privacy statement (`assets/privacy.html`) needs an update.
-3. **Apple developer account and Mac with Xcode:** a free account can run the app on your own
-   device, but the installed app expires after 7 days. TestFlight and the App Store need the paid
-   membership.
+1. **iOS music source: Files** (decided October 2026). The app's Documents folder (visible in the
+   Files app and Finder, already in the preview app) plus folders the user links with the system
+   folder picker (`UIDocumentPickerViewController`): iCloud Drive, USB drives, network shares,
+   other file providers. Access to linked folders is kept with security-scoped bookmarks; each
+   linked folder becomes an entry in the file browser's storage list (`StorageProvider.roots()`).
+   Full access to the audio data, so pitch, master tempo, scratching and waveform work as on
+   Android; M3U playlists keep working.
+   - Not chosen for now: the Music library (MediaPlayer framework). Only downloaded tracks without
+     DRM are playable (purchased / synced from a Mac), Apple Music subscription tracks are not.
+     Can be added later as another source. Apple Music via MusicKit is ruled out: playback only
+     through Apple's player (no pitch, no scratching, no access to the audio).
+
+## Open decisions
+
+1. **Crash reporting on iOS:** Crashlytics for iOS, or Sentry on both platforms. Either way the
+   privacy statement (`files/privacy.html`) needs an update.
+2. **Apple developer account:** a free account can run the app on your own device, but the
+   installed app expires after 7 days. TestFlight and the App Store need the paid membership.
+3. **iCloud / computer backup on iOS:** by default all app data is part of the device backup —
+   settings, queue, playlists and also the music in the app's Documents folder (uses the user's
+   iCloud storage). Android's Auto Backup was turned off (PR #66). Options: keep (current, and so
+   described in the privacy statement), exclude everything, or exclude only the music. Excluding
+   is possible per folder (`NSURLIsExcludedFromBackupKey`); the privacy text then changes.
+
+## Open tasks
+
+Not yet scheduled; roughly by benefit.
+
+**iOS features**
+- **Linked folders:** an "add folder" action in the file browser with the system folder picker
+  (`UIDocumentPickerViewController`): iCloud Drive, USB drives, network shares, other providers.
+  Access kept with security-scoped bookmarks; each folder becomes a storage root with virtual ids
+  `/Linked/<name>/…` (like `/Documents/…`, see `IosPaths`).
+- **Crash reporting on iOS** (after decision 1).
+- **Test on real devices** (needs decision 2): scratch dropouts / latency (if any, move the render
+  callback to Swift), haptics, background playback and lock screen, iPad layout, performance of
+  the waveform and scratch decode in a release build.
+- **Release setup:** app version / build number (`CFBundleShortVersionString` / `CFBundleVersion`
+  are fixed in `iosApp/project.yml`), signing, TestFlight, App Store metadata.
+
+**iOS glitches seen in the simulator**
+- The first tap right after the app starts is sometimes lost (UIKit logs "Failed to receive
+  system gesture state notification before next touch").
+- The overview waveform takes ~10 s for a 4-minute track in the simulator debug build; check in a
+  release build on a device, otherwise reuse the scratch decode (see below).
+
+**Both platforms**
+- **Scratch fill-up:** after loading, only the start of a track can be scratched until the
+  background decode catches up. A first attempt (one decode for waveform + scratch, batched
+  writes) is parked on branch `feature/scratch-single-decode`; it didn't noticeably help on the
+  Tab A. Ideas: decode from the playback position first, show the scratchable range.
+- **Licenses screen:** the license chips use a colour our colour scheme doesn't define (dark
+  pink); give them the accent colour.
+- **Unit tests to `commonTest`** (kotlin.test), so they also run on the iOS simulator
+  (`iosSimulatorArm64Test`); today they run on the JVM only (`androidHostTest`).
+- Deprecation warnings: `TabRow` → `PrimaryTabRow`, `ContextCompat.getExternalFilesDirs`.
+
+**Android / branches**
+- Three fixes exist only on `kmp-migration`, not on `develop`: pitch saved shortly after each
+  change, file browser order (`fileBrowserOrder`), M3U entries in subfolders (`resolvePath`).
+  They reach `develop` with the final merge, or earlier as a separate PR.
+- `develop` still builds only with JDK 17 (Kotlin 1.9 + kapt).
+- **Final step:** merge `kmp-migration` into `develop`.
 
 ## Testing
 

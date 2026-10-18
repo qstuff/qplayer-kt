@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android-only strings (manifest, notification); the app's texts are in shared/composeResources. -->
+<resources>
+    <string name="app_name">qdeq</string>
+    <string name="notification_channel_id" translatable="false">qplayer_notification_channel_01</string>
+    <string name="notification_channel_name" translatable="false">qplayer control channel</string>
+</resources>
