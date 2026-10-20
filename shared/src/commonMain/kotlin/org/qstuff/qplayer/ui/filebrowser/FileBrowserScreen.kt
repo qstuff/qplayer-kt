@@ -37,8 +37,19 @@ import org.qstuff.qplayer.resources.dialog_ok
 import org.qstuff.qplayer.resources.filebrowser_dialog_add_tracks_to_queue_title
 import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
 import org.qstuff.qplayer.resources.filebrowser_storages_title
+import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.resources.snackbar_undo
+import org.qstuff.qplayer.resources.filebrowser_track_already_queued
+import org.qstuff.qplayer.resources.filebrowser_track_added
+import org.jetbrains.compose.resources.getString
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.LocalIndication
 
 private val QOrangeDivider = Color(0x60FC7614)
+private const val TAP_HIGHLIGHT_MS = 300L
 
 /** The file browser tab; asks for the storage permission first (see StoragePermissionGate). */
 @Composable
@@ -67,84 +78,113 @@ private fun FileBrowserContent(
     var addTracksDialogItems by remember { mutableStateOf<List<BrowserItem>?>(null) }
     var m3uDialogItem by remember { mutableStateOf<BrowserItem?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        Text(
-            text = if (storageRoots != null) {
-                stringResource(Res.string.filebrowser_storages_title)
-            } else directoryName,
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 5.dp)
-        )
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-        Row(
-            modifier = Modifier
-                .height(28.dp)
-                .padding(start = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Nothing above the storage list.
-            if (storageRoots == null) {
-                IconButton(
-                    onClick = { fileBrowserViewModel.navigateUp() },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        Icons.Default.SubdirectoryArrowLeft,
-                        contentDescription = "Navigate up",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+    // Tap on a track: add it to the queue and confirm with a snackbar (undo, if it was added). A
+    // new tap replaces the visible snackbar instead of queueing behind it.
+    fun addTrackToQueue(item: BrowserItem) {
+        val added = queueViewModel.addPath(item.id)
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            if (added == null) {
+                snackbarHostState.showSnackbar(getString(Res.string.filebrowser_track_already_queued, item.name))
+            } else {
+                val result = snackbarHostState.showSnackbar(
+                    message = getString(Res.string.filebrowser_track_added, item.name),
+                    actionLabel = getString(Res.string.snackbar_undo),
+                    duration = SnackbarDuration.Short
+                )
+                if (result == SnackbarResult.ActionPerformed) queueViewModel.removeTrack(added)
             }
         }
+    }
 
-        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            Text(
+                text = if (storageRoots != null) {
+                    stringResource(Res.string.filebrowser_storages_title)
+                } else directoryName,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            )
 
-        storageRoots?.let { roots ->
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(roots, key = { it.id }) { root ->
-                    StorageRootItem(
-                        root = root,
-                        onClick = { fileBrowserViewModel.onStorageRootClicked(root) }
+            Row(
+                modifier = Modifier
+                    .height(28.dp)
+                    .padding(start = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Nothing above the storage list.
+                if (storageRoots == null) {
+                    IconButton(
+                        onClick = { fileBrowserViewModel.navigateUp() },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.SubdirectoryArrowLeft,
+                            contentDescription = "Navigate up",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+
+            storageRoots?.let { roots ->
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(roots, key = { it.id }) { root ->
+                        StorageRootItem(
+                            root = root,
+                            onClick = { fileBrowserViewModel.onStorageRootClicked(root) }
+                        )
+                        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
+                    }
+                }
+            }
+
+            if (storageRoots == null) LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(items, key = { it.id }) { item ->
+                    FileListItem(
+                        item = item,
+                        onClick = {
+                            when (item.kind) {
+                                BrowserItem.Kind.PLAYLIST -> m3uDialogItem = item
+                                BrowserItem.Kind.TRACK -> addTrackToQueue(item)
+                                BrowserItem.Kind.FOLDER -> fileBrowserViewModel.onItemClicked(item)
+                            }
+                        },
+                        onLongClick = {
+                            if (item.kind == BrowserItem.Kind.FOLDER) {
+                                addTracksDialogItems = fileBrowserViewModel.tracksIn(item).ifEmpty { null }
+                            }
+                        },
+                        onPrelistenClick = {
+                            playerViewModel.loadTrack(Track.fromPath(item.id, autoplay = true))
+                        }
                     )
                     HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                 }
             }
         }
 
-        if (storageRoots == null) LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(items, key = { it.id }) { item ->
-                FileListItem(
-                    item = item,
-                    onClick = {
-                        when (item.kind) {
-                            BrowserItem.Kind.PLAYLIST -> m3uDialogItem = item
-                            BrowserItem.Kind.TRACK -> queueViewModel.addPath(item.id)
-                            BrowserItem.Kind.FOLDER -> fileBrowserViewModel.onItemClicked(item)
-                        }
-                    },
-                    onLongClick = {
-                        if (item.kind == BrowserItem.Kind.FOLDER) {
-                            addTracksDialogItems = fileBrowserViewModel.tracksIn(item).ifEmpty { null }
-                        }
-                    },
-                    onPrelistenClick = {
-                        playerViewModel.loadTrack(Track.fromPath(item.id, autoplay = true))
-                    }
-                )
-                HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
-            }
-        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 
     addTracksDialogItems?.let { tracksToAdd ->
@@ -282,12 +322,32 @@ private fun FileListItem(
     onLongClick: () -> Unit,
     onPrelistenClick: () -> Unit
 ) {
+    // A track's title turns orange while it's pressed — and stays so briefly after a tap, which
+    // otherwise releases too fast to be seen.
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    var flash by remember { mutableStateOf(false) }
+    LaunchedEffect(flash) {
+        if (flash) {
+            delay(TAP_HIGHLIGHT_MS)
+            flash = false
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(28.dp)
             .background(Color.Black)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = {
+                    if (item.kind == BrowserItem.Kind.TRACK) flash = true
+                    onClick()
+                },
+                onLongClick = onLongClick
+            )
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -296,6 +356,7 @@ private fun FileListItem(
             BrowserItem.Kind.PLAYLIST -> Icons.AutoMirrored.Filled.PlaylistPlay
             BrowserItem.Kind.TRACK -> Icons.Default.MusicNote
         }
+        val isTrack = item.kind == BrowserItem.Kind.TRACK
         Icon(
             imageVector = icon,
             contentDescription = null,
@@ -305,14 +366,14 @@ private fun FileListItem(
         Spacer(Modifier.width(6.dp))
         Text(
             text = item.name,
-            color = Color.White,
+            color = if (isTrack && (isPressed || flash)) QOrange else Color.White,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
-        if (item.kind == BrowserItem.Kind.TRACK) {
+        if (isTrack) {
             IconButton(
                 onClick = onPrelistenClick,
                 modifier = Modifier.size(28.dp)

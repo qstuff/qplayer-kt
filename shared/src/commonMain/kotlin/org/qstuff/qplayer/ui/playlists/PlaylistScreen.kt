@@ -28,6 +28,7 @@ import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.dialog_cancel
 import org.qstuff.qplayer.resources.dialog_ok
 import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
+import org.qstuff.qplayer.resources.snackbar_undo
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -40,6 +41,7 @@ fun PlaylistScreen(
     val playlists by playlistViewModel.playlistList.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val undoLabel = stringResource(Res.string.snackbar_undo)
     val scope = rememberCoroutineScope()
 
     var openPlaylist by remember { mutableStateOf<Playlist?>(null) }
@@ -57,7 +59,7 @@ fun PlaylistScreen(
                         scope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 message = playlist.name,
-                                actionLabel = "Undo",
+                                actionLabel = undoLabel,
                                 duration = SnackbarDuration.Long
                             )
                             if (result == SnackbarResult.ActionPerformed) {

@@ -39,6 +39,7 @@ import org.qstuff.qplayer.resources.queue_dialog_confirm_clear_message
 import org.qstuff.qplayer.resources.queue_dialog_confirm_clear_title
 import org.qstuff.qplayer.resources.queue_dialog_save_tracks_as_playlist_message
 import org.qstuff.qplayer.resources.queue_dialog_save_tracks_as_playlist_title
+import org.qstuff.qplayer.resources.snackbar_undo
 
 private val QOrangeDivider = Color(0x60FC7614)
 
@@ -55,6 +56,7 @@ fun QueueScreen(
     val playlists by playlistViewModel.playlistList.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val undoLabel = stringResource(Res.string.snackbar_undo)
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -110,7 +112,7 @@ fun QueueScreen(
                             scope.launch {
                                 val result = snackbarHostState.showSnackbar(
                                     message = track.name,
-                                    actionLabel = "Undo",
+                                    actionLabel = undoLabel,
                                     duration = SnackbarDuration.Long
                                 )
                                 if (result == SnackbarResult.ActionPerformed) {

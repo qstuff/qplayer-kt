@@ -65,17 +65,19 @@ class QueueViewModel(
     private var lastRemovedSelectedIndex = -1
 
 
-    private fun addTrack(track: Track) {
+    /** Appends [track] unless it's already queued; returns whether it was added. */
+    private fun addTrack(track: Track): Boolean {
         log.d { "addTrack(): $track " }
 
         if (containsTrack(track)) {
             log.d { "addTrack(): already in queue " }
-            return
+            return false
         }
 
         currentTrackList.add(track)
         _trackList.value = ArrayList(currentTrackList)
         saveTrackList()
+        return true
     }
 
     private fun containsTrack(track: Track) : Boolean {
@@ -106,10 +108,11 @@ class QueueViewModel(
         }
     }
 
-    /** Add the audio file at [path] (unless it's already queued). */
-    fun addPath(path: String) {
-        addTrack(Track.fromPath(path))
-    }
+    /**
+     * Add the audio file at [path] (unless it's already queued). Returns the added track — e.g. for
+     * undo via [removeTrack] — or null if it was already in the queue.
+     */
+    fun addPath(path: String): Track? = Track.fromPath(path).takeIf { addTrack(it) }
 
     fun removeTrack(track: Track) {
 
