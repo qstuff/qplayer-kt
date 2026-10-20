@@ -21,11 +21,14 @@
 
     <string name="filebrowser_dialog_add_tracks_to_queue_title">Load these tracks into the queue ?</string>
     <string name="filebrowser_dialog_queue_overwrite">Overwrite queue</string>
+    <string name="filebrowser_track_added">%1$s added to the queue</string>
+    <string name="filebrowser_track_already_queued">%1$s is already in the queue</string>
 
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
     <string name="navigate_back">Back</string>
     <string name="dialog_cancel">Cancel</string>
+    <string name="snackbar_undo">Undo</string>
 
     <string name="add_m3ulist_to_queue_dialog_tracks_found_title">Open %1$s  in Queue</string>
     <string name="add_m3ulist_to_queue_dialog_no_tracks_found_title">Can't open %1$s</string>
