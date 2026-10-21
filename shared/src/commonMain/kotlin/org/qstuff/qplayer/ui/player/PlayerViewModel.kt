@@ -21,6 +21,7 @@ import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.LruCache
 import org.qstuff.qplayer.util.PlayerStatus
 import co.touchlab.kermit.Logger
+import kotlin.math.roundToInt
 
 private val log = Logger.withTag("PlayerViewModel")
 
@@ -196,6 +197,16 @@ class PlayerViewModel(
         val progress = ((currentTrackSpeed -1) * 100 * pitchFactor + 500)
         onPitchChanged(progress.toInt())
     }
+
+    /**
+     * The fine-tune buttons (‹ ›): 0.1 % per step — at least one unit of the 0..1000 pitch scale,
+     * so at ±100 % (5 units per %) a step is 0.2 % instead of nothing.
+     */
+    fun pitchStepDown() = onPitchChanged((_pitchValue.value - pitchStep()).coerceAtLeast(0))
+
+    fun pitchStepUp() = onPitchChanged((_pitchValue.value + pitchStep()).coerceAtMost(1000))
+
+    private fun pitchStep() = (0.1f * pitchFactor).roundToInt().coerceAtLeast(1)
 
     fun onPitchChanged(progress: Int) {
         currentPitchProgress = progress
