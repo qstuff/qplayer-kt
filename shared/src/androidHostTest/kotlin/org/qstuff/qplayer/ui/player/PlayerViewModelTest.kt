@@ -21,6 +21,7 @@ import org.junit.Test
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
+import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.util.PlayerStatus
 import java.util.Locale
 
@@ -222,6 +223,20 @@ class PlayerViewModelTest {
         vm.endScratch()
 
         assertEquals(listOf("pause", "seek 12000", "play"), player.calls)
+    }
+
+    @Test
+    fun `the jog mode quick switch writes the setting, which is applied like from Settings`() {
+        val vm = viewModel()
+        assertEquals(JogwheelMode.SPEED_ANGULAR, vm.jogwheelMode.value)
+
+        vm.setJogwheelMode(JogwheelMode.SCRATCH)
+        assertEquals(JogwheelMode.SCRATCH, prefs.getJogWheelModeEnum())
+
+        vm.loadSettings()               // what PlaybackCoordinator does on settingsChanged
+        assertEquals(JogwheelMode.SCRATCH, vm.jogwheelMode.value)
+        player.connect()
+        assertTrue(vm.startScratch())   // scratch mode is active
     }
 
     @Test

@@ -30,6 +30,8 @@ import org.qstuff.qplayer.ui.player.jogwheel.JogWheel
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.ui.theme.LocalDimens
+import org.qstuff.qplayer.ui.player.jogwheel.JogModeSwitch
+import androidx.compose.foundation.layout.aspectRatio
 
 
 /** Monotonic clock for the jog wheel's velocity mode (only time differences count). */
@@ -50,6 +52,8 @@ private val jogClock = TimeSource.Monotonic.markNow()
  *        [onScratchEnd]).
  * @param onJogTouch / onJogRotate every touch-down / rotation (since touch-down) of the jog wheel,
  *        in any mode — used for haptic feedback.
+ * @param jogwheelMode / onJogwheelModeChange the quick mode switch in the jog square's top-left
+ *        corner (see JogModeSwitch).
  * @param jogEnabled false: the jog wheel ignores touches (phone: while the tab sheet is open, so a
  *        swipe to collapse it can't hit the wheel by accident).
  * @param fitHeight false (phone): the jog wheel fills the width, the row's height follows.
@@ -63,6 +67,8 @@ fun PitchJogSection(
     onPitchChange: (Int) -> Unit,
     getSensitivity: () -> Int,
     getJogwheelMode: () -> JogwheelMode,
+    jogwheelMode: JogwheelMode,
+    onJogwheelModeChange: (JogwheelMode) -> Unit,
     onScratchStart: () -> Boolean,
     onScratch: (rotationRad: Double) -> Unit,
     onScratchEnd: () -> Unit,
@@ -151,60 +157,68 @@ fun PitchJogSection(
                 }
             }
 
-            // Jog wheel — square (aspectRatio inside), same height/top as the pitch fader
-            JogWheel(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .background(Color.Black),
-                enabled = jogEnabled,
-                onDown = {
-                    onJogTouch()
-                    jogState.capturedPitchProgress = getPitchProgress()
-                    jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
-                    jogState.lastAngle = 0.0
-                    jogState.deltaList.clear()
-                    jogState.scratching =
-                        getJogwheelMode() == JogwheelMode.SCRATCH && onScratchStart()
-                },
-                onMove = { textureAngle ->
-                    onJogRotate(textureAngle)
-                    if (jogState.scratching) {
-                        onScratch(textureAngle)
-                        return@JogWheel
-                    }
-                    val sensitivity = getSensitivity()
-                    jogState.lastOnMoveTime = jogState.onMoveTime
-                    jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
-                    when (getJogwheelMode()) {
-                        JogwheelMode.SPEED_ANGULAR -> {
-                            val delta = textureAngle * 100 * sensitivity
-                            onPitchChange((jogState.capturedPitchProgress + delta).toInt())
+            // Jog wheel — square, same height/top as the pitch fader. The square's top corners
+            // (outside the wheel) hold the quick switches.
+            Box(modifier = Modifier.fillMaxHeight().aspectRatio(1f)) {
+                JogWheel(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .background(Color.Black),
+                    enabled = jogEnabled,
+                    onDown = {
+                        onJogTouch()
+                        jogState.capturedPitchProgress = getPitchProgress()
+                        jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
+                        jogState.lastAngle = 0.0
+                        jogState.deltaList.clear()
+                        jogState.scratching =
+                            getJogwheelMode() == JogwheelMode.SCRATCH && onScratchStart()
+                    },
+                    onMove = { textureAngle ->
+                        onJogRotate(textureAngle)
+                        if (jogState.scratching) {
+                            onScratch(textureAngle)
+                            return@JogWheel
                         }
-                        JogwheelMode.SPEED_VELOCITY -> {
-                            val timeDiff = jogState.onMoveTime - jogState.lastOnMoveTime
-                            // Two moves within the same millisecond: no velocity (avoids ÷ 0).
-                            if (timeDiff <= 0) return@JogWheel
-                            val angleDiff = textureAngle - jogState.lastAngle
-                            val v = angleDiff / timeDiff * 20000
-                            val delta = smoothenDelta(v * sensitivity, jogState.deltaList)
-                            onPitchChange((jogState.capturedPitchProgress + delta).toInt())
-                            jogState.lastAngle = textureAngle
+                        val sensitivity = getSensitivity()
+                        jogState.lastOnMoveTime = jogState.onMoveTime
+                        jogState.onMoveTime = jogClock.elapsedNow().inWholeMilliseconds
+                        when (getJogwheelMode()) {
+                            JogwheelMode.SPEED_ANGULAR -> {
+                                val delta = textureAngle * 100 * sensitivity
+                                onPitchChange((jogState.capturedPitchProgress + delta).toInt())
+                            }
+                            JogwheelMode.SPEED_VELOCITY -> {
+                                val timeDiff = jogState.onMoveTime - jogState.lastOnMoveTime
+                                // Two moves within the same millisecond: no velocity (avoids ÷ 0).
+                                if (timeDiff <= 0) return@JogWheel
+                                val angleDiff = textureAngle - jogState.lastAngle
+                                val v = angleDiff / timeDiff * 20000
+                                val delta = smoothenDelta(v * sensitivity, jogState.deltaList)
+                                onPitchChange((jogState.capturedPitchProgress + delta).toInt())
+                                jogState.lastAngle = textureAngle
+                            }
+                            else -> {}
                         }
-                        else -> {}
+                    },
+                    onUp = {
+                        if (jogState.scratching) {
+                            jogState.scratching = false
+                            onScratchEnd()
+                            return@JogWheel
+                        }
+                        onPitchChange(jogState.capturedPitchProgress)
+                        jogState.onMoveTime = 0L
+                        jogState.lastOnMoveTime = 0L
+                        jogState.lastAngle = 0.0
                     }
-                },
-                onUp = {
-                    if (jogState.scratching) {
-                        jogState.scratching = false
-                        onScratchEnd()
-                        return@JogWheel
-                    }
-                    onPitchChange(jogState.capturedPitchProgress)
-                    jogState.onMoveTime = 0L
-                    jogState.lastOnMoveTime = 0L
-                    jogState.lastAngle = 0.0
-                }
-            )
+                )
+                JogModeSwitch(
+                    mode = jogwheelMode,
+                    onModeChange = onJogwheelModeChange,
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                )
+            }
         }
     }
 }

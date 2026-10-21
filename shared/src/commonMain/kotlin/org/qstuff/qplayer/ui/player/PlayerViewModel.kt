@@ -85,6 +85,9 @@ class PlayerViewModel(
     private val _jogwheelSensitivity = MutableStateFlow(10)
     val jogwheelSensitivity: StateFlow<Int> = _jogwheelSensitivity.asStateFlow()
 
+    private val _jogwheelMode = MutableStateFlow(JogwheelMode.SPEED_ANGULAR)
+    val jogwheelMode: StateFlow<JogwheelMode> = _jogwheelMode.asStateFlow()
+
     // JogwheelHaptics.LEVEL_* (jog wheel vibration setting)
     private val _jogwheelHapticLevel = MutableStateFlow(2)
     val jogwheelHapticLevel: StateFlow<Int> = _jogwheelHapticLevel.asStateFlow()
@@ -485,8 +488,14 @@ class PlayerViewModel(
         isStopPlaybackOnSettingCuepointEnabled = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled()
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
         _jogwheelHapticLevel.value = preferencesDataSource.getJogWheelHapticLevel()
-        isScratchModeEnabled = preferencesDataSource.getJogWheelModeEnum() == JogwheelMode.SCRATCH
+        _jogwheelMode.value = preferencesDataSource.getJogWheelModeEnum()
+        isScratchModeEnabled = _jogwheelMode.value == JogwheelMode.SCRATCH
         prepareScratch()
+    }
+
+    /** The jog wheel quick switch: the same setting as in Settings (applied via loadSettings). */
+    fun setJogwheelMode(mode: JogwheelMode) {
+        preferencesDataSource.setJogWheelMode(mode.ordinal)
     }
 
     private fun startUpdateTimer() {

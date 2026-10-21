@@ -93,6 +93,7 @@ fun PlayerScreen(
     val cueActive by playerViewModel.cueActive.collectAsStateWithLifecycle()
     val showRemainingTime by playerViewModel.showRemainingTime.collectAsStateWithLifecycle()
     val jogwheelHapticLevel by playerViewModel.jogwheelHapticLevel.collectAsStateWithLifecycle()
+    val jogwheelMode by playerViewModel.jogwheelMode.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
@@ -295,7 +296,9 @@ fun PlayerScreen(
                 getPitchProgress = { playerViewModel.pitchValue.value },
                 onPitchChange = playerViewModel::onPitchChanged,
                 getSensitivity = { playerViewModel.jogwheelSensitivity.value },
-                getJogwheelMode = { preferencesDataSource.getJogWheelModeEnum() },
+                getJogwheelMode = { playerViewModel.jogwheelMode.value },
+                jogwheelMode = jogwheelMode,
+                onJogwheelModeChange = playerViewModel::setJogwheelMode,
                 onScratchStart = playerViewModel::startScratch,
                 onScratch = playerViewModel::scratchTo,
                 onScratchEnd = playerViewModel::endScratch,
