@@ -207,6 +207,41 @@ class PlayerViewModelTest {
     }
 
     @Test
+    fun `the fine-tune buttons step in every range, also at 100 percent`() {
+        val vm = viewModel()
+        player.connect()
+        // ±8 %, ±15 %, ±50 %: ~0.1 % per step (6, 3, 1 units)
+        listOf(0 to 6, 1 to 3, 2 to 1).forEach { (range, units) ->
+            vm.onPitchRangeSelected(range)
+            vm.onPitchChanged(500)
+            vm.pitchStepUp()
+            assertEquals(500 + units, vm.pitchValue.value)
+            vm.pitchStepDown()
+            assertEquals(500, vm.pitchValue.value)
+        }
+
+        vm.onPitchRangeSelected(3)      // ±100 %: 5 units per %, 0.1 % would be half a unit
+        vm.onPitchChanged(500)
+        vm.pitchStepUp()
+        assertEquals(501, vm.pitchValue.value)
+        assertEquals("  +0,2%", vm.pitchValueText.value)
+        vm.pitchStepDown()
+        vm.pitchStepDown()
+        assertEquals(499, vm.pitchValue.value)
+    }
+
+    @Test
+    fun `the fine-tune buttons stop at the ends of the fader`() {
+        val vm = viewModel()
+        vm.onPitchChanged(1000)
+        vm.pitchStepUp()
+        assertEquals(1000, vm.pitchValue.value)
+        vm.onPitchChanged(0)
+        vm.pitchStepDown()
+        assertEquals(0, vm.pitchValue.value)
+    }
+
+    @Test
     fun `scratching pauses the player and hands the end position back`() {
         prefs.setJogWheelMode(2)        // SCRATCH
         val vm = viewModel()

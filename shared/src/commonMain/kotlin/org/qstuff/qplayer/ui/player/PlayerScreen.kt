@@ -237,14 +237,8 @@ fun PlayerScreen(
                         currentTrack?.also { playerViewModel.toggleCue(it, false) }
                     }
                 },
-                onPitchDecrease = {
-                    val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value - delta)
-                },
-                onPitchIncrease = {
-                    val delta = (0.1f * playerViewModel.pitchFactor).toInt()
-                    playerViewModel.onPitchChanged(playerViewModel.pitchValue.value + delta)
-                },
+                onPitchDecrease = playerViewModel::pitchStepDown,
+                onPitchIncrease = playerViewModel::pitchStepUp,
                 onPitchRangeSelected = { index -> playerViewModel.onPitchRangeSelected(index) },
                 onReset = { playerViewModel.onPitchChanged(500) },
                 onToggleMasterTempo = {
