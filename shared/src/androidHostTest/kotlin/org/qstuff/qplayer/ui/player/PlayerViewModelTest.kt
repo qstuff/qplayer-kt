@@ -240,6 +240,17 @@ class PlayerViewModelTest {
     }
 
     @Test
+    fun `the sensitivity quick switch writes the setting, which is applied like from Settings`() {
+        val vm = viewModel()
+
+        vm.setJogwheelSensitivity(20)
+        assertEquals(20, prefs.getJogWheelSensitivity())
+
+        vm.loadSettings()               // what PlaybackCoordinator does on settingsChanged
+        assertEquals(20, vm.jogwheelSensitivity.value)
+    }
+
+    @Test
     fun `no scratching outside scratch mode`() {
         val vm = viewModel()
         player.connect()

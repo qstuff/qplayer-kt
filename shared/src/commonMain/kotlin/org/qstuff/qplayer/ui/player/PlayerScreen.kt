@@ -94,6 +94,7 @@ fun PlayerScreen(
     val showRemainingTime by playerViewModel.showRemainingTime.collectAsStateWithLifecycle()
     val jogwheelHapticLevel by playerViewModel.jogwheelHapticLevel.collectAsStateWithLifecycle()
     val jogwheelMode by playerViewModel.jogwheelMode.collectAsStateWithLifecycle()
+    val jogwheelSensitivity by playerViewModel.jogwheelSensitivity.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
@@ -299,6 +300,8 @@ fun PlayerScreen(
                 getJogwheelMode = { playerViewModel.jogwheelMode.value },
                 jogwheelMode = jogwheelMode,
                 onJogwheelModeChange = playerViewModel::setJogwheelMode,
+                jogwheelSensitivity = jogwheelSensitivity,
+                onJogwheelSensitivityChange = playerViewModel::setJogwheelSensitivity,
                 onScratchStart = playerViewModel::startScratch,
                 onScratch = playerViewModel::scratchTo,
                 onScratchEnd = playerViewModel::endScratch,

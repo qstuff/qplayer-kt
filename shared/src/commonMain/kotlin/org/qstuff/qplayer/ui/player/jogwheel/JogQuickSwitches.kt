@@ -1,9 +1,9 @@
 package org.qstuff.qplayer.ui.player.jogwheel
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,8 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.automirrored.filled.RotateRight
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material.icons.filled.SignalCellularAlt1Bar
+import androidx.compose.material.icons.filled.SignalCellularAlt2Bar
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,10 +47,16 @@ import androidx.compose.ui.window.PopupProperties
 import org.jetbrains.compose.resources.stringArrayResource
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.jogwheel_mode_entries
+import org.qstuff.qplayer.resources.jogwheel_sensitivity_entries
+import org.qstuff.qplayer.resources.jogwheel_sensitivity_values
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
 
+// Quick switches for the jog wheel settings, for the top corners of the jog wheel's square
+// (outside the wheel): mode (top left), sensitivity (top right). Same settings as in Settings.
+
 private val ButtonBackground = Color(0xFF1A1A1A)
+private val QuickSwitchSize = 36.dp
 
 private fun JogwheelMode.icon(): ImageVector = when (this) {
     JogwheelMode.SPEED_ANGULAR -> Icons.AutoMirrored.Filled.RotateRight
@@ -55,23 +64,71 @@ private fun JogwheelMode.icon(): ImageVector = when (this) {
     JogwheelMode.SCRATCH -> Icons.Filled.Album
 }
 
-/**
- * Quick switch for the jog wheel mode, for a corner of the jog wheel's square: a round button
- * showing the current [mode]; a tap unfolds the three modes below it (speed-dial style, above
- * everything else). Choosing one calls [onModeChange] — the same setting as in Settings — and
- * folds the options again; a tap anywhere else just folds them.
- */
+/** Low / medium / high: one, two, three bars. */
+private val SensitivityIcons = listOf(
+    Icons.Filled.SignalCellularAlt1Bar,
+    Icons.Filled.SignalCellularAlt2Bar,
+    Icons.Filled.SignalCellularAlt
+)
+
+/** The jog wheel mode: by angle, by velocity, scratch. */
 @Composable
 fun JogModeSwitch(
     mode: JogwheelMode,
     onModeChange: (JogwheelMode) -> Unit,
-    modifier: Modifier = Modifier,
-    buttonSize: Dp = 36.dp
+    modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
     // Entries are "Name:\nDescription" — the options only show the name (as the Settings summary).
     val names = stringArrayResource(Res.array.jogwheel_mode_entries)
         .map { it.trim().substringBefore('\n').removeSuffix(":") }
+    JogQuickSwitch(
+        options = JogwheelMode.entries.map { QuickOption(it, it.icon(), names.getOrElse(it.ordinal) { _ -> it.name }) },
+        selected = mode,
+        onSelect = onModeChange,
+        alignEnd = false,
+        modifier = modifier
+    )
+}
+
+/** The jog wheel sensitivity: low, medium, high (the values of the Settings entries). */
+@Composable
+fun JogSensitivitySwitch(
+    sensitivity: Int,
+    onSensitivityChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val names = stringArrayResource(Res.array.jogwheel_sensitivity_entries)
+    val values = stringArrayResource(Res.array.jogwheel_sensitivity_values).map { it.toInt() }
+    JogQuickSwitch(
+        options = values.mapIndexed { i, value ->
+            QuickOption(value, SensitivityIcons.getOrElse(i) { SensitivityIcons.last() }, names.getOrElse(i) { value.toString() })
+        },
+        selected = sensitivity,
+        onSelect = onSensitivityChange,
+        alignEnd = true,
+        modifier = modifier
+    )
+}
+
+private class QuickOption<T>(val value: T, val icon: ImageVector, val label: String)
+
+/**
+ * A round button showing the [selected] option's icon; a tap unfolds all [options] below it
+ * (speed-dial style, in a popup above everything else — left- or right-aligned with the button,
+ * [alignEnd] for the right corner). Choosing one calls [onSelect] and folds the options again;
+ * a tap anywhere else just folds them.
+ */
+@Composable
+private fun <T> JogQuickSwitch(
+    options: List<QuickOption<T>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    alignEnd: Boolean,
+    modifier: Modifier = Modifier,
+    buttonSize: Dp = QuickSwitchSize
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val current = options.firstOrNull { it.value == selected }
 
     Box(modifier) {
         Box(
@@ -82,17 +139,20 @@ fun JogModeSwitch(
                 .clickable { expanded = !expanded },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = mode.icon(),
-                contentDescription = names.getOrNull(mode.ordinal),
-                tint = QOrange,
-                modifier = Modifier.size(buttonSize * 0.6f)
-            )
+            current?.let {
+                Icon(
+                    imageVector = it.icon,
+                    contentDescription = it.label,
+                    tint = QOrange,
+                    modifier = Modifier.size(buttonSize * 0.6f)
+                )
+            }
         }
 
         if (expanded) {
             val gap = with(LocalDensity.current) { (buttonSize + 6.dp).roundToPx() }
             Popup(
+                alignment = if (alignEnd) Alignment.TopEnd else Alignment.TopStart,
                 offset = IntOffset(0, gap),
                 onDismissRequest = { expanded = false },
                 properties = PopupProperties(focusable = true)
@@ -103,16 +163,18 @@ fun JogModeSwitch(
                     visibleState = visible,
                     enter = fadeIn() + expandVertically(expandFrom = Alignment.Top)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        JogwheelMode.entries.forEach { option ->
-                            ModeOption(
-                                icon = option.icon(),
-                                label = names.getOrElse(option.ordinal) { option.name },
-                                selected = option == mode,
+                    Column(
+                        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        options.forEach { option ->
+                            QuickOptionChip(
+                                option = option,
+                                selected = option.value == selected,
                                 height = buttonSize,
                                 onClick = {
                                     expanded = false
-                                    if (option != mode) onModeChange(option)
+                                    if (option.value != selected) onSelect(option.value)
                                 }
                             )
                         }
@@ -124,9 +186,8 @@ fun JogModeSwitch(
 }
 
 @Composable
-private fun ModeOption(
-    icon: ImageVector,
-    label: String,
+private fun QuickOptionChip(
+    option: QuickOption<*>,
     selected: Boolean,
     height: Dp,
     onClick: () -> Unit
@@ -142,8 +203,8 @@ private fun ModeOption(
             .padding(start = 8.dp, end = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(height * 0.6f))
+        Icon(imageVector = option.icon, contentDescription = null, tint = color, modifier = Modifier.size(height * 0.6f))
         Spacer(Modifier.width(8.dp))
-        Text(text = label, color = color, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(text = option.label, color = color, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
