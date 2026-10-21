@@ -493,9 +493,14 @@ class PlayerViewModel(
         prepareScratch()
     }
 
-    /** The jog wheel quick switch: the same setting as in Settings (applied via loadSettings). */
+    // The jog wheel quick switches: the same settings as in Settings (applied via loadSettings).
+
     fun setJogwheelMode(mode: JogwheelMode) {
         preferencesDataSource.setJogWheelMode(mode.ordinal)
+    }
+
+    fun setJogwheelSensitivity(sensitivity: Int) {
+        preferencesDataSource.setJogWheelSensitivity(sensitivity)
     }
 
     private fun startUpdateTimer() {

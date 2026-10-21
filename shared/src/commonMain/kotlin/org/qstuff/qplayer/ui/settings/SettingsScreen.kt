@@ -44,10 +44,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.dialog_cancel
 import org.qstuff.qplayer.resources.jogwheel_haptics_entries
-import org.qstuff.qplayer.resources.jogwheel_mode_entries
-import org.qstuff.qplayer.resources.jogwheel_mode_values
-import org.qstuff.qplayer.resources.jogwheel_sensitivity_entries
-import org.qstuff.qplayer.resources.jogwheel_sensitivity_values
 import org.qstuff.qplayer.resources.more_menu_settings
 import org.qstuff.qplayer.resources.navigate_back
 import org.qstuff.qplayer.resources.settings_app_version_title
@@ -58,10 +54,6 @@ import org.qstuff.qplayer.resources.settings_device_info_title
 import org.qstuff.qplayer.resources.settings_dj_jogwheel_haptics_summary
 import org.qstuff.qplayer.resources.settings_dj_jogwheel_haptics_title
 import org.qstuff.qplayer.resources.settings_dj_jogwheel_haptics_unavailable
-import org.qstuff.qplayer.resources.settings_dj_jogwheel_mode_summary
-import org.qstuff.qplayer.resources.settings_dj_jogwheel_mode_title
-import org.qstuff.qplayer.resources.settings_dj_jogwheel_sensitivity_summary
-import org.qstuff.qplayer.resources.settings_dj_jogwheel_sensitivity_title
 import org.qstuff.qplayer.resources.settings_dj_stop_playback_on_cue_summary
 import org.qstuff.qplayer.resources.settings_dj_stop_playback_on_cue_title
 import org.qstuff.qplayer.resources.settings_privacy_crashreport_summary
@@ -84,17 +76,7 @@ fun SettingsScreen(
 ) {
     val state by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
-    var showSensitivityDialog by rememberSaveable { mutableStateOf(false) }
-    var showModeDialog by rememberSaveable { mutableStateOf(false) }
     var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
-
-    val sensitivityEntries = stringArrayResource(Res.array.jogwheel_sensitivity_entries)
-    val sensitivityValues = stringArrayResource(Res.array.jogwheel_sensitivity_values).map { it.toInt() }
-    val modeEntries = stringArrayResource(Res.array.jogwheel_mode_entries).map { it.trim() }
-    val modeValues = stringArrayResource(Res.array.jogwheel_mode_values).map { it.toInt() }
-
-    val sensitivityIndex = sensitivityValues.indexOf(state.jogwheelSensitivity)
-    val modeIndex = modeValues.indexOf(state.jogwheelMode)
 
     // Index = JogwheelHaptics.LEVEL_* (off / light / medium / strong)
     val hapticEntries = stringArrayResource(Res.array.jogwheel_haptics_entries)
@@ -153,23 +135,8 @@ fun SettingsScreen(
                 checked = state.stopPlaybackOnCue,
                 onCheckedChange = settingsViewModel::setStopPlaybackOnCue
             )
-            ClickableRow(
-                title = stringResource(Res.string.settings_dj_jogwheel_sensitivity_title),
-                summary = stringResource(
-                    Res.string.settings_dj_jogwheel_sensitivity_summary,
-                    sensitivityEntries.getOrElse(sensitivityIndex) { "" }
-                ),
-                onClick = { showSensitivityDialog = true }
-            )
-            ClickableRow(
-                title = stringResource(Res.string.settings_dj_jogwheel_mode_title),
-                summary = stringResource(
-                    Res.string.settings_dj_jogwheel_mode_summary,
-                    // Entries are "Name:\nDescription" — the summary only shows the name
-                    modeEntries.getOrElse(modeIndex) { "" }.substringBefore('\n').removeSuffix(":")
-                ),
-                onClick = { showModeDialog = true }
-            )
+            // Jog wheel mode and sensitivity: quick switches in the jog wheel's corners
+            // (JogQuickSwitches), no longer here.
             ClickableRow(
                 title = stringResource(Res.string.settings_dj_jogwheel_haptics_title),
                 summary = if (canVibrate) {
@@ -200,19 +167,6 @@ fun SettingsScreen(
         }
     }
 
-    if (showSensitivityDialog) {
-        SingleChoiceDialog(
-            title = stringResource(Res.string.settings_dj_jogwheel_sensitivity_title),
-            entries = sensitivityEntries.toList(),
-            selectedIndex = sensitivityIndex,
-            onSelect = { index ->
-                settingsViewModel.setJogwheelSensitivity(sensitivityValues[index])
-                showSensitivityDialog = false
-            },
-            onDismiss = { showSensitivityDialog = false }
-        )
-    }
-
     if (showHapticsDialog) {
         SingleChoiceDialog(
             title = stringResource(Res.string.settings_dj_jogwheel_haptics_title),
@@ -223,19 +177,6 @@ fun SettingsScreen(
                 showHapticsDialog = false
             },
             onDismiss = { showHapticsDialog = false }
-        )
-    }
-
-    if (showModeDialog) {
-        SingleChoiceDialog(
-            title = stringResource(Res.string.settings_dj_jogwheel_mode_title),
-            entries = modeEntries,
-            selectedIndex = modeIndex,
-            onSelect = { index ->
-                settingsViewModel.setJogwheelMode(modeValues[index])
-                showModeDialog = false
-            },
-            onDismiss = { showModeDialog = false }
         )
     }
 }

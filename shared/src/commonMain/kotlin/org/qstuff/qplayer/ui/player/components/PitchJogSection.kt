@@ -31,6 +31,7 @@ import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.JogwheelMode
 import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.player.jogwheel.JogModeSwitch
+import org.qstuff.qplayer.ui.player.jogwheel.JogSensitivitySwitch
 import androidx.compose.foundation.layout.aspectRatio
 
 
@@ -52,8 +53,8 @@ private val jogClock = TimeSource.Monotonic.markNow()
  *        [onScratchEnd]).
  * @param onJogTouch / onJogRotate every touch-down / rotation (since touch-down) of the jog wheel,
  *        in any mode — used for haptic feedback.
- * @param jogwheelMode / onJogwheelModeChange the quick mode switch in the jog square's top-left
- *        corner (see JogModeSwitch).
+ * @param jogwheelMode / onJogwheelModeChange, jogwheelSensitivity / onJogwheelSensitivityChange
+ *        the quick switches in the jog square's top corners (see JogQuickSwitches).
  * @param jogEnabled false: the jog wheel ignores touches (phone: while the tab sheet is open, so a
  *        swipe to collapse it can't hit the wheel by accident).
  * @param fitHeight false (phone): the jog wheel fills the width, the row's height follows.
@@ -69,6 +70,8 @@ fun PitchJogSection(
     getJogwheelMode: () -> JogwheelMode,
     jogwheelMode: JogwheelMode,
     onJogwheelModeChange: (JogwheelMode) -> Unit,
+    jogwheelSensitivity: Int,
+    onJogwheelSensitivityChange: (Int) -> Unit,
     onScratchStart: () -> Boolean,
     onScratch: (rotationRad: Double) -> Unit,
     onScratchEnd: () -> Unit,
@@ -217,6 +220,11 @@ fun PitchJogSection(
                     mode = jogwheelMode,
                     onModeChange = onJogwheelModeChange,
                     modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                )
+                JogSensitivitySwitch(
+                    sensitivity = jogwheelSensitivity,
+                    onSensitivityChange = onJogwheelSensitivityChange,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
                 )
             }
         }
