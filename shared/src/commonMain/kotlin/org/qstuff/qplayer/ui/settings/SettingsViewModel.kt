@@ -13,8 +13,6 @@ data class SettingsUiState(
     val proceedToNextTrack: Boolean,
     val showClearQueueWarning: Boolean,
     val stopPlaybackOnCue: Boolean,
-    val jogwheelSensitivity: Int,
-    val jogwheelMode: Int,
     val jogwheelHapticLevel: Int,
     val crashreporting: Boolean
 )
@@ -48,16 +46,6 @@ class SettingsViewModel(
         _uiState.update { it.copy(stopPlaybackOnCue = enabled) }
     }
 
-    fun setJogwheelSensitivity(sensitivity: Int) {
-        preferencesDataSource.setJogWheelSensitivity(sensitivity)
-        _uiState.update { it.copy(jogwheelSensitivity = sensitivity) }
-    }
-
-    fun setJogwheelMode(mode: Int) {
-        preferencesDataSource.setJogWheelMode(mode)
-        _uiState.update { it.copy(jogwheelMode = mode) }
-    }
-
     fun setJogwheelHapticLevel(level: Int) {
         preferencesDataSource.setJogWheelHapticLevel(level)
         _uiState.update { it.copy(jogwheelHapticLevel = level) }
@@ -74,8 +62,6 @@ class SettingsViewModel(
         proceedToNextTrack = preferencesDataSource.isProceedToNextTrackEnabled(),
         showClearQueueWarning = preferencesDataSource.isShowClearQueueWarningEnabled(),
         stopPlaybackOnCue = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled(),
-        jogwheelSensitivity = preferencesDataSource.getJogWheelSensitivity(),
-        jogwheelMode = preferencesDataSource.getJogWheelMode(),
         jogwheelHapticLevel = preferencesDataSource.getJogWheelHapticLevel(),
         crashreporting = preferencesDataSource.isCrashreportingEnabled()
     )

@@ -135,7 +135,7 @@ private fun <T> JogQuickSwitch(
             modifier = Modifier
                 .size(buttonSize)
                 .background(ButtonBackground, CircleShape)
-                .border(1.5.dp, if (expanded) QOrange else Color.White, CircleShape)
+                .border(1.5.dp, QOrange, CircleShape)
                 .clickable { expanded = !expanded },
             contentAlignment = Alignment.Center
         ) {

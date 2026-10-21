@@ -25,12 +25,6 @@
         <item>Scratch:\nDas Jogwheel bewegt die Wiedergabe direkt wie eine Schallplatte</item>
     </string-array>
 
-    <string-array name="jogwheel_mode_values">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-    </string-array>
-
     <string-array name="jogwheel_haptics_entries">
         <item>Aus</item>
         <item>Leicht</item>
