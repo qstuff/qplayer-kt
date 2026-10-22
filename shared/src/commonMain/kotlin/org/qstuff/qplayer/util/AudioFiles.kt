@@ -6,7 +6,7 @@ package org.qstuff.qplayer.util
  */
 object AudioFiles {
 
-    private val SUPPORTED_EXTENSIONS = listOf(".mp3", ".mp4", ".m4a", ".aif", ".aac", ".wav", ".m3u")
+    private val SUPPORTED_EXTENSIONS = listOf(".mp3", ".mp4", ".m4a", ".aif", ".aiff", ".aac", ".wav", ".m3u")
 
     /** Hidden entries (".something") are never listed. */
     fun isHidden(name: String) = name.startsWith(".")

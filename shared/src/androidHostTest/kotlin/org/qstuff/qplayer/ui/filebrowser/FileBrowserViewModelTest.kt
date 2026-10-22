@@ -98,6 +98,30 @@ class FileBrowserViewModelTest {
     }
 
     @Test
+    fun `refresh lists the shown folder again`() {
+        val folders = mutableMapOf("/storage/6262-3034/Music" to listOf(track("/storage/6262-3034/Music/a.mp3")))
+        val prefs = PreferencesDataSource(MapSettings()).apply { saveLastBrowsedDir("/storage/6262-3034/Music") }
+        val vm = FileBrowserViewModel(FakeStorage(listOf(internal, sdCard), folders), prefs)
+
+        folders["/storage/6262-3034/Music"] = listOf(track("/storage/6262-3034/Music/a.mp3"), track("/storage/6262-3034/Music/b.mp3"))
+        vm.refresh()
+
+        assertEquals(listOf("a.mp3", "b.mp3"), vm.state.value.items.map { it.name })
+    }
+
+    @Test
+    fun `openFolder opens folders on a storage only`() {
+        val (vm, prefs) = viewModel()
+
+        vm.openFolder("/storage/6262-3034/Music/set")
+        assertEquals("SD card/Music/set", vm.state.value.directoryName)
+        assertEquals("/storage/6262-3034/Music/set", prefs.getLastBrowsedDir())
+
+        vm.openFolder("/somewhere/else")
+        assertEquals("SD card/Music/set", vm.state.value.directoryName)
+    }
+
+    @Test
     fun `playlist tracks resolved relative to the playlist's folder`() {
         val (vm, _) = viewModel()
 

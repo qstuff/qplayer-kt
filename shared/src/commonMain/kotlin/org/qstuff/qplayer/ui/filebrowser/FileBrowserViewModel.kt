@@ -79,6 +79,20 @@ class FileBrowserViewModel(
         browseTo(root.id)
     }
 
+    /**
+     * Lists the shown folder (or the storage list) again: files may have been added or removed from
+     * outside meanwhile (Files app, Finder, another app). Stays put if the folder can't be listed.
+     */
+    fun refresh() {
+        val dir = currentDir
+        if (dir == null) showStorageRoots() else browseTo(dir)
+    }
+
+    /** Opens [folderId], e.g. the folder files were just imported to; ignored if it's on no storage. */
+    fun openFolder(folderId: String) {
+        if (storage.rootOf(folderId) != null) browseTo(folderId)
+    }
+
     /** The tracks of [folder] (no playlists), for adding the whole folder to the queue. */
     fun tracksIn(folder: BrowserItem): List<BrowserItem> = storage.tracksIn(folder.id)
 
