@@ -26,6 +26,9 @@ class RoomDataSource(private val database: QDeqDatabase) : PlaylistStore {
     override suspend fun addTracks(tracklist: List<Track>) =
         database.trackDao().insertAll(tracklist)
 
+    override suspend fun removeTracks(tracks: List<Track>) =
+        database.trackDao().delete(tracks)
+
     override suspend fun removeTracksForPlaylist(playlistName: String) =
         database.trackDao().deleteTracksForPlaylist(playlistName)
 }

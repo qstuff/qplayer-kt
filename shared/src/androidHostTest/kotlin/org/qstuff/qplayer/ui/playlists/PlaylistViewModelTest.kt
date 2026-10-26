@@ -40,6 +40,9 @@ class PlaylistViewModelTest {
                 tracks[id] = it.copy(track_id = id)
             }
         }
+        override suspend fun removeTracks(tracks: List<Track>) {
+            tracks.forEach { this.tracks.remove(it.track_id) }
+        }
         override suspend fun removeTracksForPlaylist(playlistName: String) {
             tracks.values.removeAll { it.playlistName == playlistName }
         }
@@ -95,5 +98,38 @@ class PlaylistViewModelTest {
         assertEquals(listOf("/m/a.mp3", "/m/b.mp3"), store.uris("A"))
         assertEquals(listOf("/m/a.mp3", "/m/b.mp3", "/m/a.mp3", "/m/b.mp3"), store.uris("B"))
         assertEquals(listOf("A", "A"), queue.map { it.playlistName })     // queue tracks untouched
+    }
+
+    @Test
+    fun `an opened playlist lists its tracks, which can be removed and restored in place`() = runTest {
+        val vm = PlaylistViewModel(store)
+        vm.saveTracksAsNewPlaylist(listOf(track("/m/a.mp3"), track("/m/b.mp3"), track("/m/c.mp3")), "Set")
+
+        vm.openPlaylist(vm.playlistList.value.single())
+        assertEquals("Set", vm.openedPlaylist.value?.name)
+        assertEquals(listOf("a.mp3", "b.mp3", "c.mp3"), vm.openedTracks.value.map { it.name })
+
+        val b = vm.openedTracks.value[1]
+        vm.removeTrack(b)
+        assertEquals(listOf("a.mp3", "c.mp3"), vm.openedTracks.value.map { it.name })
+        assertEquals(listOf("/m/a.mp3", "/m/c.mp3"), store.uris("Set"))
+
+        vm.restoreTrack(b, 1)           // the snackbar's undo
+        assertEquals(listOf("a.mp3", "b.mp3", "c.mp3"), vm.openedTracks.value.map { it.name })
+        assertEquals(listOf("/m/a.mp3", "/m/b.mp3", "/m/c.mp3"), store.tracks.values.sortedBy { it.track_id }.map { it.uri })
+
+        vm.closePlaylist()
+        assertEquals(null, vm.openedPlaylist.value)
+    }
+
+    @Test
+    fun `saving into the opened playlist refreshes its tracks`() = runTest {
+        val vm = PlaylistViewModel(store)
+        vm.saveTracksAsNewPlaylist(listOf(track("/m/a.mp3")), "Set")
+        vm.openPlaylist(vm.playlistList.value.single())
+
+        vm.saveTracksToExistingPlaylist(listOf(track("/m/b.mp3")), "Set", overwrite = false)
+
+        assertEquals(listOf("a.mp3", "b.mp3"), vm.openedTracks.value.map { it.name })
     }
 }
