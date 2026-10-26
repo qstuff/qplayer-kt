@@ -16,9 +16,11 @@ interface TrackDao {
     @Query("SELECT * FROM Tracks; ")
     suspend fun getAll(): List<Track>
 
+    /** In saved order (row id): a track restored after removal is back in its old place. */
     @Query("SELECT * FROM Tracks " +
             "WHERE playlistName = :playlistName " +
-            "AND name IS NOT NULL;")
+            "AND name IS NOT NULL " +
+            "ORDER BY track_id;")
     suspend fun getTracksForPlaylist(playlistName: String): List<Track>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

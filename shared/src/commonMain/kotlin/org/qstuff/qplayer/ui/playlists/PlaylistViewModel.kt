@@ -28,6 +28,12 @@ class PlaylistViewModel(
     val playlistList: StateFlow<List<Playlist>> = _playlistList.asStateFlow()
 
 
+    // The playlist opened in the Playlists tab (null: the list of playlists) and its tracks.
+    private val _openedPlaylist = MutableStateFlow<Playlist?>(null)
+    val openedPlaylist: StateFlow<Playlist?> = _openedPlaylist.asStateFlow()
+    private val _openedTracks = MutableStateFlow<List<Track>>(emptyList())
+    val openedTracks: StateFlow<List<Track>> = _openedTracks.asStateFlow()
+
     private val currentPlaylistList = arrayListOf<Playlist>()
     // Tracks of the last removed playlist, for Undo.
     private val lastRemovedPlaylistTracks = arrayListOf<Track>()
@@ -68,7 +74,45 @@ class PlaylistViewModel(
         viewModelScope.launch {
             if (overwrite) roomDataSource.removeTracksForPlaylist(playlistName)
             roomDataSource.addTracks(copies)
+            if (_openedPlaylist.value?.name == playlistName) loadOpenedTracks(playlistName)
         }
+    }
+
+    /** Show [playlist]'s tracks in the Playlists tab. */
+    fun openPlaylist(playlist: Playlist) {
+        _openedPlaylist.value = playlist
+        _openedTracks.value = emptyList()
+        viewModelScope.launch { loadOpenedTracks(playlist.name) }
+    }
+
+    /** Back to the list of playlists. */
+    fun closePlaylist() {
+        _openedPlaylist.value = null
+        _openedTracks.value = emptyList()
+    }
+
+    /** Remove [track] from the opened playlist (undo: [restoreTrack]). */
+    fun removeTrack(track: Track) {
+        _openedTracks.value = _openedTracks.value.filterNot { it.track_id == track.track_id }
+        viewModelScope.launch { roomDataSource.removeTracks(listOf(track)) }
+    }
+
+    /**
+     * Put a removed [track] back at [index]. It keeps its row id, and the tracks are listed in id
+     * order, so it's back in its old place after a reload too.
+     */
+    fun restoreTrack(track: Track, index: Int) {
+        viewModelScope.launch { roomDataSource.addTracks(listOf(track)) }
+        if (_openedPlaylist.value?.name == track.playlistName) {
+            _openedTracks.value = _openedTracks.value.toMutableList().apply {
+                add(index.coerceIn(0, size), track)
+            }
+        }
+    }
+
+    private suspend fun loadOpenedTracks(playlistName: String) {
+        val tracks = roomDataSource.getTracksForPlaylist(playlistName) ?: listOf()
+        if (_openedPlaylist.value?.name == playlistName) _openedTracks.value = tracks
     }
 
     /**

@@ -20,5 +20,8 @@ interface PlaylistStore {
 
     suspend fun addTracks(tracklist: List<Track>)
 
+    /** Removes these tracks (by [Track.track_id]) from their playlist. */
+    suspend fun removeTracks(tracks: List<Track>)
+
     suspend fun removeTracksForPlaylist(playlistName: String)
 }
