@@ -32,12 +32,20 @@ import org.qstuff.qplayer.resources.dialog_cancel
 import org.qstuff.qplayer.resources.dialog_ok
 import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
 import org.qstuff.qplayer.resources.snackbar_undo
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.ReorderableItem
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 private val QOrangeDivider = Color(0x60FC7614)
+/** A track lifted by long press to be moved. */
+private val DraggedBackground = Color(0xFF6B3500)
 
 /**
  * The Playlists tab: the list of playlists — a tap opens one (its tracks, which can be swiped
- * away), a long press offers to add it to the queue or replace the queue with it.
+ * away and moved by long press + drag), a long press offers to add it to the queue or replace the
+ * queue with it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +60,15 @@ fun PlaylistScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val undoLabel = stringResource(Res.string.snackbar_undo)
     val scope = rememberCoroutineScope()
+
+    // Opened playlist: long press + drag reorders its tracks; this copy follows the finger, the
+    // ViewModel gets it on drop.
+    val tracksListState = rememberLazyListState()
+    var orderedEntries by remember(openedTracks) { mutableStateOf(openedTracks) }
+    val haptic = LocalHapticFeedback.current
+    val reorderState = rememberReorderableLazyListState(tracksListState) { from, to ->
+        orderedEntries = orderedEntries.toMutableList().apply { add(to.index, removeAt(from.index)) }
+    }
 
     // Long press: the add-to / replace-queue dialog for this playlist.
     var dialogPlaylist by remember { mutableStateOf<Playlist?>(null) }
@@ -125,18 +142,29 @@ fun PlaylistScreen(
                 }
                 HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
 
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(openedTracks, key = { it.track_id }) { track ->
-                        val index = openedTracks.indexOf(track)
-                        SwipeToRemove(
-                            onDismissed = {
-                                playlistViewModel.removeTrack(track)
-                                undoable(track.name) { playlistViewModel.restoreTrack(track, index) }
+                LazyColumn(state = tracksListState, modifier = Modifier.fillMaxSize()) {
+                    items(orderedEntries, key = { it.key }) { entry ->
+                        ReorderableItem(reorderState, key = entry.key) { isDragging ->
+                            Column {
+                                SwipeToRemove(
+                                    onDismissed = {
+                                        val index = openedTracks.indexOf(entry)
+                                        playlistViewModel.removeTrack(entry)
+                                        undoable(entry.track.name) { playlistViewModel.restoreTrack(entry, index) }
+                                    }
+                                ) {
+                                    PlaylistTrackItem(
+                                        track = entry.track,
+                                        isDragging = isDragging,
+                                        modifier = Modifier.longPressDraggableHandle(
+                                            onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                            onDragStopped = { playlistViewModel.reorderTracks(orderedEntries) }
+                                        )
+                                    )
+                                }
+                                HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                             }
-                        ) {
-                            PlaylistTrackItem(track)
                         }
-                        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                     }
                 }
             }
@@ -204,12 +232,16 @@ private fun PlaylistItem(
 }
 
 @Composable
-private fun PlaylistTrackItem(track: Track) {
+private fun PlaylistTrackItem(
+    track: Track,
+    modifier: Modifier = Modifier,
+    isDragging: Boolean = false
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(28.dp)
-            .background(Color.Black)
+            .background(if (isDragging) DraggedBackground else Color.Black)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

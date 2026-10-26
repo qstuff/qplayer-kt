@@ -65,6 +65,8 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             // Licenses screen (the list: Android generated in :androidApp, iOS exported below)
             implementation(libs.aboutlibraries.compose.m3)
+            // Long press + drag to reorder the queue and playlist tracks
+            implementation(libs.reorderable)
         }
         iosMain.dependencies {
             implementation(libs.sqlite.bundled)

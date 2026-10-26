@@ -170,10 +170,16 @@ class QueueViewModel(
         saveTrackList()
     }
 
-    fun trackListReordered(tracks: List<Track>) {
+    /** The queue in a new order (the same tracks, moved by drag); the highlighted track stays so. */
+    fun reorderTracks(tracks: List<Track>) {
+        val selectedUri = currentTrackList.getOrNull(_onTrackSelectedIndex.value)?.uri
 
         currentTrackList.clear()
         currentTrackList.addAll(tracks)
+        _trackList.value = ArrayList(currentTrackList)
+        if (selectedUri != null) {
+            _onTrackSelectedIndex.value = currentTrackList.indexOfFirst { it.uri == selectedUri }
+        }
         saveTrackList()
     }
 
