@@ -45,6 +45,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
+import org.qstuff.qplayer.resources.jogwheel_quick_mode_label
+import org.qstuff.qplayer.resources.jogwheel_quick_sensitivity_label
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.jogwheel_mode_entries
 import org.qstuff.qplayer.resources.jogwheel_sensitivity_entries
@@ -82,6 +85,7 @@ fun JogModeSwitch(
     val names = stringArrayResource(Res.array.jogwheel_mode_entries)
         .map { it.trim().substringBefore('\n').removeSuffix(":") }
     JogQuickSwitch(
+        label = stringResource(Res.string.jogwheel_quick_mode_label),
         options = JogwheelMode.entries.map { QuickOption(it, it.icon(), names.getOrElse(it.ordinal) { _ -> it.name }) },
         selected = mode,
         onSelect = onModeChange,
@@ -100,6 +104,7 @@ fun JogSensitivitySwitch(
     val names = stringArrayResource(Res.array.jogwheel_sensitivity_entries)
     val values = stringArrayResource(Res.array.jogwheel_sensitivity_values).map { it.toInt() }
     JogQuickSwitch(
+        label = stringResource(Res.string.jogwheel_quick_sensitivity_label),
         options = values.mapIndexed { i, value ->
             QuickOption(value, SensitivityIcons.getOrElse(i) { SensitivityIcons.last() }, names.getOrElse(i) { value.toString() })
         },
@@ -113,13 +118,15 @@ fun JogSensitivitySwitch(
 private class QuickOption<T>(val value: T, val icon: ImageVector, val label: String)
 
 /**
- * A round button showing the [selected] option's icon; a tap unfolds all [options] below it
+ * A round button showing the [selected] option's icon, with a small [label] beside it (on the
+ * inner side, at the top edge where the corner is widest); a tap unfolds all [options] below it
  * (speed-dial style, in a popup above everything else — left- or right-aligned with the button,
  * [alignEnd] for the right corner). Choosing one calls [onSelect] and folds the options again;
  * a tap anywhere else just folds them.
  */
 @Composable
 private fun <T> JogQuickSwitch(
+    label: String,
     options: List<QuickOption<T>>,
     selected: T,
     onSelect: (T) -> Unit,
@@ -131,22 +138,26 @@ private fun <T> JogQuickSwitch(
     val current = options.firstOrNull { it.value == selected }
 
     Box(modifier) {
-        Box(
-            modifier = Modifier
-                .size(buttonSize)
-                .background(ButtonBackground, CircleShape)
-                .border(1.5.dp, QOrange, CircleShape)
-                .clickable { expanded = !expanded },
-            contentAlignment = Alignment.Center
-        ) {
-            current?.let {
-                Icon(
-                    imageVector = it.icon,
-                    contentDescription = it.label,
-                    tint = QOrange,
-                    modifier = Modifier.size(buttonSize * 0.6f)
-                )
+        Row(verticalAlignment = Alignment.Top) {
+            if (alignEnd) QuickSwitchLabel(label, Modifier.padding(end = 4.dp))
+            Box(
+                modifier = Modifier
+                    .size(buttonSize)
+                    .background(ButtonBackground, CircleShape)
+                    .border(1.5.dp, QOrange, CircleShape)
+                    .clickable { expanded = !expanded },
+                contentAlignment = Alignment.Center
+            ) {
+                current?.let {
+                    Icon(
+                        imageVector = it.icon,
+                        contentDescription = it.label,
+                        tint = QOrange,
+                        modifier = Modifier.size(buttonSize * 0.6f)
+                    )
+                }
             }
+            if (!alignEnd) QuickSwitchLabel(label, Modifier.padding(start = 4.dp))
         }
 
         if (expanded) {
@@ -183,6 +194,19 @@ private fun <T> JogQuickSwitch(
             }
         }
     }
+}
+
+@Composable
+private fun QuickSwitchLabel(text: String, modifier: Modifier) {
+    Text(
+        text = text,
+        color = QOrange,
+        fontSize = 10.sp,
+        lineHeight = 12.sp,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        modifier = modifier
+    )
 }
 
 @Composable

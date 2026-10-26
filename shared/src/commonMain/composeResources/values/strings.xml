@@ -61,6 +61,10 @@
     <string name="settings_dj_stop_playback_on_cue_title">Wiedergabe stoppen beim Cue-Punkt setzen</string>
     <string name="settings_dj_stop_playback_on_cue_summary">Wenn aktiviert stoppt die Wiedergabe beim Setzen eines Cue-Punktes</string>
 
+    <!-- Jog wheel quick switches (labels beside the corner buttons) -->
+    <string name="jogwheel_quick_mode_label">Modus</string>
+    <string name="jogwheel_quick_sensitivity_label">Speed</string>
+
     <string name="settings_dj_jogwheel_haptics_title">Jogwheel Vibration</string>
     <string name="settings_dj_jogwheel_haptics_summary">Kurze Vibration beim Berühren und Drehen des Jogwheels\nAktuell: %1$s</string>
     <string name="settings_dj_jogwheel_haptics_unavailable">Dieses Gerät kann nicht vibrieren</string>
