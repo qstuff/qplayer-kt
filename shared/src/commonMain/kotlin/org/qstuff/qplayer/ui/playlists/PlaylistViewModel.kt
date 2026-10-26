@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
-import org.qstuff.qplayer.datasource.room.RoomDataSource
+import org.qstuff.qplayer.datasource.room.PlaylistStore
 import co.touchlab.kermit.Logger
 
 private val log = Logger.withTag("PlaylistViewModel")
@@ -19,7 +19,7 @@ private val log = Logger.withTag("PlaylistViewModel")
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 class PlaylistViewModel(
-    private val roomDataSource: RoomDataSource
+    private val roomDataSource: PlaylistStore
 ) : ViewModel() {
 
     // Plain UI state, exposed as read-only StateFlow. Always a fresh list copy, never the
@@ -42,42 +42,42 @@ class PlaylistViewModel(
         }
     }
 
+    /**
+     * Saves copies of [tracks] as a new playlist [playlistName]. It appears in the list once the
+     * database has assigned its id (the list is keyed by it — two new ones with id 0 collided).
+     */
     fun saveTracksAsNewPlaylist(tracks: List<Track>, playlistName: String) {
-
-        val playlist = Playlist(0, playlistName, tracks)
-
-        tracks.forEach {
-            it.playlistName = playlistName
-        }
-
+        val copies = tracks.copiesFor(playlistName)
         viewModelScope.launch {
-            roomDataSource.addPlaylist(playlist)
-            roomDataSource.addTracks(tracks)
+            val playlist = Playlist(0, playlistName, copies)
+            playlist.playlist_id = roomDataSource.addPlaylist(playlist).toInt()
+            roomDataSource.addTracks(copies)
+            currentPlaylistList.add(playlist)
+            publish()
         }
-
-        currentPlaylistList.add(playlist)
-        publish()
     }
 
+    /** Saves copies of [tracks] into the playlist [playlistName]: appended, or replacing its tracks. */
     fun saveTracksToExistingPlaylist(tracks: List<Track>?, playlistName: String?, overwrite: Boolean) {
 
         if (tracks.isNullOrEmpty() || playlistName.isNullOrBlank()) {
             return
         }
 
+        val copies = tracks.copiesFor(playlistName)
         viewModelScope.launch {
-
-            val savedTracks = arrayListOf<Track>()
-            if (!overwrite) {
-                savedTracks.addAll(roomDataSource.getTracksForPlaylist(playlistName) ?: listOf())
-            }
-            tracks.forEach {
-                it.playlistName = playlistName
-                savedTracks.add(it)
-            }
-            roomDataSource.addTracks(savedTracks)
+            if (overwrite) roomDataSource.removeTracksForPlaylist(playlistName)
+            roomDataSource.addTracks(copies)
         }
     }
+
+    /**
+     * New rows for [playlistName]. Never the given objects themselves: tracks loaded from another
+     * playlist keep their row id, and saving them would *move* those rows (insert = replace by id)
+     * — and the queue's tracks would get the playlist name as a side effect.
+     */
+    private fun List<Track>.copiesFor(playlistName: String) =
+        map { it.copy(track_id = 0, playlistName = playlistName) }
 
     suspend fun getTracksForPlaylist(playlist: Playlist): List<Track> =
         roomDataSource.getTracksForPlaylist(playlist.name) ?: listOf()

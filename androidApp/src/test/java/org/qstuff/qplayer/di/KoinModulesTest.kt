@@ -4,7 +4,7 @@ import org.junit.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.test.verify.verify
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
-import org.qstuff.qplayer.datasource.room.RoomDataSource
+import org.qstuff.qplayer.datasource.room.PlaylistStore
 import org.qstuff.qplayer.ui.filebrowser.StorageProvider
 import org.qstuff.qplayer.ui.player.AudioPlayer
 import org.qstuff.qplayer.ui.player.WaveformGenerator
@@ -23,7 +23,7 @@ class KoinModulesTest {
         viewModelModule.verify(
             extraTypes = listOf(
                 PreferencesDataSource::class,
-                RoomDataSource::class,
+                PlaylistStore::class,
                 AudioPlayer::class,
                 Scratcher::class,
                 WaveformGenerator::class,

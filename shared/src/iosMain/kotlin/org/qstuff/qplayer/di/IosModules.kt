@@ -6,9 +6,11 @@ import com.russhwolf.settings.NSUserDefaultsSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
+import org.qstuff.qplayer.datasource.room.PlaylistStore
 import org.qstuff.qplayer.datasource.room.RoomDataSource
 import org.qstuff.qplayer.platform.IosPlatformInfo
 import org.qstuff.qplayer.platform.NoCrashReporter
@@ -38,7 +40,7 @@ private val iosDataModule = module {
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
     }
-    singleOf(::RoomDataSource)
+    singleOf(::RoomDataSource) bind PlaylistStore::class
 }
 
 /**
