@@ -20,8 +20,9 @@ interface PlaylistDao {
             "AND name IS NOT NULL;")
     suspend fun getPlaylistByName(name: String): Playlist
 
+    /** Returns the playlist's row id (new if its id is 0). */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(playlist: Playlist)
+    suspend fun insertAll(playlist: Playlist): Long
 
     @Delete
     suspend fun delete(playlist: Playlist)

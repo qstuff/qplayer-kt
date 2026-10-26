@@ -9,23 +9,23 @@ import org.qstuff.qplayer.datasource.model.Track
  * Copyright (C) 2018 until now by Claus Chierici. All rights reserved.
  */
 /** Playlist/track persistence (the DAOs are suspending; Room runs them off the main thread). */
-class RoomDataSource(private val database: QDeqDatabase) {
+class RoomDataSource(private val database: QDeqDatabase) : PlaylistStore {
 
-    suspend fun getAllPlaylists(): List<Playlist> =
+    override suspend fun getAllPlaylists(): List<Playlist> =
         database.playlistDao().getAll()
 
-    suspend fun addPlaylist(playlist: Playlist) =
+    override suspend fun addPlaylist(playlist: Playlist): Long =
         database.playlistDao().insertAll(playlist)
 
-    suspend fun removePlaylist(playlist: Playlist) =
+    override suspend fun removePlaylist(playlist: Playlist) =
         database.playlistDao().delete(playlist.name)
 
-    suspend fun getTracksForPlaylist(playlistName: String): List<Track>? =
+    override suspend fun getTracksForPlaylist(playlistName: String): List<Track>? =
         database.trackDao().getTracksForPlaylist(playlistName)
 
-    suspend fun addTracks(tracklist: List<Track>) =
+    override suspend fun addTracks(tracklist: List<Track>) =
         database.trackDao().insertAll(tracklist)
 
-    suspend fun removeTracksForPlaylist(playlistName: String) =
+    override suspend fun removeTracksForPlaylist(playlistName: String) =
         database.trackDao().deleteTracksForPlaylist(playlistName)
 }
