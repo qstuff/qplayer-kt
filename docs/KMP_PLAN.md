@@ -163,17 +163,27 @@ dependencies, exported at build time), privacy statement with Android and iOS se
 
 Not yet scheduled; roughly by benefit.
 
+**Done since:** importing files on iOS (PR #79, by Miriam Busch): audio files and M3U playlists
+handed over by other apps ("Open in…", share sheet, AirDrop, also from iCloud Drive and other file
+providers) are copied into the Documents folder (`IosFileImport`); the file browser refreshes when
+the app returns to the foreground.
+
 **iOS features**
 - **Linked folders:** an "add folder" action in the file browser with the system folder picker
   (`UIDocumentPickerViewController`): iCloud Drive, USB drives, network shares, other providers.
   Access kept with security-scoped bookmarks; each folder becomes a storage root with virtual ids
-  `/Linked/<name>/…` (like `/Documents/…`, see `IosPaths`).
+  `/Linked/<name>/…` (like `/Documents/…`, see `IosPaths`). Unlike the import (#79), whole folders
+  are browsed in place — no copies, always current.
 - **Crash reporting on iOS** (after decision 1).
 - **Test on real devices** (needs decision 2): scratch dropouts / latency (if any, move the render
   callback to Swift), haptics, background playback and lock screen, iPad layout, performance of
   the waveform and scratch decode in a release build.
 - **Release setup:** app version / build number (`CFBundleShortVersionString` / `CFBundleVersion`
   are fixed in `iosApp/project.yml`), signing, TestFlight, App Store metadata.
+
+- **Xcode project format:** XcodeGen writes an older project format (`objectVersion` 51), which
+  Xcode converts locally on opening (an uncommitted change to `project.pbxproj`). Set
+  `options.projectFormat` in `iosApp/project.yml` to the current format.
 
 **iOS glitches seen in the simulator**
 - The first tap right after the app starts is sometimes lost (UIKit logs "Failed to receive
@@ -184,20 +194,13 @@ Not yet scheduled; roughly by benefit.
 **Both platforms**
 - **Scratch fill-up:** after loading, only the start of a track can be scratched until the
   background decode catches up. A first attempt (one decode for waveform + scratch, batched
-  writes) is parked on branch `feature/scratch-single-decode`; it didn't noticeably help on the
+  writes) is parked on branch `feature/scratch-single-decode` (still the old `app/` layout); it didn't noticeably help on the
   Tab A. Ideas: decode from the playback position first, show the scratchable range.
 - **Licenses screen:** the license chips use a colour our colour scheme doesn't define (dark
   pink); give them the accent colour.
 - **Unit tests to `commonTest`** (kotlin.test), so they also run on the iOS simulator
   (`iosSimulatorArm64Test`); today they run on the JVM only (`androidHostTest`).
 - Deprecation warnings: `TabRow` → `PrimaryTabRow`, `ContextCompat.getExternalFilesDirs`.
-
-**Android / branches**
-- Three fixes exist only on `kmp-migration`, not on `develop`: pitch saved shortly after each
-  change, file browser order (`fileBrowserOrder`), M3U entries in subfolders (`resolvePath`).
-  They reach `develop` with the final merge, or earlier as a separate PR.
-- `develop` still builds only with JDK 17 (Kotlin 1.9 + kapt).
-- **Final step:** merge `kmp-migration` into `develop`.
 
 ## Testing
 
