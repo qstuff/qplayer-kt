@@ -31,8 +31,9 @@ class PlaylistViewModel(
     // The playlist opened in the Playlists tab (null: the list of playlists) and its tracks.
     private val _openedPlaylist = MutableStateFlow<Playlist?>(null)
     val openedPlaylist: StateFlow<Playlist?> = _openedPlaylist.asStateFlow()
-    private val _openedTracks = MutableStateFlow<List<Track>>(emptyList())
-    val openedTracks: StateFlow<List<Track>> = _openedTracks.asStateFlow()
+    private val _openedTracks = MutableStateFlow<List<PlaylistEntry>>(emptyList())
+    val openedTracks: StateFlow<List<PlaylistEntry>> = _openedTracks.asStateFlow()
+    private var nextEntryKey = 0L
 
     private val currentPlaylistList = arrayListOf<Playlist>()
     // Tracks of the last removed playlist, for Undo.
@@ -91,28 +92,41 @@ class PlaylistViewModel(
         _openedTracks.value = emptyList()
     }
 
-    /** Remove [track] from the opened playlist (undo: [restoreTrack]). */
-    fun removeTrack(track: Track) {
-        _openedTracks.value = _openedTracks.value.filterNot { it.track_id == track.track_id }
-        viewModelScope.launch { roomDataSource.removeTracks(listOf(track)) }
+    /** Remove [entry]'s track from the opened playlist (undo: [restoreTrack]). */
+    fun removeTrack(entry: PlaylistEntry) {
+        _openedTracks.value = _openedTracks.value.filterNot { it.key == entry.key }
+        viewModelScope.launch { roomDataSource.removeTracks(listOf(entry.track)) }
     }
 
     /**
-     * Put a removed [track] back at [index]. It keeps its row id, and the tracks are listed in id
-     * order, so it's back in its old place after a reload too.
+     * Put a removed [entry] back at [index]. Its track keeps its row id, and the tracks are listed
+     * in id order, so it's back in its old place after a reload too.
      */
-    fun restoreTrack(track: Track, index: Int) {
-        viewModelScope.launch { roomDataSource.addTracks(listOf(track)) }
-        if (_openedPlaylist.value?.name == track.playlistName) {
+    fun restoreTrack(entry: PlaylistEntry, index: Int) {
+        viewModelScope.launch { roomDataSource.addTracks(listOf(entry.track)) }
+        if (_openedPlaylist.value?.name == entry.track.playlistName) {
             _openedTracks.value = _openedTracks.value.toMutableList().apply {
-                add(index.coerceIn(0, size), track)
+                add(index.coerceIn(0, size), entry)
             }
         }
     }
 
+    /**
+     * The opened playlist in a new order (the same entries, moved by drag). The tracks are listed
+     * by row id, so they get their existing ids in the new order — rewritten in place, no new rows.
+     */
+    fun reorderTracks(entries: List<PlaylistEntry>) {
+        val ids = entries.map { it.track.track_id }.sorted()
+        val reordered = entries.mapIndexed { i, entry -> entry.copy(track = entry.track.copy(track_id = ids[i])) }
+        _openedTracks.value = reordered
+        viewModelScope.launch { roomDataSource.addTracks(reordered.map { it.track }) }
+    }
+
     private suspend fun loadOpenedTracks(playlistName: String) {
         val tracks = roomDataSource.getTracksForPlaylist(playlistName) ?: listOf()
-        if (_openedPlaylist.value?.name == playlistName) _openedTracks.value = tracks
+        if (_openedPlaylist.value?.name == playlistName) {
+            _openedTracks.value = tracks.map { PlaylistEntry(nextEntryKey++, it) }
+        }
     }
 
     /**
@@ -165,3 +179,9 @@ class PlaylistViewModel(
         _playlistList.value = ArrayList(currentPlaylistList)
     }
 }
+
+/**
+ * A track of the opened playlist. [key] identifies it in the list and stays the same when the
+ * track is moved — its row id doesn't (see [PlaylistViewModel.reorderTracks]).
+ */
+data class PlaylistEntry(val key: Long, val track: Track)

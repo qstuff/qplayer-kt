@@ -40,8 +40,15 @@ import org.qstuff.qplayer.resources.queue_dialog_confirm_clear_title
 import org.qstuff.qplayer.resources.queue_dialog_save_tracks_as_playlist_message
 import org.qstuff.qplayer.resources.queue_dialog_save_tracks_as_playlist_title
 import org.qstuff.qplayer.resources.snackbar_undo
+import androidx.compose.foundation.layout.Column
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.ReorderableItem
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 private val QOrangeDivider = Color(0x60FC7614)
+/** A track lifted by long press to be moved. */
+private val DraggedBackground = Color(0xFF6B3500)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,8 +70,19 @@ fun QueueScreen(
     var showClearDialog by remember { mutableStateOf(false) }
     var showSavePlaylistDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(selectedIndex) {
+    // The highlighted track, by file: stays highlighted while tracks are moved.
+    val selectedUri = tracks.getOrNull(selectedIndex)?.uri
+
+    // Scroll to a newly selected track — not when the selection only moved in the list.
+    LaunchedEffect(selectedUri) {
         if (selectedIndex in 0 until tracks.size) listState.animateScrollToItem(selectedIndex)
+    }
+
+    // Long press + drag reorders: this copy follows the finger, the queue gets it on drop.
+    var orderedTracks by remember(tracks) { mutableStateOf(tracks) }
+    val haptic = LocalHapticFeedback.current
+    val reorderState = rememberReorderableLazyListState(listState) { from, to ->
+        orderedTracks = orderedTracks.toMutableList().apply { add(to.index, removeAt(from.index)) }
     }
 
     Box(modifier = Modifier
@@ -103,31 +121,39 @@ fun QueueScreen(
                 state = listState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(tracks, key = { track -> track.uri }) { track ->
-                    val index = tracks.indexOf(track)
-                    val isSelected = index == selectedIndex
-                    SwipeToRemove(
-                        onDismissed = {
-                            queueViewModel.removeTrack(track)
-                            scope.launch {
-                                val result = snackbarHostState.showSnackbar(
-                                    message = track.name,
-                                    actionLabel = undoLabel,
-                                    duration = SnackbarDuration.Long
-                                )
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    queueViewModel.restoreTrackAt(track, index)
+                items(orderedTracks, key = { track -> track.uri }) { track ->
+                    ReorderableItem(reorderState, key = track.uri) { isDragging ->
+                        Column {
+                            SwipeToRemove(
+                                onDismissed = {
+                                    val index = tracks.indexOf(track)
+                                    queueViewModel.removeTrack(track)
+                                    scope.launch {
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = track.name,
+                                            actionLabel = undoLabel,
+                                            duration = SnackbarDuration.Long
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            queueViewModel.restoreTrackAt(track, index)
+                                        }
+                                    }
                                 }
+                            ) {
+                                TrackListItem(
+                                    track = track,
+                                    isSelected = track.uri == selectedUri,
+                                    isDragging = isDragging,
+                                    onClick = { queueViewModel.onTrackSelected(track) },
+                                    modifier = Modifier.longPressDraggableHandle(
+                                        onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                        onDragStopped = { queueViewModel.reorderTracks(orderedTracks) }
+                                    )
+                                )
                             }
+                            HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                         }
-                    ) {
-                        TrackListItem(
-                            track = track,
-                            isSelected = isSelected,
-                            onClick = { queueViewModel.onTrackSelected(track) }
-                        )
                     }
-                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                 }
             }
         }
@@ -181,13 +207,19 @@ fun QueueScreen(
 private fun TrackListItem(
     track: Track,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isDragging: Boolean = false
 ) {
-    val bgColor = if (isSelected) Color(0xFF3A1E00) else Color.Black
+    val bgColor = when {
+        isDragging -> DraggedBackground
+        isSelected -> Color(0xFF3A1E00)
+        else -> Color.Black
+    }
     val textColor = if (isSelected) QOrange else Color.White
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(28.dp)
             .background(bgColor)

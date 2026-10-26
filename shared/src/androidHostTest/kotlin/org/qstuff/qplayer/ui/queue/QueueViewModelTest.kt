@@ -45,4 +45,17 @@ class QueueViewModelTest {
         assertNull(vm.addPath("/music/a.mp3"))
         assertEquals(listOf("/music/a.mp3"), uris())
     }
+
+    @Test
+    fun `reordering keeps the selected track selected`() {
+        listOf("/music/a.mp3", "/music/b.mp3", "/music/c.mp3").forEach { vm.addPath(it) }
+        val (a, b, c) = vm.trackList.value
+        vm.onTrackSelected(b)
+        assertEquals(1, vm.onTrackSelectedIndex.value)
+
+        vm.reorderTracks(listOf(b, c, a))      // b dragged to the top
+
+        assertEquals(listOf("/music/b.mp3", "/music/c.mp3", "/music/a.mp3"), uris())
+        assertEquals(0, vm.onTrackSelectedIndex.value)
+    }
 }

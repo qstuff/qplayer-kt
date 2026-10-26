@@ -107,15 +107,15 @@ class PlaylistViewModelTest {
 
         vm.openPlaylist(vm.playlistList.value.single())
         assertEquals("Set", vm.openedPlaylist.value?.name)
-        assertEquals(listOf("a.mp3", "b.mp3", "c.mp3"), vm.openedTracks.value.map { it.name })
+        assertEquals(listOf("a.mp3", "b.mp3", "c.mp3"), vm.openedTracks.value.map { it.track.name })
 
         val b = vm.openedTracks.value[1]
         vm.removeTrack(b)
-        assertEquals(listOf("a.mp3", "c.mp3"), vm.openedTracks.value.map { it.name })
+        assertEquals(listOf("a.mp3", "c.mp3"), vm.openedTracks.value.map { it.track.name })
         assertEquals(listOf("/m/a.mp3", "/m/c.mp3"), store.uris("Set"))
 
         vm.restoreTrack(b, 1)           // the snackbar's undo
-        assertEquals(listOf("a.mp3", "b.mp3", "c.mp3"), vm.openedTracks.value.map { it.name })
+        assertEquals(listOf("a.mp3", "b.mp3", "c.mp3"), vm.openedTracks.value.map { it.track.name })
         assertEquals(listOf("/m/a.mp3", "/m/b.mp3", "/m/c.mp3"), store.tracks.values.sortedBy { it.track_id }.map { it.uri })
 
         vm.closePlaylist()
@@ -130,6 +130,24 @@ class PlaylistViewModelTest {
 
         vm.saveTracksToExistingPlaylist(listOf(track("/m/b.mp3")), "Set", overwrite = false)
 
-        assertEquals(listOf("a.mp3", "b.mp3"), vm.openedTracks.value.map { it.name })
+        assertEquals(listOf("a.mp3", "b.mp3"), vm.openedTracks.value.map { it.track.name })
+    }
+
+    @Test
+    fun `moved tracks keep their keys and are saved in the new order`() = runTest {
+        val vm = PlaylistViewModel(store)
+        vm.saveTracksAsNewPlaylist(listOf(track("/m/a.mp3"), track("/m/b.mp3"), track("/m/c.mp3")), "Set")
+        vm.openPlaylist(vm.playlistList.value.single())
+        val (a, b, c) = vm.openedTracks.value
+
+        vm.reorderTracks(listOf(c, a, b))      // c dragged to the top
+
+        assertEquals(listOf(c.key, a.key, b.key), vm.openedTracks.value.map { it.key })
+        assertEquals(listOf("/m/c.mp3", "/m/a.mp3", "/m/b.mp3"),
+            store.tracks.values.sortedBy { it.track_id }.map { it.uri })
+        assertEquals(3, store.tracks.size)     // rewritten in place, no new rows
+
+        vm.openPlaylist(vm.playlistList.value.single())     // reopened: the new order
+        assertEquals(listOf("c.mp3", "a.mp3", "b.mp3"), vm.openedTracks.value.map { it.track.name })
     }
 }
