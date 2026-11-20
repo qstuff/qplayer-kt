@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
 import kotlin.time.TimeSource
@@ -57,6 +58,7 @@ private val jogClock = TimeSource.Monotonic.markNow()
  *        the quick switches in the jog square's top corners (see JogQuickSwitches).
  * @param jogEnabled false: the jog wheel ignores touches (phone: while the tab sheet is open, so a
  *        swipe to collapse it can't hit the wheel by accident).
+ * @param pitchbarWidth width of the pitch fader slot, incl. its 4dp gap to the jog wheel.
  * @param fitHeight false (phone): the jog wheel fills the width, the row's height follows.
  *        true (tablet pane): the jog wheel is also limited by the available height, and the
  *        fader + wheel group is centred horizontally.
@@ -78,6 +80,7 @@ fun PitchJogSection(
     onJogTouch: () -> Unit,
     onJogRotate: (rotationRad: Double) -> Unit,
     modifier: Modifier = Modifier,
+    pitchbarWidth: Dp = LocalDimens.current.pitchbarWidth,
     fitHeight: Boolean = false,
     jogEnabled: Boolean = true
 ) {
@@ -99,7 +102,6 @@ fun PitchJogSection(
             .padding(top = 4.dp),  // 4dp below the duration row
         contentAlignment = Alignment.TopCenter
     ) {
-        val pitchbarWidth = LocalDimens.current.pitchbarWidth
         // The jog wheel is square and fills the width to the right of the pitch fader, so the
         // row height = that width. The pitch fader uses fillMaxHeight for the same top/height.
         val jogSize = if (fitHeight) {
@@ -116,7 +118,7 @@ fun PitchJogSection(
                 modifier = Modifier
                     .width(pitchbarWidth)
                     .fillMaxHeight()
-                    .padding(end = 4.dp)
+                    .padding(end = ControlChipSpacing)
                     .background(Color.Black, roundedShape)
             ) {
                 // Opaque orange fill from the centre (0%) out to the thumb + a QOrange playhead
