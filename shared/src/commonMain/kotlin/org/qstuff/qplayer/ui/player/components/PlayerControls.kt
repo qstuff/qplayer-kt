@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.TrackRepeatStatus
@@ -31,6 +32,16 @@ import org.qstuff.qplayer.resources.button_shuffle
 import org.qstuff.qplayer.resources.button_shuffle_selected
 import org.qstuff.qplayer.resources.ic_keyboard_arrow_left_white_24px
 import org.qstuff.qplayer.resources.ic_keyboard_arrow_right_white_24px
+
+/** Gap between the control chips (horizontal and between the rows). */
+val ControlChipSpacing = 4.dp
+
+/** Chips per button row — all chips share the row width equally. */
+private const val CONTROL_CHIPS_PER_ROW = 6
+
+/** Width of one control chip in a button row [rowWidth] wide (mirrors the weight(1f) layout). */
+fun controlChipWidth(rowWidth: Dp): Dp =
+    (rowWidth - ControlChipSpacing * (CONTROL_CHIPS_PER_ROW - 1)) / CONTROL_CHIPS_PER_ROW
 
 /**
  * The two transport/pitch control button rows, built from [ControlChip]s.
@@ -67,8 +78,8 @@ fun PlayerControls(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(top = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(ControlChipSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconControlChip(
@@ -121,8 +132,8 @@ fun PlayerControls(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(top = 4.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ControlChipSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconControlChip(

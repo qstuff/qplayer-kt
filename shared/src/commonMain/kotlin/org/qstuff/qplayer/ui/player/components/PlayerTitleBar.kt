@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.jetbrains.compose.resources.painterResource
@@ -34,6 +35,7 @@ import org.qstuff.qplayer.resources.more_menu_licenses
 import org.qstuff.qplayer.resources.more_menu_privacy
 import org.qstuff.qplayer.resources.more_menu_settings
 import org.qstuff.qplayer.ui.theme.LocalDimens
+import org.qstuff.qplayer.ui.theme.boxFittedTextStyle
 
 /**
  * Top title bar: the "QdeQ" wordmark (+ optional version [titleSuffix]) and a "more" overflow
@@ -66,6 +68,10 @@ fun PlayerTitleBar(
                     withStyle(SpanStyle(color = Color.White)) { append(titleSuffix) }
                 }
             },
+            style = boxFittedTextStyle(LocalDimens.current.titleTextviewHeight),
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .weight(1f)
                 .padding(start = LocalDimens.current.textviewPaddingStart)

@@ -26,7 +26,16 @@ data class Dimens(
     val waveformTopMargin: Dp = 2.dp,
     val cueMarkerWidth: Dp = 30.dp,
     val cueMarkerTopMargin: Dp = 15.dp,
+    /** Title bar / track info text sized to fill its box (see boxFittedTextStyle). */
+    val fitTextToBoxes: Boolean = false,
 ) {
+    /**
+     * Height of the track title and duration rows. Tablets: as tall as the title bar, so all
+     * three top rows (and their box-fitted text) match. Phone: [textviewHeight].
+     */
+    val trackInfoRowHeight: Dp
+        get() = if (fitTextToBoxes) titleTextviewHeight else textviewHeight
+
     companion object {
         val Phone = Dimens()
 
@@ -37,6 +46,7 @@ data class Dimens(
             seekbarHeight = 55.dp,
             cueMarkerWidth = 20.dp,
             cueMarkerTopMargin = 5.dp,
+            fitTextToBoxes = true,
         )
 
         /** Smallest width ≥ 720 dp (10" tablets, e.g. the Galaxy Tab A 10.1). */
@@ -51,6 +61,7 @@ data class Dimens(
             roundedShapeRadius = 12.dp,
             cueMarkerWidth = 30.dp,
             cueMarkerTopMargin = 5.dp,
+            fitTextToBoxes = true,
         )
 
         fun forSmallestWidth(smallestWidthDp: Int): Dimens = when {

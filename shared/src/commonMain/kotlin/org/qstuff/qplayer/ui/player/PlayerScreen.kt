@@ -37,12 +37,14 @@ import org.koin.compose.koinInject
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
+import org.qstuff.qplayer.ui.player.components.ControlChipSpacing
 import org.qstuff.qplayer.ui.player.components.PitchJogSection
 import org.qstuff.qplayer.ui.player.components.PlayerControls
 import org.qstuff.qplayer.ui.player.components.PlayerTabSheet
 import org.qstuff.qplayer.ui.player.components.PlayerTabs
 import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
 import org.qstuff.qplayer.ui.player.components.TrackInfoSection
+import org.qstuff.qplayer.ui.player.components.controlChipWidth
 import org.qstuff.qplayer.ui.player.components.WaveformSeekbar
 import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
 import org.qstuff.qplayer.ui.player.jogwheel.JogwheelHaptics
@@ -199,6 +201,14 @@ fun PlayerScreen(
         // Tablets (locked to landscape, see PlayerActivity): deck (title … jog wheel) left,
         // tabs + button bar permanently right.
         val isTwoPane = maxWidth > maxHeight
+        // Phone: the visible fader (slot minus its 4dp gap to the jog wheel) is exactly as wide
+        // as the first button below it, and the jog wheel starts where the second button starts.
+        // Tablet: the fixed dimension.
+        val pitchbarWidth = if (isTwoPane) {
+            LocalDimens.current.pitchbarWidth
+        } else {
+            controlChipWidth(maxWidth - colHPadding * 2) + ControlChipSpacing
+        }
 
         // ─── Button bar: transport, cue, pitch fine-tuning, range, reset, master tempo ───
         val controls: @Composable () -> Unit = {
@@ -303,6 +313,7 @@ fun PlayerScreen(
                 onJogRotate = jogwheelHaptics::onRotate,
                 // Tablet: the wheel takes the height left below the waveform.
                 modifier = if (isTwoPane) Modifier.weight(1f) else Modifier,
+                pitchbarWidth = pitchbarWidth,
                 fitHeight = isTwoPane,
                 jogEnabled = isTwoPane || !isTabSheetOpen
             )
@@ -311,9 +322,9 @@ fun PlayerScreen(
             if (!isTwoPane) controls()
         }
 
-        val pitchbarWidth = LocalDimens.current.pitchbarWidth
         val titleBarHeight = LocalDimens.current.titleTextviewHeight
         val textviewHeight = LocalDimens.current.textviewHeight
+        val trackInfoRowHeight = LocalDimens.current.trackInfoRowHeight
         val seekbarHeight = LocalDimens.current.seekbarHeight
 
         if (isTwoPane) {
@@ -321,7 +332,7 @@ fun PlayerScreen(
             // padding, track info = 2 rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
             // the button bar's own bottom gap). The deck is exactly as wide as fader + wheel, so
             // there's no white space beside them; the right pane takes the rest of the width.
-            val deckFixedHeight = 4.dp + titleBarHeight + textviewHeight * 2 + 12.dp +
+            val deckFixedHeight = 4.dp + titleBarHeight + trackInfoRowHeight * 2 + 12.dp +
                     seekbarHeight + 4.dp + 8.dp
             val jogSize = maxHeight - deckFixedHeight
             val deckWidth = (pitchbarWidth + jogSize + colHPadding * 2)
@@ -362,9 +373,9 @@ fun PlayerScreen(
             // pitch fader, so its height = that width. +4.dp gap below the duration row.
             // Mirrors PitchJogSection's inner BoxWithConstraints.
             val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
-            val trackInfoHeight = textviewHeight * 2 + 4.dp
-            // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
-            val btnRowsHeight = textviewHeight * 2 + 24.dp
+            val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
+            // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
+            val btnRowsHeight = textviewHeight * 2 + 16.dp
             // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
             val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
             val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
