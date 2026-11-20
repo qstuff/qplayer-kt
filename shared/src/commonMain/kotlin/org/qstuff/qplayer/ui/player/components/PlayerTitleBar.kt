@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.jetbrains.compose.resources.painterResource
@@ -68,6 +69,9 @@ fun PlayerTitleBar(
                 }
             },
             style = boxFittedTextStyle(LocalDimens.current.titleTextviewHeight),
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .weight(1f)
                 .padding(start = LocalDimens.current.textviewPaddingStart)
