@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ import kotlinx.coroutines.isActive
 import kotlin.math.roundToInt
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.ui.theme.LocalDimens
+import org.qstuff.qplayer.ui.theme.boxFittedTextStyle
 
 /**
  * Track title (marquee when it overflows) plus the duration row (total on the left, the
@@ -51,6 +53,8 @@ fun TrackInfoSection(
     modifier: Modifier = Modifier
 ) {
     val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
+    val fitText = LocalDimens.current.fitTextToBoxes
+    val textStyle = boxFittedTextStyle(LocalDimens.current.textviewHeight)
 
     Column(
         modifier = modifier.padding(vertical = 4.dp),
@@ -63,13 +67,14 @@ fun TrackInfoSection(
                 .background(Color.Black, roundedShape)
                 .padding(
                     start = LocalDimens.current.textviewPaddingStart,
-                    top = 4.dp
+                    top = if (fitText) 0.dp else 4.dp
                 ),
             contentAlignment = Alignment.CenterStart
         ) {
             MarqueeText(
                 text = trackTitleText,
                 color = QOrange,
+                style = textStyle,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -84,11 +89,13 @@ fun TrackInfoSection(
             Text(
                 text = totalDurationText,
                 color = Color.White,
+                style = textStyle,
                 modifier = Modifier.padding(start = LocalDimens.current.textviewPaddingStart)
             )
             Text(
                 text = dynamicTimeText,
                 color = QOrange,
+                style = textStyle,
                 modifier = Modifier
                     .padding(end = LocalDimens.current.textviewPaddingEnd)
                     .graphicsLayer { alpha = dynamicTimeAlpha }
@@ -107,6 +114,7 @@ fun TrackInfoSection(
 private fun MarqueeText(
     text: String,
     color: Color,
+    style: TextStyle,
     modifier: Modifier = Modifier,
     startDelayMillis: Long = 1500,
     edgeDelayMillis: Long = 1200,
@@ -142,6 +150,7 @@ private fun MarqueeText(
         Text(
             text = text,
             color = color,
+            style = style,
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Visible,

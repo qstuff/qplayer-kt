@@ -34,6 +34,7 @@ import org.qstuff.qplayer.resources.more_menu_licenses
 import org.qstuff.qplayer.resources.more_menu_privacy
 import org.qstuff.qplayer.resources.more_menu_settings
 import org.qstuff.qplayer.ui.theme.LocalDimens
+import org.qstuff.qplayer.ui.theme.boxFittedTextStyle
 
 /**
  * Top title bar: the "QdeQ" wordmark (+ optional version [titleSuffix]) and a "more" overflow
@@ -66,6 +67,7 @@ fun PlayerTitleBar(
                     withStyle(SpanStyle(color = Color.White)) { append(titleSuffix) }
                 }
             },
+            style = boxFittedTextStyle(LocalDimens.current.titleTextviewHeight),
             modifier = Modifier
                 .weight(1f)
                 .padding(start = LocalDimens.current.textviewPaddingStart)
