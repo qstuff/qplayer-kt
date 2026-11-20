@@ -107,7 +107,6 @@ fun PlaylistScreen(
                             onLongClick = { dialogPlaylist = playlist }
                         )
                     }
-                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                 }
             }
         } else {
@@ -163,7 +162,6 @@ fun PlaylistScreen(
                                         )
                                     )
                                 }
-                                HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                             }
                         }
                     }

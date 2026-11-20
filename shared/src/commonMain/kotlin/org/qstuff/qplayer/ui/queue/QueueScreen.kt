@@ -152,7 +152,6 @@ fun QueueScreen(
                                     )
                                 )
                             }
-                            HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                         }
                     }
                 }
