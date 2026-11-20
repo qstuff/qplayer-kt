@@ -10,6 +10,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.util.JogwheelMode
+import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.util.TrackRepeatStatus
 
 /*
@@ -52,6 +53,7 @@ class PreferencesDataSource(private val settings: Settings) {
         const val PREFS_JOG_WHEEL_SENSITIVITY = "PREFS_JOG_WHEEL_SENSITIVITY"
         const val PREFS_JOG_WHEEL_MODE = "PREFS_JOG_WHEEL_MODE"
         const val PREFS_JOG_WHEEL_HAPTICS = "PREFS_JOG_WHEEL_HAPTICS"
+        const val PREFS_PLAYER_LAYOUT = "PREFS_PLAYER_LAYOUT"
 
         // Others
         const val PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN = "PREFS_ENABLE_CRASHREPORTING_DIALOG_SHOWN"
@@ -164,6 +166,8 @@ class PreferencesDataSource(private val settings: Settings) {
     fun getJogWheelMode() = settings.getString(PREFS_JOG_WHEEL_MODE, "0").toInt()
     /** JogwheelHaptics.LEVEL_* (off / light / medium / strong); medium by default. */
     fun getJogWheelHapticLevel() = settings.getInt(PREFS_JOG_WHEEL_HAPTICS, 2)
+    fun getPlayerLayout(): PlayerLayout =
+        PlayerLayout.entries.getOrElse(settings.getInt(PREFS_PLAYER_LAYOUT, 0)) { PlayerLayout.MODERN }
     fun getJogWheelModeEnum() = JogwheelMode.entries[settings.getString(PREFS_JOG_WHEEL_MODE, "0").toInt()]
 
     fun setAutostartEnabled(enabled: Boolean) =
@@ -190,4 +194,7 @@ class PreferencesDataSource(private val settings: Settings) {
 
     fun setJogWheelHapticLevel(level: Int) =
             putSetting { putInt(PREFS_JOG_WHEEL_HAPTICS, level) }
+
+    fun setPlayerLayout(layout: PlayerLayout) =
+            putSetting { putInt(PREFS_PLAYER_LAYOUT, layout.ordinal) }
 }

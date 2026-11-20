@@ -42,6 +42,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.qstuff.qplayer.resources.Res
+import org.qstuff.qplayer.resources.jogwheel_mode_entries
+import org.qstuff.qplayer.resources.jogwheel_sensitivity_entries
+import org.qstuff.qplayer.resources.jogwheel_sensitivity_values
+import org.qstuff.qplayer.resources.player_layout_entries
+import org.qstuff.qplayer.resources.settings_cat_appearance_title
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_mode_summary
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_mode_title
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_sensitivity_summary
+import org.qstuff.qplayer.resources.settings_dj_jogwheel_sensitivity_title
+import org.qstuff.qplayer.resources.settings_player_layout_summary
+import org.qstuff.qplayer.resources.settings_player_layout_title
+import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.resources.dialog_cancel
 import org.qstuff.qplayer.resources.jogwheel_haptics_entries
 import org.qstuff.qplayer.resources.more_menu_settings
@@ -77,6 +89,18 @@ fun SettingsScreen(
     val state by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
     var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
+    var showLayoutDialog by rememberSaveable { mutableStateOf(false) }
+    var showSensitivityDialog by rememberSaveable { mutableStateOf(false) }
+    var showModeDialog by rememberSaveable { mutableStateOf(false) }
+
+    // Index = PlayerLayout ordinal
+    val layoutEntries = stringArrayResource(Res.array.player_layout_entries)
+    val sensitivityEntries = stringArrayResource(Res.array.jogwheel_sensitivity_entries)
+    val sensitivityValues = stringArrayResource(Res.array.jogwheel_sensitivity_values).map { it.toInt() }
+    // Index = JogwheelMode ordinal; entries are "Name:\nDescription"
+    val modeEntries = stringArrayResource(Res.array.jogwheel_mode_entries).map { it.trim() }
+    val sensitivityIndex = sensitivityValues.indexOf(state.jogwheelSensitivity)
+    val isClassicLayout = state.playerLayout == PlayerLayout.CLASSIC
 
     // Index = JogwheelHaptics.LEVEL_* (off / light / medium / strong)
     val hapticEntries = stringArrayResource(Res.array.jogwheel_haptics_entries)
@@ -108,6 +132,16 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
+            CategoryHeader(stringResource(Res.string.settings_cat_appearance_title))
+            ClickableRow(
+                title = stringResource(Res.string.settings_player_layout_title),
+                summary = stringResource(
+                    Res.string.settings_player_layout_summary,
+                    layoutEntries.getOrElse(state.playerLayout.ordinal) { "" }
+                ),
+                onClick = { showLayoutDialog = true }
+            )
+
             CategoryHeader(stringResource(Res.string.settings_cat_player_basic_title))
             SwitchRow(
                 title = stringResource(Res.string.settings_track_autostart_title),
@@ -135,8 +169,27 @@ fun SettingsScreen(
                 checked = state.stopPlaybackOnCue,
                 onCheckedChange = settingsViewModel::setStopPlaybackOnCue
             )
-            // Jog wheel mode and sensitivity: quick switches in the jog wheel's corners
-            // (JogQuickSwitches), no longer here.
+            // Jog wheel mode and sensitivity: in the modern layout quick switches in the jog
+            // wheel's corners (JogQuickSwitches); the classic layout has none, so they're here.
+            if (isClassicLayout) {
+                ClickableRow(
+                    title = stringResource(Res.string.settings_dj_jogwheel_mode_title),
+                    summary = stringResource(
+                        Res.string.settings_dj_jogwheel_mode_summary,
+                        // The summary only shows the name
+                        modeEntries.getOrElse(state.jogwheelMode) { "" }.substringBefore('\n').removeSuffix(":")
+                    ),
+                    onClick = { showModeDialog = true }
+                )
+                ClickableRow(
+                    title = stringResource(Res.string.settings_dj_jogwheel_sensitivity_title),
+                    summary = stringResource(
+                        Res.string.settings_dj_jogwheel_sensitivity_summary,
+                        sensitivityEntries.getOrElse(sensitivityIndex) { "" }
+                    ),
+                    onClick = { showSensitivityDialog = true }
+                )
+            }
             ClickableRow(
                 title = stringResource(Res.string.settings_dj_jogwheel_haptics_title),
                 summary = if (canVibrate) {
@@ -165,6 +218,45 @@ fun SettingsScreen(
                 value = deviceInfo
             )
         }
+    }
+
+    if (showLayoutDialog) {
+        SingleChoiceDialog(
+            title = stringResource(Res.string.settings_player_layout_title),
+            entries = layoutEntries.toList(),
+            selectedIndex = state.playerLayout.ordinal,
+            onSelect = { index ->
+                settingsViewModel.setPlayerLayout(PlayerLayout.entries[index])
+                showLayoutDialog = false
+            },
+            onDismiss = { showLayoutDialog = false }
+        )
+    }
+
+    if (showModeDialog) {
+        SingleChoiceDialog(
+            title = stringResource(Res.string.settings_dj_jogwheel_mode_title),
+            entries = modeEntries,
+            selectedIndex = state.jogwheelMode,
+            onSelect = { index ->
+                settingsViewModel.setJogwheelMode(index)
+                showModeDialog = false
+            },
+            onDismiss = { showModeDialog = false }
+        )
+    }
+
+    if (showSensitivityDialog) {
+        SingleChoiceDialog(
+            title = stringResource(Res.string.settings_dj_jogwheel_sensitivity_title),
+            entries = sensitivityEntries.toList(),
+            selectedIndex = sensitivityIndex,
+            onSelect = { index ->
+                settingsViewModel.setJogwheelSensitivity(sensitivityValues[index])
+                showSensitivityDialog = false
+            },
+            onDismiss = { showSensitivityDialog = false }
+        )
     }
 
     if (showHapticsDialog) {

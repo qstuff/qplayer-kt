@@ -8,6 +8,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.qstuff.qplayer.datasource.model.Track
+import org.qstuff.qplayer.util.PlayerLayout
 
 class PreferencesDataSourceTest {
 
@@ -84,5 +85,15 @@ class PreferencesDataSourceTest {
 
         assertEquals("20", settings.getStringOrNull(PreferencesDataSource.PREFS_JOG_WHEEL_SENSITIVITY))
         assertEquals(20, prefs.getJogWheelSensitivity())
+    }
+
+    @Test
+    fun `player layout is modern by default and is stored`() {
+        val prefs = PreferencesDataSource(MapSettings())
+        assertEquals(PlayerLayout.MODERN, prefs.getPlayerLayout())
+
+        prefs.setPlayerLayout(PlayerLayout.CLASSIC)
+
+        assertEquals(PlayerLayout.CLASSIC, prefs.getPlayerLayout())
     }
 }

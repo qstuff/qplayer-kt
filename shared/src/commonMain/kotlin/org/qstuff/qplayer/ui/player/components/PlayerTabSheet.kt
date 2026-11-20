@@ -51,6 +51,7 @@ fun PlayerTabSheet(
     fileBrowserViewModel: FileBrowserViewModel,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
+    folderTabs: Boolean = false,
     onOpenChange: (open: Boolean) -> Unit = {}
 ) {
     val sheetOffset = remember { Animatable(maxSheetOffsetPx) }
@@ -99,9 +100,11 @@ fun PlayerTabSheet(
     ) {
         // Grab handle: a white rounded bar, ~half a tab wide, at the very top of the panel.
         // The full-width row is draggable to collapse/expand the sheet.
+        // Folder tabs (classic) sit on white, so the handle row is white with a black bar.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .then(if (folderTabs) Modifier.background(Color.White) else Modifier)
                 .then(sheetDragModifier)
                 .padding(vertical = 6.dp),
             contentAlignment = Alignment.Center
@@ -110,7 +113,7 @@ fun PlayerTabSheet(
                 modifier = Modifier
                     .fillMaxWidth(1f / 6f)
                     .height(6.dp)
-                    .background(Color.White, RoundedCornerShape(3.dp))
+                    .background(if (folderTabs) Color.Black else Color.White, RoundedCornerShape(3.dp))
             )
         }
         PlayerTabs(
@@ -120,6 +123,7 @@ fun PlayerTabSheet(
             playerViewModel = playerViewModel,
             modifier = Modifier.weight(1f),
             tabRowModifier = sheetDragModifier,
+            folderTabs = folderTabs,
             // tap on the already-selected tab → toggle the sheet
             onSelectedTabClick = {
                 val target =

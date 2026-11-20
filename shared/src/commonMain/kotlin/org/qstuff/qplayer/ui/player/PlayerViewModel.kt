@@ -18,6 +18,7 @@ import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
 import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.util.JogwheelMode
+import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.util.LruCache
 import org.qstuff.qplayer.util.PlayerStatus
 import co.touchlab.kermit.Logger
@@ -88,6 +89,10 @@ class PlayerViewModel(
 
     private val _jogwheelMode = MutableStateFlow(JogwheelMode.SPEED_ANGULAR)
     val jogwheelMode: StateFlow<JogwheelMode> = _jogwheelMode.asStateFlow()
+
+    // Phone player arrangement (Settings), applied right away via loadSettings
+    private val _playerLayout = MutableStateFlow(PlayerLayout.MODERN)
+    val playerLayout: StateFlow<PlayerLayout> = _playerLayout.asStateFlow()
 
     // JogwheelHaptics.LEVEL_* (jog wheel vibration setting)
     private val _jogwheelHapticLevel = MutableStateFlow(2)
@@ -546,6 +551,7 @@ class PlayerViewModel(
         _jogwheelSensitivity.value = preferencesDataSource.getJogWheelSensitivity()
         _jogwheelHapticLevel.value = preferencesDataSource.getJogWheelHapticLevel()
         _jogwheelMode.value = preferencesDataSource.getJogWheelModeEnum()
+        _playerLayout.value = preferencesDataSource.getPlayerLayout()
         isScratchModeEnabled = _jogwheelMode.value == JogwheelMode.SCRATCH
         prepareScratch()
     }

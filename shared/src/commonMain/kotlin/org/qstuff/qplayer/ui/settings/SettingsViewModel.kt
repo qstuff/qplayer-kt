@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.util.CrashReporter
+import org.qstuff.qplayer.util.PlayerLayout
 
 data class SettingsUiState(
     val autostart: Boolean,
@@ -14,6 +15,9 @@ data class SettingsUiState(
     val showClearQueueWarning: Boolean,
     val stopPlaybackOnCue: Boolean,
     val jogwheelHapticLevel: Int,
+    val jogwheelSensitivity: Int,
+    val jogwheelMode: Int,
+    val playerLayout: PlayerLayout,
     val crashreporting: Boolean
 )
 
@@ -51,6 +55,21 @@ class SettingsViewModel(
         _uiState.update { it.copy(jogwheelHapticLevel = level) }
     }
 
+    fun setJogwheelSensitivity(sensitivity: Int) {
+        preferencesDataSource.setJogWheelSensitivity(sensitivity)
+        _uiState.update { it.copy(jogwheelSensitivity = sensitivity) }
+    }
+
+    fun setJogwheelMode(mode: Int) {
+        preferencesDataSource.setJogWheelMode(mode)
+        _uiState.update { it.copy(jogwheelMode = mode) }
+    }
+
+    fun setPlayerLayout(layout: PlayerLayout) {
+        preferencesDataSource.setPlayerLayout(layout)
+        _uiState.update { it.copy(playerLayout = layout) }
+    }
+
     fun setCrashreporting(enabled: Boolean) {
         preferencesDataSource.setCrashreportingEnabled(enabled)
         crashReporter.setEnabled(enabled)
@@ -63,6 +82,9 @@ class SettingsViewModel(
         showClearQueueWarning = preferencesDataSource.isShowClearQueueWarningEnabled(),
         stopPlaybackOnCue = preferencesDataSource.isStopPlaybackOnSettingCuepointEnabled(),
         jogwheelHapticLevel = preferencesDataSource.getJogWheelHapticLevel(),
+        jogwheelSensitivity = preferencesDataSource.getJogWheelSensitivity(),
+        jogwheelMode = preferencesDataSource.getJogWheelMode(),
+        playerLayout = preferencesDataSource.getPlayerLayout(),
         crashreporting = preferencesDataSource.isCrashreportingEnabled()
     )
 }
