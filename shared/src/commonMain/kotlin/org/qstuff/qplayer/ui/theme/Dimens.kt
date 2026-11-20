@@ -29,6 +29,13 @@ data class Dimens(
     /** Title bar / track info text sized to fill its box (see boxFittedTextStyle). */
     val fitTextToBoxes: Boolean = false,
 ) {
+    /**
+     * Height of the track title and duration rows. Tablets: as tall as the title bar, so all
+     * three top rows (and their box-fitted text) match. Phone: [textviewHeight].
+     */
+    val trackInfoRowHeight: Dp
+        get() = if (fitTextToBoxes) titleTextviewHeight else textviewHeight
+
     companion object {
         val Phone = Dimens()
 

@@ -324,6 +324,7 @@ fun PlayerScreen(
 
         val titleBarHeight = LocalDimens.current.titleTextviewHeight
         val textviewHeight = LocalDimens.current.textviewHeight
+        val trackInfoRowHeight = LocalDimens.current.trackInfoRowHeight
         val seekbarHeight = LocalDimens.current.seekbarHeight
 
         if (isTwoPane) {
@@ -331,7 +332,7 @@ fun PlayerScreen(
             // padding, track info = 2 rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
             // the button bar's own bottom gap). The deck is exactly as wide as fader + wheel, so
             // there's no white space beside them; the right pane takes the rest of the width.
-            val deckFixedHeight = 4.dp + titleBarHeight + textviewHeight * 2 + 12.dp +
+            val deckFixedHeight = 4.dp + titleBarHeight + trackInfoRowHeight * 2 + 12.dp +
                     seekbarHeight + 4.dp + 8.dp
             val jogSize = maxHeight - deckFixedHeight
             val deckWidth = (pitchbarWidth + jogSize + colHPadding * 2)
@@ -372,7 +373,7 @@ fun PlayerScreen(
             // pitch fader, so its height = that width. +4.dp gap below the duration row.
             // Mirrors PitchJogSection's inner BoxWithConstraints.
             val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
-            val trackInfoHeight = textviewHeight * 2 + 4.dp
+            val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
             // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
             val btnRowsHeight = textviewHeight * 2 + 16.dp
             // -8.dp leaves a visible white gap between the button row and the collapsed panel top.

@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /** Vertical gap between a box-fitted text line and its box, top and bottom. */
-val FittedTextVerticalPadding = 2.dp
+val FittedTextVerticalPadding = 4.dp
 
 /**
  * Font size → natural line height (ascent + descent) of the platform UI fonts (Roboto ≈ 1.17,

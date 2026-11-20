@@ -54,7 +54,7 @@ fun TrackInfoSection(
 ) {
     val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     val fitText = LocalDimens.current.fitTextToBoxes
-    val textStyle = boxFittedTextStyle(LocalDimens.current.textviewHeight)
+    val textStyle = boxFittedTextStyle(LocalDimens.current.trackInfoRowHeight)
 
     Column(
         modifier = modifier.padding(vertical = 4.dp),
@@ -63,7 +63,7 @@ fun TrackInfoSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(LocalDimens.current.textviewHeight)
+                .height(LocalDimens.current.trackInfoRowHeight)
                 .background(Color.Black, roundedShape)
                 .padding(
                     start = LocalDimens.current.textviewPaddingStart,
@@ -81,7 +81,7 @@ fun TrackInfoSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(LocalDimens.current.textviewHeight)
+                .height(LocalDimens.current.trackInfoRowHeight)
                 .background(Color.Black, roundedShape),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
