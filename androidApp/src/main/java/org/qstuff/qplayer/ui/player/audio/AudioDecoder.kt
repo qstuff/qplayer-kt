@@ -74,46 +74,49 @@ object AudioDecoder {
             var sawOutputEOS = false
 
             while (!sawOutputEOS && coroutineContext.isActive) {
-                if (!sawInputEOS) {
-                    val inIndex = codec.dequeueInputBuffer(DEQUEUE_TIMEOUT_US)
-                    if (inIndex >= 0) {
-                        val inBuf = codec.getInputBuffer(inIndex)
-                        val sampleSize = inBuf?.let { extractor.readSampleData(it, 0) } ?: -1
-                        if (sampleSize < 0) {
-                            codec.queueInputBuffer(
-                                inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                            )
-                            sawInputEOS = true
-                        } else {
-                            codec.queueInputBuffer(inIndex, 0, sampleSize, extractor.sampleTime, 0)
-                            extractor.advance()
-                        }
+                // Keep the codec's pipeline full: queue every free input buffer without waiting,
+                // then drain every ready output. Block (briefly) only when neither made progress.
+                var progressed = false
+                while (!sawInputEOS) {
+                    val inIndex = codec.dequeueInputBuffer(0)
+                    if (inIndex < 0) break
+                    progressed = true
+                    val inBuf = codec.getInputBuffer(inIndex)
+                    val sampleSize = inBuf?.let { extractor.readSampleData(it, 0) } ?: -1
+                    if (sampleSize < 0) {
+                        codec.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                        sawInputEOS = true
+                    } else {
+                        codec.queueInputBuffer(inIndex, 0, sampleSize, extractor.sampleTime, 0)
+                        extractor.advance()
                     }
                 }
 
-                when (val outIndex = codec.dequeueOutputBuffer(info, DEQUEUE_TIMEOUT_US)) {
-                    MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                while (!sawOutputEOS) {
+                    val outIndex = codec.dequeueOutputBuffer(info, if (progressed) 0 else DEQUEUE_TIMEOUT_US)
+                    if (outIndex == MediaCodec.INFO_TRY_AGAIN_LATER) break
+                    progressed = true
+                    if (outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                         val outputFormat = codec.outputFormat
                         channels = outputFormat
                             .getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
                         sampleRate = outputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                        continue
                     }
-                    MediaCodec.INFO_TRY_AGAIN_LATER -> { /* no output yet */ }
-                    else -> if (outIndex >= 0) {
-                        val outBuf = codec.getOutputBuffer(outIndex)
-                        if (outBuf != null && info.size > 0) {
-                            if (!formatReported) {
-                                onFormat(sampleRate, channels, durationUs)
-                                formatReported = true
-                            }
-                            outBuf.position(info.offset)
-                            outBuf.limit(info.offset + info.size)
-                            onPcm(outBuf.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer(), channels)
+                    if (outIndex < 0) continue
+                    val outBuf = codec.getOutputBuffer(outIndex)
+                    if (outBuf != null && info.size > 0) {
+                        if (!formatReported) {
+                            onFormat(sampleRate, channels, durationUs)
+                            formatReported = true
                         }
-                        codec.releaseOutputBuffer(outIndex, false)
-                        if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-                            sawOutputEOS = true
-                        }
+                        outBuf.position(info.offset)
+                        outBuf.limit(info.offset + info.size)
+                        onPcm(outBuf.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer(), channels)
+                    }
+                    codec.releaseOutputBuffer(outIndex, false)
+                    if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                        sawOutputEOS = true
                     }
                 }
             }

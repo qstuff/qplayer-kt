@@ -15,6 +15,7 @@ import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSBundle
+import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -65,6 +66,10 @@ fun openAudioFile(id: String): AVAudioFile? = memScoped {
         null
     }
 }
+
+/** The app's Caches folder: data that can be recreated (not backed up; iOS may clear it). */
+fun cachesDirectory(): String =
+    NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true).first() as String
 
 /** The app's private data folder (Application Support, created if needed): the playlist database. */
 @OptIn(ExperimentalForeignApi::class)

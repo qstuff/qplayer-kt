@@ -1,11 +1,13 @@
 package org.qstuff.qplayer.di
 
+import java.io.File
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import org.qstuff.qplayer.ui.filebrowser.FileStorageProvider
 import org.qstuff.qplayer.ui.filebrowser.StorageProvider
 import org.qstuff.qplayer.ui.filebrowser.StorageRoots
 import org.qstuff.qplayer.ui.player.AudioPlayer
+import org.qstuff.qplayer.ui.player.CachingWaveformGenerator
 import org.qstuff.qplayer.ui.player.Scratcher
 import org.qstuff.qplayer.ui.player.WaveformGenerator
 import org.qstuff.qplayer.ui.player.jogwheel.AndroidHapticFeedback
@@ -23,7 +25,15 @@ val platformModule = module {
     // One engine / scratch engine per PlayerViewModel (activity-scoped).
     factory<AudioPlayer> { MediaServiceAudioPlayer(androidContext()) }
     factory<Scratcher> { ScratchEngine(androidContext()) }
-    single<WaveformGenerator> { AndroidWaveformGenerator(androidContext()) }
+    single<WaveformGenerator> {
+        val context = androidContext()
+        // Waveforms of loaded tracks are kept on disk (cache folder: Android may clear it).
+        CachingWaveformGenerator(
+            delegate = AndroidWaveformGenerator(context),
+            cacheDir = File(context.cacheDir, "waveforms").path,
+            fileSize = { uri -> if (uri.startsWith("/")) File(uri).takeIf { it.isFile }?.length() else null }
+        )
+    }
     single<HapticFeedback> { AndroidHapticFeedback(androidContext()) }
     single<CrashReporter> { FirebaseCrashReporter() }
     single<PlatformInfo> { AndroidPlatformInfo(androidContext()) }
