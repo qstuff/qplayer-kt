@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.qstuff.qplayer.ui.theme.BoxFittedText
 import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
@@ -81,5 +81,5 @@ fun RowScope.TextControlChip(
     onLongClick: (() -> Unit)? = null,
     color: Color = Color.White
 ) = ControlChip(onClick = onClick, onLongClick = onLongClick) {
-    Text(text = text, color = color)
+    BoxFittedText(text = text, color = color, boxHeight = LocalDimens.current.textviewHeight)
 }

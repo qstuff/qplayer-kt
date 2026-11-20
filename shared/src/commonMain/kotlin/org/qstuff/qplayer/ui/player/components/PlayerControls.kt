@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.qstuff.qplayer.ui.theme.BoxFittedText
+import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.resources.Res
@@ -148,9 +150,10 @@ fun PlayerControls(
             // Pitch range chip hosts its own dropdown menu.
             var showPitchRangeMenu by remember { mutableStateOf(false) }
             ControlChip(onClick = { showPitchRangeMenu = true }) {
-                Text(
+                BoxFittedText(
                     text = pitchRangeValues.getOrElse(pitchFactorIndex) { "?" },
-                    color = Color.White
+                    color = Color.White,
+                    boxHeight = LocalDimens.current.textviewHeight
                 )
                 DropdownMenu(
                     expanded = showPitchRangeMenu,
