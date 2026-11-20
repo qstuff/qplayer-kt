@@ -26,6 +26,7 @@ import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.SwipeToRemove
+import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.jetbrains.compose.resources.stringResource
 import org.qstuff.qplayer.resources.Res
@@ -237,7 +238,7 @@ private fun TrackListItem(
         Text(
             text = track.name,
             color = textColor,
-            fontSize = 15.sp,
+            fontSize = LocalDimens.current.listFontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

@@ -26,6 +26,7 @@ import org.qstuff.qplayer.datasource.model.Playlist
 import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.SwipeToRemove
+import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.jetbrains.compose.resources.stringResource
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.dialog_cancel
@@ -114,7 +115,7 @@ fun PlaylistScreen(
                 Text(
                     text = opened.name,
                     color = Color.White,
-                    fontSize = 15.sp,
+                    fontSize = LocalDimens.current.listFontSize,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -223,7 +224,7 @@ private fun PlaylistItem(
         Text(
             text = playlist.name,
             color = Color.White,
-            fontSize = 15.sp,
+            fontSize = LocalDimens.current.listFontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -255,7 +256,7 @@ private fun PlaylistTrackItem(
         Text(
             text = track.name,
             color = Color.White,
-            fontSize = 15.sp,
+            fontSize = LocalDimens.current.listFontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

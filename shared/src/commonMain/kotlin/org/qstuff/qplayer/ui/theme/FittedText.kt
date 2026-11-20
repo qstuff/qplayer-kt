@@ -21,8 +21,8 @@ import kotlin.math.floor
 /** Gap between a box-fitted text line and its box (top and bottom; for chips also start/end). */
 val FittedTextPadding = 6.dp
 
-/** Smallest size (sp) chip labels shrink to when they're too wide for their chips. */
-private const val MIN_CHIP_FONT_SIZE = 8f
+/** Smallest size (sp) width-fitted labels shrink to when they're too wide for their boxes. */
+private const val MIN_FITTED_FONT_SIZE = 8f
 
 /**
  * Font size → natural line height (ascent + descent) of the platform UI fonts (Roboto ≈ 1.17,
@@ -41,8 +41,17 @@ private const val FONT_LINE_HEIGHT_RATIO = 1.2f
 @Composable
 fun boxFittedTextStyle(boxHeight: Dp): TextStyle {
     if (!LocalDimens.current.fitTextToBoxes) return LocalTextStyle.current
+    return fittedTextStyle(boxHeight, FittedTextPadding)
+}
+
+/**
+ * Text style for a single line that fills a box [boxHeight] tall, leaving [verticalPadding]
+ * above and below — on every screen size (see [boxFittedTextStyle] for the tablet-only variant).
+ */
+@Composable
+fun fittedTextStyle(boxHeight: Dp, verticalPadding: Dp): TextStyle {
     val lineHeight = with(LocalDensity.current) {
-        (boxHeight - FittedTextPadding * 2).toSp()
+        (boxHeight - verticalPadding * 2).toSp()
     }
     return LocalTextStyle.current.merge(
         TextStyle(
@@ -57,31 +66,40 @@ fun boxFittedTextStyle(boxHeight: Dp): TextStyle {
 }
 
 /**
- * One label style shared by all chips in a set: as large as a chip [chipHeight] tall allows
- * (see [boxFittedTextStyle]), shrunk until the widest of [labels] fits a chip [chipWidth] wide
- * minus [FittedTextPadding] at start and end — so every label has the same size. Tablets only
- * ([Dimens.fitTextToBoxes]); phone: the default text style.
+ * [base] (e.g. from [fittedTextStyle]) shrunk until the widest of [labels] fits [availableWidth]
+ * — one size for a whole set of labels (chips, tabs). Never larger than [base].
  *
- * [labels] should cover everything a chip can show (e.g. a worst-case pitch value), not just the
+ * [labels] should cover everything the set can show (e.g. a worst-case pitch value), not just the
  * current texts, so the size doesn't jump while the values change.
  */
 @Composable
-fun rememberChipLabelStyle(chipWidth: Dp, chipHeight: Dp, labels: List<String>): TextStyle {
-    val base = boxFittedTextStyle(chipHeight)
-    if (!LocalDimens.current.fitTextToBoxes) return base
+fun rememberWidthFittedStyle(base: TextStyle, availableWidth: Dp, labels: List<String>): TextStyle {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    return remember(base, chipWidth, labels, density) {
-        val availablePx = with(density) { (chipWidth - FittedTextPadding * 2).toPx() }
+    return remember(base, availableWidth, labels, density) {
+        val availablePx = with(density) { availableWidth.toPx() }
         // Text width scales linearly with the font size: measure once at the max size.
         val widestPx = labels.maxOfOrNull { label ->
             measurer.measure(label.trim(), base, maxLines = 1, softWrap = false).size.width
         } ?: 0
         val maxSize = base.fontSize.value
         val fitted = if (widestPx > 0) minOf(maxSize, maxSize * availablePx / widestPx) else maxSize
-        // Floor to 0.5 sp so rounding can't push the widest label past the padding.
-        base.copy(fontSize = maxOf(floor(fitted * 2f) / 2f, MIN_CHIP_FONT_SIZE).sp)
+        // Floor to 0.5 sp so rounding can't push the widest label past its padding.
+        base.copy(fontSize = maxOf(floor(fitted * 2f) / 2f, MIN_FITTED_FONT_SIZE).sp)
     }
+}
+
+/**
+ * One label style shared by all chips in a set: as large as a chip [chipHeight] tall allows
+ * (see [boxFittedTextStyle]), shrunk until the widest of [labels] fits a chip [chipWidth] wide
+ * minus [FittedTextPadding] at start and end — so every label has the same size. Tablets only
+ * ([Dimens.fitTextToBoxes]); phone: the default text style.
+ */
+@Composable
+fun rememberChipLabelStyle(chipWidth: Dp, chipHeight: Dp, labels: List<String>): TextStyle {
+    val base = boxFittedTextStyle(chipHeight)
+    if (!LocalDimens.current.fitTextToBoxes) return base
+    return rememberWidthFittedStyle(base, chipWidth - FittedTextPadding * 2, labels)
 }
 
 /**
