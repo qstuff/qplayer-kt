@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
@@ -24,11 +25,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,14 +55,17 @@ private const val JOG_INSET_UNITS = 0.75f
  *
  * Columns: fader (one button wide) · two square button columns · a third column that runs under
  * the jog wheel to the right edge. Rows: pitch value · range · repeat/shuffle (square) · cue ·
- * prev/next/play (square). The jog wheel is as tall as these rows and right-aligned; [unit] (the
- * button width) is chosen so its left edge stays [JOG_INSET_UNITS] right of the third column.
+ * prev/next/play (square), together [buttonsHeight]. The jog wheel is right-aligned and one gap
+ * taller than the rows at both ends: it reaches up to the title bar and down to the track title
+ * row. [unit] (the button width) is chosen so its left edge stays [JOG_INSET_UNITS] right of the
+ * third column.
  */
 class ClassicDeckMetrics(width: Dp, val rowHeight: Dp) {
     val gap = ControlChipSpacing
-    // jog = 3 rows + 2 units + 4 gaps must fit: width − fader slot − 2 columns − inset
-    val unit = (width - rowHeight * 3 - gap * 7) / (5 + JOG_INSET_UNITS)
-    val jogSize = rowHeight * 3 + unit * 2 + gap * 4
+    // jog = 3 rows + 2 units + 4 gaps + 2 gaps must fit: width − fader slot − 2 columns − inset
+    val unit = (width - rowHeight * 3 - gap * 9) / (5 + JOG_INSET_UNITS)
+    val buttonsHeight = rowHeight * 3 + unit * 2 + gap * 4
+    val jogSize = buttonsHeight + gap * 2
     val faderWidth = unit
 }
 
@@ -100,48 +102,50 @@ fun ClassicPlayerDeck(
                 onPitchChange = jogActions.onPitchChange,
                 modifier = Modifier
                     .width(m.faderWidth)
-                    .height(m.jogSize + m.gap + trackInfoRowHeight * 2 + m.gap)
+                    .height(m.buttonsHeight + m.gap + trackInfoRowHeight * 2 + m.gap)
             )
             Spacer(Modifier.width(m.gap))
             Column(Modifier.weight(1f)) {
                 val handler = rememberJogWheelHandler(jogActions)
                 val rotationDeg = remember { mutableStateOf(0f) }
                 val radius = LocalDimens.current.roundedShapeRadius
+                val jogSizePx = with(LocalDensity.current) { m.jogSize.toPx() }
                 // The wheel's touch handling sits on the whole block, limited to the wheel's
                 // circle (top right): touches beside it reach the chips below it.
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(m.jogSize)
+                        .height(m.buttonsHeight)
                         // Right of the wheel's centre one continuous black area, instead of the
-                        // white gaps between reset, mt and play: from the top of the block down
-                        // into the track title row (drawn after it, so the row's rounded corner
-                        // sits on black). Left of the centre the chips keep their gaps.
+                        // white gaps between reset, mt and play: from the title bar (through the
+                        // gap above, squaring off the bar's bottom-right corner) down into the
+                        // track title row (drawn after it, so the row's rounded corner sits on
+                        // black). Left of the centre the chips keep their gaps.
                         .drawBehind {
                             val left = size.width - m.jogSize.toPx() / 2f
-                            val bottom = size.height + (m.gap + radius).toPx()
-                            val r = CornerRadius(radius.toPx())
-                            drawPath(
-                                Path().apply {
-                                    addRoundRect(
-                                        RoundRect(
-                                            left = left, top = 0f, right = size.width, bottom = bottom,
-                                            topLeftCornerRadius = CornerRadius.Zero,
-                                            topRightCornerRadius = r,
-                                            bottomRightCornerRadius = CornerRadius.Zero,
-                                            bottomLeftCornerRadius = CornerRadius.Zero
-                                        )
-                                    )
-                                },
-                                color = Color.Black
+                            val gap = m.gap.toPx()
+                            val r = radius.toPx()
+                            // 2 px into the title bar: no hairline where gap px are fractional
+                            val top = -gap - 2f
+                            drawRect(
+                                Color.Black,
+                                topLeft = Offset(left, top),
+                                size = Size(size.width - left, size.height - top + gap + r)
+                            )
+                            // the title bar's rounded bottom-right corner
+                            drawRect(
+                                Color.Black,
+                                topLeft = Offset(size.width - r, -gap - r),
+                                size = Size(r, r)
                             )
                         }
                         .jogWheelInput(
                             enabled = jogEnabled,
                             rotationDeg = rotationDeg,
+                            // The wheel's square, one gap beyond the block at top and bottom
                             wheelBounds = { size ->
-                                val d = size.height.toFloat()
-                                Rect(Offset(size.width - d, 0f), Size(d, d))
+                                val d = jogSizePx
+                                Rect(Offset(size.width - d, (size.height - d) / 2f), Size(d, d))
                             },
                             onDown = handler::onDown,
                             onMove = handler::onMove,
@@ -150,10 +154,12 @@ fun ClassicPlayerDeck(
                 ) {
                     ClassicButtons(controls, m, labelStyle)
                     // On top of the third column's chips; outside its circle the canvas is clear.
+                    // requiredSize: taller than the block, centred on it — one gap beyond at top
+                    // (to the title bar) and bottom (to the track title row).
                     JogWheelFace(
                         rotationDeg = rotationDeg,
                         showQTail = false,
-                        modifier = Modifier.align(Alignment.TopEnd).size(m.jogSize)
+                        modifier = Modifier.align(Alignment.TopEnd).requiredSize(m.jogSize)
                     )
                 }
                 trackInfo()

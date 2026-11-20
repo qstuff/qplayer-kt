@@ -416,7 +416,7 @@ fun PlayerScreen(
                 // Title bar (+4dp above), 4dp gap, buttons/jog block, track info (2 rows + 12dp),
                 // waveform; -8.dp leaves a white gap above the collapsed panel. Expanded, the
                 // sheet reaches up to just below the title bar.
-                val deckHeight = 4.dp + titleBarHeight + 4.dp + ClassicDeckMetrics(colWidth, textviewHeight).jogSize +
+                val deckHeight = 4.dp + titleBarHeight + 4.dp + ClassicDeckMetrics(colWidth, textviewHeight).buttonsHeight +
                         trackInfoRowHeight * 2 + 12.dp + seekbarHeight
                 peekHeight = (maxHeight - deckHeight - 8.dp).coerceAtLeast(48.dp)
                 expandedHeight = (maxHeight - 4.dp - titleBarHeight - 4.dp).coerceAtLeast(peekHeight)
