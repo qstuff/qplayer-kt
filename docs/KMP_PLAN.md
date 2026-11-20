@@ -181,10 +181,6 @@ the app returns to the foreground.
 - **Release setup:** app version / build number (`CFBundleShortVersionString` / `CFBundleVersion`
   are fixed in `iosApp/project.yml`), signing, TestFlight, App Store metadata.
 
-- **Xcode project format:** XcodeGen writes an older project format (`objectVersion` 51), which
-  Xcode converts locally on opening (an uncommitted change to `project.pbxproj`). Set
-  `options.projectFormat` in `iosApp/project.yml` to the current format.
-
 **iOS glitches seen in the simulator**
 - The first tap right after the app starts is sometimes lost (UIKit logs "Failed to receive
   system gesture state notification before next touch").
