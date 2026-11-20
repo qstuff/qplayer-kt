@@ -1,7 +1,10 @@
 package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -12,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserScreen
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
@@ -21,11 +25,22 @@ import org.qstuff.qplayer.ui.playlists.PlaylistViewModel
 import org.qstuff.qplayer.ui.queue.QueueScreen
 import org.qstuff.qplayer.ui.queue.QueueViewModel
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.ui.theme.fittedTextStyle
+import org.qstuff.qplayer.ui.theme.rememberWidthFittedStyle
 import org.jetbrains.compose.resources.stringResource
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.filebrowser_title
 import org.qstuff.qplayer.resources.playlists_title
 import org.qstuff.qplayer.resources.queue_title
+
+/** Material 3's text-only Tab height. */
+private val TAB_HEIGHT = 48.dp
+
+/** Gap between a tab label and the tab's top/bottom edge. */
+private val TAB_LABEL_PADDING = 8.dp
+
+/** Material 3 Tab's own start/end content padding. */
+private val TAB_HORIZONTAL_PADDING = 16.dp
 
 /**
  * The Queue / Files / Playlists tabs and their pager. Used inside the phone's draggable
@@ -54,26 +69,38 @@ fun PlayerTabs(
     )
 
     Column(modifier = modifier) {
-        TabRow(
-            selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.Black,
-            contentColor = QOrange,
-            modifier = tabRowModifier
-        ) {
-            tabTitles.forEachIndexed { index, title ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        if (pagerState.currentPage == index) {
-                            onSelectedTabClick()
-                        } else {
-                            scope.launch { pagerState.animateScrollToPage(index) }
-                        }
-                    },
-                    text = { Text(title) },
-                    selectedContentColor = QOrange,
-                    unselectedContentColor = Color.White
-                )
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            // Tab labels fill the tab height (minus TAB_LABEL_PADDING top/bottom) and share one
+            // size, shrunk so the longest title fits one tab (minus the Tab's start/end padding).
+            val tabLabelStyle = rememberWidthFittedStyle(
+                base = fittedTextStyle(TAB_HEIGHT, TAB_LABEL_PADDING),
+                availableWidth = maxWidth / tabTitles.size - TAB_HORIZONTAL_PADDING * 2,
+                labels = tabTitles
+            )
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color.Black,
+                contentColor = QOrange,
+                modifier = tabRowModifier
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            if (pagerState.currentPage == index) {
+                                onSelectedTabClick()
+                            } else {
+                                scope.launch { pagerState.animateScrollToPage(index) }
+                            }
+                        },
+                        text = {
+                            Text(title, style = tabLabelStyle, maxLines = 1, softWrap = false)
+                        },
+                        modifier = Modifier.height(TAB_HEIGHT),
+                        selectedContentColor = QOrange,
+                        unselectedContentColor = Color.White
+                    )
+                }
             }
         }
         HorizontalPager(
