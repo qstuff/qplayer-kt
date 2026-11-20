@@ -8,9 +8,13 @@ options:
   deploymentTarget:
     iOS: "16.0"
   createIntermediateGroups: true
+  # Current project format, so Xcode doesn't convert project.pbxproj (objectVersion) on opening
+  projectFormat: xcode16_0
 targets:
   iosApp:
     type: application
+    # Same as PRODUCT_NAME: the product reference is qdeq.app (otherwise iosApp.app, fixed by Xcode)
+    productName: qdeq
     platform: iOS
     sources:
       - iosApp
@@ -68,6 +72,8 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
+        # Signing team, so Xcode doesn't add it to project.pbxproj on opening (not a secret)
+        DEVELOPMENT_TEAM: J6R79552P5
         # The Kotlin framework (shared module), built by the script phase below
         FRAMEWORK_SEARCH_PATHS: "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
         OTHER_LDFLAGS: ["$(inherited)", "-framework", "Shared"]
