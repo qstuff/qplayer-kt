@@ -24,6 +24,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -102,12 +106,36 @@ fun ClassicPlayerDeck(
             Column(Modifier.weight(1f)) {
                 val handler = rememberJogWheelHandler(jogActions)
                 val rotationDeg = remember { mutableStateOf(0f) }
+                val radius = LocalDimens.current.roundedShapeRadius
                 // The wheel's touch handling sits on the whole block, limited to the wheel's
                 // circle (top right): touches beside it reach the chips below it.
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .height(m.jogSize)
+                        // Right of the wheel's centre one continuous black area, instead of the
+                        // white gaps between reset, mt and play: from the top of the block down
+                        // into the track title row (drawn after it, so the row's rounded corner
+                        // sits on black). Left of the centre the chips keep their gaps.
+                        .drawBehind {
+                            val left = size.width - m.jogSize.toPx() / 2f
+                            val bottom = size.height + (m.gap + radius).toPx()
+                            val r = CornerRadius(radius.toPx())
+                            drawPath(
+                                Path().apply {
+                                    addRoundRect(
+                                        RoundRect(
+                                            left = left, top = 0f, right = size.width, bottom = bottom,
+                                            topLeftCornerRadius = CornerRadius.Zero,
+                                            topRightCornerRadius = r,
+                                            bottomRightCornerRadius = CornerRadius.Zero,
+                                            bottomLeftCornerRadius = CornerRadius.Zero
+                                        )
+                                    )
+                                },
+                                color = Color.Black
+                            )
+                        }
                         .jogWheelInput(
                             enabled = jogEnabled,
                             rotationDeg = rotationDeg,
