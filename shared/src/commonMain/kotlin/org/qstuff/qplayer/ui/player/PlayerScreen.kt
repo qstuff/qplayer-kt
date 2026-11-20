@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.key
 import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.ui.player.components.ClassicPlayerDeck
@@ -410,28 +409,27 @@ fun PlayerScreen(
             val colWidth = maxWidth - colHPadding * 2
             val isClassic = playerLayout == PlayerLayout.CLASSIC
 
-            val peekHeight: Dp
-            val expandedHeight: Dp
-            if (isClassic) {
-                // Title bar (+4dp above), 4dp gap, buttons/jog block, track info (2 rows + 12dp),
-                // waveform; -8.dp leaves a white gap above the collapsed panel. Expanded, the
-                // sheet reaches up to just below the title bar.
+            // Jog+pitch row of the modern layout: the jog wheel is a square filling the width to
+            // the right of the pitch fader, so its height = that width. +4.dp gap below the
+            // duration row. Mirrors PitchJogSection's inner BoxWithConstraints.
+            val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
+            // Expanded, the sheet has the same height in both layouts.
+            val expandedSheetHeight = maxHeight - titleBarHeight - jogSectionHeight
+
+            val peekHeight = if (isClassic) {
+                // Title bar (+4dp above), 4dp gap, buttons block, track info (2 rows + 12dp),
+                // waveform; -8.dp leaves a white gap above the collapsed panel.
                 val deckHeight = 4.dp + titleBarHeight + 4.dp + ClassicDeckMetrics(colWidth, textviewHeight).buttonsHeight +
                         trackInfoRowHeight * 2 + 12.dp + seekbarHeight
-                peekHeight = (maxHeight - deckHeight - 8.dp).coerceAtLeast(48.dp)
-                expandedHeight = (maxHeight - 4.dp - titleBarHeight - 4.dp).coerceAtLeast(peekHeight)
+                (maxHeight - deckHeight - 8.dp).coerceAtLeast(48.dp)
             } else {
-                // Jog+pitch row: the jog wheel is a square filling the width to the right of the
-                // pitch fader, so its height = that width. +4.dp gap below the duration row.
-                // Mirrors PitchJogSection's inner BoxWithConstraints.
-                val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
                 val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
                 // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
                 val btnRowsHeight = textviewHeight * 2 + 16.dp
                 // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
-                peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
-                expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
+                (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
             }
+            val expandedHeight = expandedSheetHeight.coerceAtLeast(peekHeight)
 
             val density = LocalDensity.current
             val expandedHeightPx = with(density) { expandedHeight.toPx() }
