@@ -142,13 +142,17 @@ fun JogWheelFace(
         val cy = size.height / 2f
         val radius = size.minDimension / 2f
 
+        val stroke = borderWidth.toPx()
         // Wheel image + white background, kept circular now that the Canvas itself is no longer
-        // clipped to a circle (so the Q tail below can extend into the square's corner).
+        // clipped to a circle (so the Q tail below can extend into the square's corner). Clipped
+        // to the middle of the rim, not the outer edge: otherwise the image's black reaches the
+        // rim's anti-aliased outer edge and shows as a faint grey line against a white page.
+        val clipRadius = radius - stroke / 2f
         val circle = Path().apply {
-            addOval(Rect(cx - radius, cy - radius, cx + radius, cy + radius))
+            addOval(Rect(cx - clipRadius, cy - clipRadius, cx + clipRadius, cy + clipRadius))
         }
         clipPath(circle) {
-            drawCircle(Color.White, radius = radius)
+            drawCircle(Color.White, radius = clipRadius)
             rotate(rotationDeg.value) {
                 with(painter) {
                     draw(size)
@@ -157,7 +161,6 @@ fun JogWheelFace(
         }
 
         // White rim on top of the rimless ("ohne rand") wheel image.
-        val stroke = borderWidth.toPx()
         drawCircle(
             color = Color.White,
             radius = radius - stroke / 2f,
