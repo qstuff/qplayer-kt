@@ -1,10 +1,8 @@
 package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import org.qstuff.qplayer.ui.theme.LocalDimens
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
@@ -157,8 +155,8 @@ fun PlayerTabs(
 }
 
 /**
- * Classic-layout tabs, like folder tabs on white: black boxes with rounded top corners and white
- * gaps between them. The selected one runs into the black list below; the others end above a
+ * Classic-layout tabs, like folder tabs: black boxes below the sheet's black handle row, with
+ * white gaps between them. The selected one runs into the black list below; the others end above a
  * white line. Selected label orange, the others white — no indicator.
  */
 @Composable
@@ -169,7 +167,6 @@ private fun FolderTabRow(
     onTabClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val radius = LocalDimens.current.roundedShapeRadius
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -184,7 +181,7 @@ private fun FolderTabRow(
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(bottom = if (selected) 0.dp else FOLDER_TAB_GAP)
-                    .background(Color.Black, RoundedCornerShape(topStart = radius, topEnd = radius))
+                    .background(Color.Black)
                     .clickable { onTabClick(index) },
                 contentAlignment = Alignment.Center
             ) {
