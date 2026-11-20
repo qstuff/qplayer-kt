@@ -31,4 +31,10 @@
         <item>Medium</item>
         <item>Strong</item>
     </string-array>
+
+    <!-- Index = PlayerLayout ordinal -->
+    <string-array name="player_layout_entries">
+        <item>Modern</item>
+        <item>Classic</item>
+    </string-array>
 </resources>

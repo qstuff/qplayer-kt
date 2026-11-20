@@ -1,6 +1,17 @@
 package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import org.qstuff.qplayer.ui.theme.LocalDimens
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +69,7 @@ fun PlayerTabs(
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
     tabRowModifier: Modifier = Modifier,
+    folderTabs: Boolean = false,
     onSelectedTabClick: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
@@ -77,29 +89,46 @@ fun PlayerTabs(
                 availableWidth = maxWidth / tabTitles.size - TAB_HORIZONTAL_PADDING * 2,
                 labels = tabTitles
             )
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                containerColor = Color.Black,
-                contentColor = QOrange,
-                modifier = tabRowModifier
-            ) {
-                tabTitles.forEachIndexed { index, title ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        onClick = {
-                            if (pagerState.currentPage == index) {
-                                onSelectedTabClick()
-                            } else {
-                                scope.launch { pagerState.animateScrollToPage(index) }
-                            }
-                        },
-                        text = {
-                            Text(title, style = tabLabelStyle, maxLines = 1, softWrap = false)
-                        },
-                        modifier = Modifier.height(TAB_HEIGHT),
-                        selectedContentColor = QOrange,
-                        unselectedContentColor = Color.White
-                    )
+            val onTabClick: (Int) -> Unit = { index ->
+                if (pagerState.currentPage == index) {
+                    onSelectedTabClick()
+                } else {
+                    scope.launch { pagerState.animateScrollToPage(index) }
+                }
+            }
+            if (folderTabs) {
+                FolderTabRow(
+                    titles = tabTitles,
+                    selectedIndex = pagerState.currentPage,
+                    labelStyle = tabLabelStyle,
+                    onTabClick = onTabClick,
+                    modifier = tabRowModifier
+                )
+            } else {
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    containerColor = Color.Black,
+                    contentColor = QOrange,
+                    modifier = tabRowModifier
+                ) {
+                    tabTitles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                if (pagerState.currentPage == index) {
+                                    onSelectedTabClick()
+                                } else {
+                                    scope.launch { pagerState.animateScrollToPage(index) }
+                                }
+                            },
+                            text = {
+                                Text(title, style = tabLabelStyle, maxLines = 1, softWrap = false)
+                            },
+                            modifier = Modifier.height(TAB_HEIGHT),
+                            selectedContentColor = QOrange,
+                            unselectedContentColor = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -126,3 +155,50 @@ fun PlayerTabs(
         }
     }
 }
+
+/**
+ * Classic-layout tabs, like folder tabs on white: black boxes with rounded top corners and white
+ * gaps between them. The selected one runs into the black list below; the others end above a
+ * white line. Selected label orange, the others white — no indicator.
+ */
+@Composable
+private fun FolderTabRow(
+    titles: List<String>,
+    selectedIndex: Int,
+    labelStyle: TextStyle,
+    onTabClick: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val radius = LocalDimens.current.roundedShapeRadius
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(TAB_HEIGHT)
+            .background(Color.White),
+        horizontalArrangement = Arrangement.spacedBy(FOLDER_TAB_GAP)
+    ) {
+        titles.forEachIndexed { index, title ->
+            val selected = index == selectedIndex
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(bottom = if (selected) 0.dp else FOLDER_TAB_GAP)
+                    .background(Color.Black, RoundedCornerShape(topStart = radius, topEnd = radius))
+                    .clickable { onTabClick(index) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    title,
+                    style = labelStyle,
+                    color = if (selected) QOrange else Color.White,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
+        }
+    }
+}
+
+/** White gap between folder tabs and below the unselected ones. */
+private val FOLDER_TAB_GAP = 4.dp

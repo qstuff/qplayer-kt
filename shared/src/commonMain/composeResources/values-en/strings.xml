@@ -69,6 +69,20 @@
     <string name="settings_dj_jogwheel_haptics_summary">Short vibration when touching and spinning the jog wheel\nCurrent: %1$s</string>
     <string name="settings_dj_jogwheel_haptics_unavailable">This device can't vibrate</string>
 
+    <!-- Jog wheel mode / sensitivity: in Settings only with the classic layout (no quick switches there) -->
+    <string name="settings_dj_jogwheel_sensitivity_title">Jogwheel sensitivity</string>
+    <string name="settings_dj_jogwheel_sensitivity_summary">Determines how sensitive the jogwheel responds to action
+Current: %1$s</string>
+    <string name="settings_dj_jogwheel_mode_title">Jogwheel mode</string>
+    <string name="settings_dj_jogwheel_mode_summary">Determines which way the jogwheel responds to action
+Current: %1$s</string>
+
+    <!-- Appearance -->
+    <string name="settings_cat_appearance_title">Appearance</string>
+    <string name="settings_player_layout_title">Player layout</string>
+    <string name="settings_player_layout_summary">Arrangement of the player on phones
+Current: %1$s</string>
+
     <!-- Privacy Settings -->
     <string name="settings_cat_privacy_title">Common Settings</string>
     <string name="settings_privacy_crashreport_title">Crashreports</string>
