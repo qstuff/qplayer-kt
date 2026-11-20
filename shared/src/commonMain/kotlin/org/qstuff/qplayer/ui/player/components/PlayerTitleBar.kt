@@ -38,7 +38,7 @@ import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.theme.boxFittedTextStyle
 
 /**
- * Top title bar: the "QdeQ" wordmark (+ optional version [titleSuffix]) and a "more" overflow
+ * Top title bar: the "qdeq" wordmark (+ optional version [titleSuffix]) and a "more" overflow
  * menu (Settings / Privacy / Imprint / Licenses). The menu's open state is local to the bar.
  */
 @Composable
@@ -62,8 +62,8 @@ fun PlayerTitleBar(
     ) {
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = QOrange)) { append("Q") }
-                withStyle(SpanStyle(color = Color.White)) { append("deQ") }
+                withStyle(SpanStyle(color = QOrange)) { append("q") }
+                withStyle(SpanStyle(color = Color.White)) { append("deq") }
                 if (titleSuffix.isNotEmpty()) {
                     withStyle(SpanStyle(color = Color.White)) { append(titleSuffix) }
                 }
