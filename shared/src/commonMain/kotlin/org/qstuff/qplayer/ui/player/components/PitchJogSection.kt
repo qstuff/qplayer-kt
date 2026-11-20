@@ -161,8 +161,9 @@ fun PitchJogSection(
             }
 
             // Jog wheel — square, same height/top as the pitch fader. The square's top corners
-            // (outside the wheel) hold the quick switches.
-            Box(modifier = Modifier.fillMaxHeight().aspectRatio(1f)) {
+            // (outside the wheel) hold the quick switches. Clipped to the shared rounded shape
+            // like every other deck element.
+            Box(modifier = Modifier.fillMaxHeight().aspectRatio(1f).clip(roundedShape)) {
                 JogWheel(
                     modifier = Modifier
                         .fillMaxHeight()

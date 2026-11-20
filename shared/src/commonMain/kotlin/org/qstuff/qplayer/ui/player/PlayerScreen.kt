@@ -363,8 +363,8 @@ fun PlayerScreen(
             // Mirrors PitchJogSection's inner BoxWithConstraints.
             val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
             val trackInfoHeight = textviewHeight * 2 + 4.dp
-            // Two button rows, each textviewHeight tall, with 8dp above row1 / between / below row2.
-            val btnRowsHeight = textviewHeight * 2 + 24.dp
+            // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
+            val btnRowsHeight = textviewHeight * 2 + 16.dp
             // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
             val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
             val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
