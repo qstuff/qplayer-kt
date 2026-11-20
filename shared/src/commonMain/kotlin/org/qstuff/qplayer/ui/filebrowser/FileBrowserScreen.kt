@@ -152,7 +152,6 @@ private fun FileBrowserContent(
                             root = root,
                             onClick = { fileBrowserViewModel.onStorageRootClicked(root) }
                         )
-                        HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                     }
                 }
             }
@@ -177,7 +176,6 @@ private fun FileBrowserContent(
                             playerViewModel.loadTrack(Track.fromPath(item.id, autoplay = true))
                         }
                     )
-                    HorizontalDivider(color = QOrangeDivider, thickness = 1.dp)
                 }
             }
         }
