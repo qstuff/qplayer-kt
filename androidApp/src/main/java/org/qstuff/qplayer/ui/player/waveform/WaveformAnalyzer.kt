@@ -4,7 +4,6 @@ import android.content.Context
 import kotlinx.coroutines.isActive
 import org.qstuff.qplayer.ui.player.audio.AudioDecoder
 import kotlin.coroutines.coroutineContext
-import kotlin.math.abs
 
 /**
  * Generates an overview waveform (one peak-amplitude byte per output point) from an audio file,
@@ -27,28 +26,31 @@ object WaveformAnalyzer {
         var framesInPeak = 0
         var currentPeak = 0
 
-        fun pushFramePeak(frameMax: Int) {
-            if (frameMax > currentPeak) currentPeak = frameMax
-            if (++framesInPeak >= FRAMES_PER_PEAK) {
-                if (peakCount == peaks.size) peaks = peaks.copyOf(peaks.size * 2)
-                peaks[peakCount++] = currentPeak
-                currentPeak = 0
-                framesInPeak = 0
-            }
-        }
-
+        // Reused copy of each PCM chunk: a bulk get() into a ShortArray is several times faster
+        // than reading the ShortBuffer sample by sample (measured on the Tab A: 4.5 s → 0.8 s).
+        var scratch = ShortArray(0)
         val decoded = AudioDecoder.decode(context, uri) { shorts, channels ->
-            val n = shorts.limit()
-            var i = shorts.position()
-            while (i < n) {
+            val count = shorts.remaining()
+            if (scratch.size < count) scratch = ShortArray(count)
+            shorts.get(scratch, 0, count)
+            val buf = scratch
+            var i = 0
+            while (i < count) {
                 var frameMax = 0
-                var c = 0
-                while (c < channels && i < n) {
-                    val s = abs(shorts.get(i).toInt())
+                val frameEnd = minOf(i + channels, count)
+                while (i < frameEnd) {
+                    val v = buf[i].toInt()
+                    val s = if (v < 0) -v else v
                     if (s > frameMax) frameMax = s
-                    i++; c++
+                    i++
                 }
-                pushFramePeak(frameMax)
+                if (frameMax > currentPeak) currentPeak = frameMax
+                if (++framesInPeak >= FRAMES_PER_PEAK) {
+                    if (peakCount == peaks.size) peaks = peaks.copyOf(peaks.size * 2)
+                    peaks[peakCount++] = currentPeak
+                    currentPeak = 0
+                    framesInPeak = 0
+                }
             }
         }
 
