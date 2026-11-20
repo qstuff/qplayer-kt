@@ -79,7 +79,7 @@ object NoCrashReporter : CrashReporter {
 
 class IosPlatformInfo : PlatformInfo {
     override val appVersion: String =
-        "${if (IosBuild.isDebug) "QdeQ-dev" else "QdeQ"} ${IosBuild.versionName} (${IosBuild.buildNumber})"
+        "${if (IosBuild.isDebug) "qdeq-dev" else "qdeq"} ${IosBuild.versionName} (${IosBuild.buildNumber})"
     override val deviceInfo: String = UIDevice.currentDevice.let { "${it.model} ${it.systemName} ${it.systemVersion}" }
 }
 

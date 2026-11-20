@@ -26,7 +26,7 @@ import platform.Foundation.NSURL
 private val log = Logger.withTag("IosFileImport")
 
 /**
- * Files other apps hand to QdeQ ("Open in…", share sheet, AirDrop; the types are the
+ * Files other apps hand to qdeq ("Open in…", share sheet, AirDrop; the types are the
  * CFBundleDocumentTypes in iosApp/project.yml): each is copied into the Documents folder, so it
  * shows up in the file browser like a file added via the Files app or Finder.
  */
@@ -65,7 +65,7 @@ object IosFileImport {
         val inbox = "$documents/$INBOX"
         val fromInbox = source != null && source.startsWith("$inbox/")
 
-        // Opened from QdeQ's own folder in the Files app: already there.
+        // Opened from qdeq's own folder in the Files app: already there.
         if (source != null && source.startsWith("$documents/") && !fromInbox) {
             return IosPaths.DOCUMENTS + source.removePrefix(documents)
         }

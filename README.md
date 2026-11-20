@@ -1,10 +1,10 @@
-# QdeQ
+# qdeq
 
 A DJ-style music player for **Android and iOS** (phone and tablet): play your own audio files with
 pitch control, master tempo, cue point and a touch jog wheel that can bend the tempo or scratch
 like a record.
 
-QdeQ is the Kotlin rewrite of the original qplayer. Since version 4 it is a
+qdeq is the Kotlin rewrite of the original qplayer. Since version 4 it is a
 **Kotlin Multiplatform** app: UI, ViewModels, data and most of the logic are shared; only audio
 playback, decoding, file access and haptics are platform code.
 

@@ -21,7 +21,7 @@ targets:
     info:
       path: iosApp/Info.plist
       properties:
-        CFBundleDisplayName: QdeQ
+        CFBundleDisplayName: qdeq
         CFBundleShortVersionString: "4.1.0"
         CFBundleVersion: "1"
         UILaunchScreen:
@@ -29,9 +29,9 @@ targets:
         # The app's Documents folder is visible in the Files app and in Finder (music to play).
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
-        # Other apps can hand audio files and M3U playlists to QdeQ ("Open in…", share sheet,
-        # AirDrop); they are copied into the Documents folder (IosFileImport.kt). Alternate: QdeQ
-        # is offered, but doesn't become the default app for these files. No public.mpeg-4: QdeQ
+        # Other apps can hand audio files and M3U playlists to qdeq ("Open in…", share sheet,
+        # AirDrop); they are copied into the Documents folder (IosFileImport.kt). Alternate: qdeq
+        # is offered, but doesn't become the default app for these files. No public.mpeg-4: qdeq
         # would then be offered for every video.
         CFBundleDocumentTypes:
           - CFBundleTypeName: Audio
