@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.qstuff.qplayer.ui.theme.ChipLabel
+import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.ui.theme.chipIconSizeMatching
+import org.qstuff.qplayer.ui.theme.rememberChipLabelStyle
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.button_loop
@@ -35,6 +40,9 @@ import org.qstuff.qplayer.resources.ic_keyboard_arrow_right_white_24px
 
 /** Gap between the control chips (horizontal and between the rows). */
 val ControlChipSpacing = 4.dp
+
+/** Widest pitch value texts (see PlayerViewModel's pitch formatting) for the shared label size. */
+private val PITCH_VALUE_SAMPLES = listOf("+88,8%", "-88,8%", "-100,0", "+100,0")
 
 /** Chips per button row — all chips share the row width equally. */
 private const val CONTROL_CHIPS_PER_ROW = 6
@@ -73,106 +81,128 @@ fun PlayerControls(
     onToggleMasterTempo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        // ─── Row 1: prev | play | next | repeat | shuffle | cue ───
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(ControlChipSpacing),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconControlChip(
-                Res.drawable.button_previous,
-                "Previous",
-                onPrevious,
-                tint = QOrange   // white drawable → tint to the accent
-            )
-            IconControlChip(
-                iconRes = if (isPlaying) Res.drawable.button_pause_selected
-                else Res.drawable.button_play_selected,
-                contentDescription = "Play/Pause",
-                onClick = onPlayPause   // drawable is already QOrange
-            )
-            IconControlChip(
-                Res.drawable.button_next,
-                "Next",
-                onNext,
-                tint = QOrange   // white drawable → tint to the accent
-            )
-            IconControlChip(
-                // Repeat icons encode state via their own color (white = off, orange = on) and the
-                // "1" glyph, so no tint — see IconControlChip's default.
-                iconRes = when (repeat) {
-                    TrackRepeatStatus.NONE -> Res.drawable.button_loop
-                    TrackRepeatStatus.ONE -> Res.drawable.button_loop1_selected
-                    TrackRepeatStatus.ALL -> Res.drawable.button_loop_selected
-                    else -> Res.drawable.button_loop
-                },
-                contentDescription = "Repeat",
-                onClick = onToggleRepeat
-            )
-            IconControlChip(
-                // Shuffle drawables also carry their own on/off colors — no tint.
-                iconRes =
-                    if (shuffle) Res.drawable.button_shuffle_selected
-                    else Res.drawable.button_shuffle,
-                contentDescription = "Shuffle",
-                onClick = onToggleShuffle
-            )
-            TextControlChip(
-                text = "cue",
-                color = if (cueActive) QOrange else Color.White,
-                onClick = onCueClick,
-                onLongClick = onCueLongClick
-            )
-        }
-
-        // ─── Row 2: pitch- | value | pitch+ | range | reset | mt ──
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(ControlChipSpacing),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconControlChip(
-                Res.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
-                tint = QOrange   // white drawable → tint to the accent
-            )
-            TextControlChip(text = pitchValueText)
-            IconControlChip(
-                Res.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
-                tint = QOrange   // white drawable → tint to the accent
-            )
-            // Pitch range chip hosts its own dropdown menu.
-            var showPitchRangeMenu by remember { mutableStateOf(false) }
-            ControlChip(onClick = { showPitchRangeMenu = true }) {
-                Text(
-                    text = pitchRangeValues.getOrElse(pitchFactorIndex) { "?" },
-                    color = Color.White
+    BoxWithConstraints(modifier = modifier) {
+        // One label size for all text chips: the widest possible label must fit one chip. The
+        // pitch value samples cover its widest formats, so the size doesn't jump while pitching.
+        val labelStyle = rememberChipLabelStyle(
+            chipWidth = controlChipWidth(maxWidth),
+            chipHeight = LocalDimens.current.textviewHeight,
+            labels = remember(pitchRangeValues) {
+                PITCH_VALUE_SAMPLES + pitchRangeValues + listOf("reset", "mt", "cue")
+            }
+        )
+        // The pitch arrows' glyph is 12 of the drawable's 24 units tall: match the label caps.
+        val arrowIconSize = chipIconSizeMatching(
+            labelStyle = labelStyle,
+            glyphFraction = 12f / 24f,
+            chipHeight = LocalDimens.current.textviewHeight
+        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // ─── Row 1: prev | play | next | repeat | shuffle | cue ───
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(ControlChipSpacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconControlChip(
+                    Res.drawable.button_previous,
+                    "Previous",
+                    onPrevious,
+                    tint = QOrange   // white drawable → tint to the accent
                 )
-                DropdownMenu(
-                    expanded = showPitchRangeMenu,
-                    onDismissRequest = { showPitchRangeMenu = false }
-                ) {
-                    pitchRangeValues.forEachIndexed { index, value ->
-                        DropdownMenuItem(
-                            text = { Text(value) },
-                            onClick = {
-                                onPitchRangeSelected(index)
-                                showPitchRangeMenu = false
-                            }
-                        )
+                IconControlChip(
+                    iconRes = if (isPlaying) Res.drawable.button_pause_selected
+                    else Res.drawable.button_play_selected,
+                    contentDescription = "Play/Pause",
+                    onClick = onPlayPause   // drawable is already QOrange
+                )
+                IconControlChip(
+                    Res.drawable.button_next,
+                    "Next",
+                    onNext,
+                    tint = QOrange   // white drawable → tint to the accent
+                )
+                IconControlChip(
+                    // Repeat icons encode state via their own color (white = off, orange = on) and the
+                    // "1" glyph, so no tint — see IconControlChip's default.
+                    iconRes = when (repeat) {
+                        TrackRepeatStatus.NONE -> Res.drawable.button_loop
+                        TrackRepeatStatus.ONE -> Res.drawable.button_loop1_selected
+                        TrackRepeatStatus.ALL -> Res.drawable.button_loop_selected
+                        else -> Res.drawable.button_loop
+                    },
+                    contentDescription = "Repeat",
+                    onClick = onToggleRepeat
+                )
+                IconControlChip(
+                    // Shuffle drawables also carry their own on/off colors — no tint.
+                    iconRes =
+                        if (shuffle) Res.drawable.button_shuffle_selected
+                        else Res.drawable.button_shuffle,
+                    contentDescription = "Shuffle",
+                    onClick = onToggleShuffle
+                )
+                TextControlChip(
+                    text = "cue",
+                    labelStyle = labelStyle,
+                    color = if (cueActive) QOrange else Color.White,
+                    onClick = onCueClick,
+                    onLongClick = onCueLongClick
+                )
+            }
+
+            // ─── Row 2: pitch- | value | pitch+ | range | reset | mt ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(ControlChipSpacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconControlChip(
+                    Res.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
+                    tint = QOrange,   // white drawable → tint to the accent
+                    iconSize = arrowIconSize
+                )
+                TextControlChip(text = pitchValueText, labelStyle = labelStyle)
+                IconControlChip(
+                    Res.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
+                    tint = QOrange,   // white drawable → tint to the accent
+                    iconSize = arrowIconSize
+                )
+                // Pitch range chip hosts its own dropdown menu.
+                var showPitchRangeMenu by remember { mutableStateOf(false) }
+                ControlChip(onClick = { showPitchRangeMenu = true }) {
+                    ChipLabel(
+                        text = pitchRangeValues.getOrElse(pitchFactorIndex) { "?" },
+                        color = Color.White,
+                        style = labelStyle
+                    )
+                    DropdownMenu(
+                        expanded = showPitchRangeMenu,
+                        onDismissRequest = { showPitchRangeMenu = false }
+                    ) {
+                        pitchRangeValues.forEachIndexed { index, value ->
+                            DropdownMenuItem(
+                                text = { Text(value) },
+                                onClick = {
+                                    onPitchRangeSelected(index)
+                                    showPitchRangeMenu = false
+                                }
+                            )
+                        }
                     }
                 }
+                TextControlChip(text = "reset", labelStyle = labelStyle, onClick = onReset)
+                TextControlChip(
+                    text = "mt",
+                    labelStyle = labelStyle,
+                    color = if (masterTempo) QOrange else Color.White,
+                    onClick = onToggleMasterTempo
+                )
             }
-            TextControlChip(text = "reset", onClick = onReset)
-            TextControlChip(
-                text = "mt",
-                color = if (masterTempo) QOrange else Color.White,
-                onClick = onToggleMasterTempo
-            )
         }
     }
 }
