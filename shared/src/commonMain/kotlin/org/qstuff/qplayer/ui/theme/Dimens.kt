@@ -5,7 +5,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * Sizes of the player screen. Larger tablets get larger values, chosen by the screen's smallest
@@ -26,6 +28,8 @@ data class Dimens(
     val waveformTopMargin: Dp = 2.dp,
     val cueMarkerWidth: Dp = 30.dp,
     val cueMarkerTopMargin: Dp = 15.dp,
+    /** Text of the queue / filebrowser / playlist lists (not their dialogs). Tablets: +30%. */
+    val listFontSize: TextUnit = 15.sp,
     /** Title bar / track info text sized to fill its box (see boxFittedTextStyle). */
     val fitTextToBoxes: Boolean = false,
 ) {
@@ -47,6 +51,7 @@ data class Dimens(
             cueMarkerWidth = 20.dp,
             cueMarkerTopMargin = 5.dp,
             fitTextToBoxes = true,
+            listFontSize = 19.5.sp,
         )
 
         /** Smallest width ≥ 720 dp (10" tablets, e.g. the Galaxy Tab A 10.1). */
@@ -62,6 +67,7 @@ data class Dimens(
             cueMarkerWidth = 30.dp,
             cueMarkerTopMargin = 5.dp,
             fitTextToBoxes = true,
+            listFontSize = 19.5.sp,
         )
 
         fun forSmallestWidth(smallestWidthDp: Int): Dimens = when {

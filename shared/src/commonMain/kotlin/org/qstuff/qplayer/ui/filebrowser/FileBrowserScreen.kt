@@ -37,6 +37,7 @@ import org.qstuff.qplayer.resources.dialog_ok
 import org.qstuff.qplayer.resources.filebrowser_dialog_add_tracks_to_queue_title
 import org.qstuff.qplayer.resources.filebrowser_dialog_queue_overwrite
 import org.qstuff.qplayer.resources.filebrowser_storages_title
+import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.resources.snackbar_undo
 import org.qstuff.qplayer.resources.filebrowser_track_already_queued
@@ -111,7 +112,7 @@ private fun FileBrowserContent(
                     stringResource(Res.string.filebrowser_storages_title)
                 } else directoryName,
                 color = Color.White,
-                fontSize = 15.sp,
+                fontSize = LocalDimens.current.listFontSize,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -305,7 +306,7 @@ private fun StorageRootItem(root: StorageRoot, onClick: () -> Unit) {
         Text(
             text = root.label,
             color = Color.White,
-            fontSize = 15.sp,
+            fontSize = LocalDimens.current.listFontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -367,7 +368,7 @@ private fun FileListItem(
         Text(
             text = item.name,
             color = if (isTrack && (isPressed || flash)) QOrange else Color.White,
-            fontSize = 15.sp,
+            fontSize = LocalDimens.current.listFontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
