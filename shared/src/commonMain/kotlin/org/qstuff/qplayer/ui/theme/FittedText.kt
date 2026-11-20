@@ -111,3 +111,18 @@ fun ChipLabel(
         modifier = modifier.padding(horizontal = FittedTextPadding)
     )
 }
+
+/** Cap height of the platform UI fonts relative to the font size (Roboto ≈ 0.71, SF ≈ 0.70). */
+private const val CAP_HEIGHT_RATIO = 0.71f
+
+/**
+ * Size for a chip icon whose glyph is [glyphFraction] of the icon's height, so the glyph is as
+ * tall as the capitals of [labelStyle] (from [rememberChipLabelStyle]) — capped to the chip
+ * [chipHeight] minus [FittedTextPadding] top and bottom. Phone: [Dp.Unspecified] (own size).
+ */
+@Composable
+fun chipIconSizeMatching(labelStyle: TextStyle, glyphFraction: Float, chipHeight: Dp): Dp {
+    if (!LocalDimens.current.fitTextToBoxes) return Dp.Unspecified
+    val capHeight = with(LocalDensity.current) { labelStyle.fontSize.toDp() } * CAP_HEIGHT_RATIO
+    return minOf(capHeight / glyphFraction, chipHeight - FittedTextPadding * 2)
+}

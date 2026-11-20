@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -14,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.isSpecified
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.qstuff.qplayer.ui.theme.ChipLabel
@@ -58,19 +61,21 @@ fun RowScope.ControlChip(
  * Icon variant of [ControlChip]. By default the icon keeps the drawable's own colors
  * ([Color.Unspecified]) — pass an explicit [tint] only for single-color drawables that need
  * coloring. (A blanket tint would silently override state-encoding drawables like the repeat/
- * shuffle icons, where white = off and orange = on.)
+ * shuffle icons, where white = off and orange = on.) [iconSize] unspecified: the icon's own size.
  */
 @Composable
 fun RowScope.IconControlChip(
     iconRes: DrawableResource,
     contentDescription: String,
     onClick: () -> Unit,
-    tint: Color = Color.Unspecified
+    tint: Color = Color.Unspecified,
+    iconSize: Dp = Dp.Unspecified
 ) = ControlChip(onClick = onClick) {
     Icon(
         painter = painterResource(iconRes),
         contentDescription = contentDescription,
-        tint = tint
+        tint = tint,
+        modifier = if (iconSize.isSpecified) Modifier.size(iconSize) else Modifier
     )
 }
 

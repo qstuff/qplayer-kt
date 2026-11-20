@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import org.qstuff.qplayer.ui.theme.ChipLabel
 import org.qstuff.qplayer.ui.theme.LocalDimens
 import org.qstuff.qplayer.ui.theme.QOrange
+import org.qstuff.qplayer.ui.theme.chipIconSizeMatching
 import org.qstuff.qplayer.ui.theme.rememberChipLabelStyle
 import org.qstuff.qplayer.util.TrackRepeatStatus
 import org.qstuff.qplayer.resources.Res
@@ -90,6 +91,12 @@ fun PlayerControls(
                 PITCH_VALUE_SAMPLES + pitchRangeValues + listOf("reset", "mt", "cue")
             }
         )
+        // The pitch arrows' glyph is 12 of the drawable's 24 units tall: match the label caps.
+        val arrowIconSize = chipIconSizeMatching(
+            labelStyle = labelStyle,
+            glyphFraction = 12f / 24f,
+            chipHeight = LocalDimens.current.textviewHeight
+        )
         Column(modifier = Modifier.fillMaxWidth()) {
             // ─── Row 1: prev | play | next | repeat | shuffle | cue ───
             Row(
@@ -156,12 +163,14 @@ fun PlayerControls(
             ) {
                 IconControlChip(
                     Res.drawable.ic_keyboard_arrow_left_white_24px, "Pitch decrease", onPitchDecrease,
-                    tint = QOrange   // white drawable → tint to the accent
+                    tint = QOrange,   // white drawable → tint to the accent
+                    iconSize = arrowIconSize
                 )
                 TextControlChip(text = pitchValueText, labelStyle = labelStyle)
                 IconControlChip(
                     Res.drawable.ic_keyboard_arrow_right_white_24px, "Pitch increase", onPitchIncrease,
-                    tint = QOrange   // white drawable → tint to the accent
+                    tint = QOrange,   // white drawable → tint to the accent
+                    iconSize = arrowIconSize
                 )
                 // Pitch range chip hosts its own dropdown menu.
                 var showPitchRangeMenu by remember { mutableStateOf(false) }
