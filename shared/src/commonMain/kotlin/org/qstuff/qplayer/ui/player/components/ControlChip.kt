@@ -13,9 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import org.qstuff.qplayer.ui.theme.BoxFittedText
+import org.qstuff.qplayer.ui.theme.ChipLabel
 import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
@@ -73,13 +74,17 @@ fun RowScope.IconControlChip(
     )
 }
 
-/** Text variant of [ControlChip]. Pass a null [onClick] for a non-interactive chip. */
+/**
+ * Text variant of [ControlChip]. Pass a null [onClick] for a non-interactive chip. [labelStyle]
+ * comes from rememberChipLabelStyle, so all labels of a button bar share one size.
+ */
 @Composable
 fun RowScope.TextControlChip(
     text: String,
+    labelStyle: TextStyle,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     color: Color = Color.White
 ) = ControlChip(onClick = onClick, onLongClick = onLongClick) {
-    BoxFittedText(text = text, color = color, boxHeight = LocalDimens.current.textviewHeight)
+    ChipLabel(text = text, color = color, style = labelStyle)
 }
