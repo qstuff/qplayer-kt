@@ -51,7 +51,6 @@ fun PlayerTabSheet(
     fileBrowserViewModel: FileBrowserViewModel,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
-    folderTabs: Boolean = false,
     onOpenChange: (open: Boolean) -> Unit = {}
 ) {
     val sheetOffset = remember { Animatable(maxSheetOffsetPx) }
@@ -121,7 +120,6 @@ fun PlayerTabSheet(
             playerViewModel = playerViewModel,
             modifier = Modifier.weight(1f),
             tabRowModifier = sheetDragModifier,
-            folderTabs = folderTabs,
             // tap on the already-selected tab → toggle the sheet
             onSelectedTabClick = {
                 val target =

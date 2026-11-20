@@ -15,15 +15,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.ui.player.components.ClassicPlayerDeck
-import org.qstuff.qplayer.ui.player.components.ClassicDeckMetrics
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -346,14 +346,15 @@ fun PlayerScreen(
         }
 
         // ─── Classic phone deck (Settings → player layout): title bar, fader + buttons + jog
-        // wheel with track info below, waveform ───
+        // wheel with track info below, waveform. No bottom sheet: the tabs below always have
+        // enough room, so the wheel is never disabled. ───
         val classicDeckContent: @Composable ColumnScope.() -> Unit = {
             titleBar()
             ClassicPlayerDeck(
                 controls = controlsModel,
                 pitchProgress = pitchValue,
                 jogActions = jogActions,
-                jogEnabled = !isTabSheetOpen,
+                jogEnabled = true,
                 trackInfoRowHeight = LocalDimens.current.trackInfoRowHeight,
                 trackInfo = trackInfo,
                 modifier = Modifier.padding(top = 4.dp)
@@ -405,31 +406,42 @@ fun PlayerScreen(
                     controls()
                 }
             }
+        } else if (playerLayout == PlayerLayout.CLASSIC) {
+            // Classic: deck, 8dp white gap, then the folder tabs fill the rest of the screen.
+            val radius = LocalDimens.current.roundedShapeRadius
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = colHPadding, end = colHPadding, bottom = colHPadding)
+            ) {
+                classicDeckContent()
+                Spacer(Modifier.height(8.dp))
+                PlayerTabs(
+                    queueViewModel = queueViewModel,
+                    playlistViewModel = playlistViewModel,
+                    fileBrowserViewModel = fileBrowserViewModel,
+                    playerViewModel = playerViewModel,
+                    folderTabs = true,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(bottomStart = radius, bottomEnd = radius))
+                        .background(Color.Black)
+                )
+            }
         } else {
             val colWidth = maxWidth - colHPadding * 2
-            val isClassic = playerLayout == PlayerLayout.CLASSIC
 
-            // Jog+pitch row of the modern layout: the jog wheel is a square filling the width to
-            // the right of the pitch fader, so its height = that width. +4.dp gap below the
-            // duration row. Mirrors PitchJogSection's inner BoxWithConstraints.
+            // Jog+pitch row: the jog wheel is a square filling the width to the right of the
+            // pitch fader, so its height = that width. +4.dp gap below the duration row.
+            // Mirrors PitchJogSection's inner BoxWithConstraints.
             val jogSectionHeight = 4.dp + (colWidth - pitchbarWidth)
-            // Expanded, the sheet has the same height in both layouts.
-            val expandedSheetHeight = maxHeight - titleBarHeight - jogSectionHeight
-
-            val peekHeight = if (isClassic) {
-                // Title bar (+4dp above), 4dp gap, buttons block, track info (2 rows + 12dp),
-                // waveform; -8.dp leaves a white gap above the collapsed panel.
-                val deckHeight = 4.dp + titleBarHeight + 4.dp + ClassicDeckMetrics(colWidth, textviewHeight).buttonsHeight +
-                        trackInfoRowHeight * 2 + 12.dp + seekbarHeight
-                (maxHeight - deckHeight - 8.dp).coerceAtLeast(48.dp)
-            } else {
-                val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
-                // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
-                val btnRowsHeight = textviewHeight * 2 + 16.dp
-                // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
-                (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
-            }
-            val expandedHeight = expandedSheetHeight.coerceAtLeast(peekHeight)
+            val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
+            // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
+            val btnRowsHeight = textviewHeight * 2 + 16.dp
+            // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
+            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
+            val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
             val density = LocalDensity.current
             val expandedHeightPx = with(density) { expandedHeight.toPx() }
@@ -439,23 +451,19 @@ fun PlayerScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = colHPadding),
-                content = if (isClassic) classicDeckContent else deckContent
+                content = deckContent
             )
 
-            // Keyed on the layout: the sheet's offset is set up for its peek height.
-            key(isClassic) {
-                PlayerTabSheet(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    folderTabs = isClassic,
-                    expandedHeightPx = expandedHeightPx,
-                    maxSheetOffsetPx = maxSheetOffsetPx,
-                    queueViewModel = queueViewModel,
-                    playlistViewModel = playlistViewModel,
-                    fileBrowserViewModel = fileBrowserViewModel,
-                    playerViewModel = playerViewModel,
-                    onOpenChange = { isTabSheetOpen = it }
-                )
-            }
+            PlayerTabSheet(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                expandedHeightPx = expandedHeightPx,
+                maxSheetOffsetPx = maxSheetOffsetPx,
+                queueViewModel = queueViewModel,
+                playlistViewModel = playlistViewModel,
+                fileBrowserViewModel = fileBrowserViewModel,
+                playerViewModel = playerViewModel,
+                onOpenChange = { isTabSheetOpen = it }
+            )
         }
     }
 }
