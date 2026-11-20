@@ -130,6 +130,9 @@ class PlayerViewModel(
     // front of the generator's disk cache
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
+    // Background generation for the track that is likely loaded next (see prefetchWaveform)
+    private var prefetchTrack: Track? = null
+    private var prefetchJob: Job? = null
 
     // Jog wheel SCRATCH mode: takes over the audio from the player while the wheel is touched.
     private var isScratchModeEnabled = false
@@ -379,21 +382,33 @@ class PlayerViewModel(
     /**
      * Generate (or serve from cache) the overview waveform for [track] and publish it via
      * [onWaveformDataUpdate] — while decoding also the growing previews, so it fills in from the
-     * left. Generated waveforms are also kept on disk by the platform's CachingWaveformGenerator. Decoding runs on a background dispatcher; the previous job is
-     * cancelled when a new track is loaded, and stale results for an already-changed track are
-     * discarded. viewModelScope cancels any in-flight job when the ViewModel is cleared.
+     * left. Generated waveforms are also kept on disk by the platform's CachingWaveformGenerator.
+     * Decoding runs on a background dispatcher; the previous job is cancelled when a new track is
+     * loaded (a running prefetch waits for the new one), and stale results for an already-changed
+     * track are discarded. viewModelScope cancels any in-flight job when the ViewModel is cleared.
      */
     private fun generateWaveform(track: Track) {
         val uri = track.uri
+        waveformJob?.cancel()
+        waveformJob = null
 
-        waveformCache.get(uri)?.let { cached ->
+        val cached = waveformCache.get(uri)
+        if (cached != null) {
             _onWaveformDataUpdate.value = TrackData(track, cached)
-            return
+            // Nothing to decode: a prefetch can go on, unless it is for this very track.
+            if (prefetchTrack?.uri == uri) startPrefetch()
+        } else {
+            startWaveformJob(track)
+            // The loaded track has priority: a running prefetch starts over after its waveform.
+            startPrefetch()
         }
+    }
+
+    private fun startWaveformJob(track: Track) {
+        val uri = track.uri
 
         // Clear any previous waveform while the new one is decoding.
         _onWaveformDataUpdate.value = null
-        waveformJob?.cancel()
         waveformJob = viewModelScope.launch {
             // Growing previews while decoding (background thread; StateFlow is thread-safe).
             val bytes = waveformGenerator.generate(uri) { preview ->
@@ -408,6 +423,30 @@ class PlayerViewModel(
                     _onWaveformDataUpdate.value = TrackData(track, bytes)
                 }
             }
+        }
+    }
+
+    /**
+     * Generate the waveform of [track] in the background without showing it — for the track that
+     * is likely loaded next, so its waveform is there at once. Waits for the current track's
+     * waveform first, so both don't compete for the CPU. A new call replaces a running prefetch;
+     * loading a track restarts it after that track's waveform. null: no prefetch.
+     */
+    fun prefetchWaveform(track: Track?) {
+        prefetchTrack = track
+        startPrefetch()
+    }
+
+    private fun startPrefetch() {
+        prefetchJob?.cancel()
+        val uri = prefetchTrack?.uri ?: return
+        if (uri == _playerTrackState.value?.track?.uri || waveformCache.get(uri) != null) return
+        val current = waveformJob
+        prefetchJob = viewModelScope.launch {
+            current?.join()
+            if (waveformCache.get(uri) != null) return@launch
+            val bytes = waveformGenerator.generate(uri) ?: return@launch
+            if (isActive) waveformCache.put(uri, bytes)
         }
     }
 

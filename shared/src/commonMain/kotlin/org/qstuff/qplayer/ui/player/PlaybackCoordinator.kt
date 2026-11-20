@@ -1,7 +1,10 @@
 package org.qstuff.qplayer.ui.player
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.ui.filebrowser.FileBrowserViewModel
 import org.qstuff.qplayer.ui.player.mediaservice.TransportCommand
@@ -13,6 +16,7 @@ import org.qstuff.qplayer.ui.queue.QueueViewModel
  * - a selected queue track is loaded into the player,
  * - a finished track lets the queue decide what follows (repeat / shuffle), or stops,
  * - Next / Prev from system media controls behave like the on-screen buttons,
+ * - the waveform of the next queue track is generated in the background,
  * - changed settings are applied right away, and state is restored on start / saved on demand.
  *
  * Platform independent: the platform host (the activity on Android) [start]s it in its own scope
@@ -59,6 +63,16 @@ class PlaybackCoordinator(
                 }
             }
         }
+        // Waveform of the track that follows the loaded one in the queue (Next / auto-advance
+        // without shuffle) is generated in the background, after the loaded track's own
+        scope.launch {
+            combine(player.playerTrackState, queue.trackList) { state, tracks ->
+                val current = state?.track?.uri
+                current to followingTrack(tracks, current)
+            }
+                .distinctUntilChanged { a, b -> a.first == b.first && a.second?.uri == b.second?.uri }
+                .collect { (_, next) -> player.prefetchWaveform(next) }
+        }
         // Settings changed (Settings screen) → apply right away
         scope.launch {
             preferences.settingsChanged.collect { applySettings() }
@@ -82,4 +96,14 @@ class PlaybackCoordinator(
         player.loadSettings()
         queue.loadSettings()
     }
+}
+
+/**
+ * The queue entry after [currentUri], wrapping around like the Next button; null if
+ * [currentUri] isn't in the queue or nothing else is.
+ */
+internal fun followingTrack(tracks: List<Track>, currentUri: String?): Track? {
+    val index = tracks.indexOfFirst { it.uri == currentUri }
+    if (index < 0) return null
+    return tracks[(index + 1) % tracks.size].takeIf { it.uri != currentUri }
 }

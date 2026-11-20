@@ -1,6 +1,7 @@
 package org.qstuff.qplayer.ui.player
 
 import com.russhwolf.settings.MapSettings
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -296,5 +297,68 @@ class PlayerViewModelTest {
 
         assertFalse(vm.startScratch())
         assertEquals(emptyList<String>(), player.calls)
+    }
+
+    /** Records the requested uris; decodes only finish when the test completes them. */
+    private class ControlledGenerator : WaveformGenerator {
+        val requested = mutableListOf<String>()
+        val pending = mutableMapOf<String, CompletableDeferred<ByteArray?>>()
+        override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray? {
+            requested += uri
+            return pending.getOrPut(uri) { CompletableDeferred() }.await()
+        }
+        fun finish(uri: String) { pending.getValue(uri).complete(byteArrayOf(1)) }
+    }
+
+    @Test
+    fun `prefetch waits for the loaded track's waveform, then fills the cache`() {
+        val generator = ControlledGenerator()
+        val vm = PlayerViewModel(player, scratcher, generator, prefs)
+        player.connect()
+        val a = Track.fromPath("/music/a.mp3")
+        val b = Track.fromPath("/music/b.mp3")
+        vm.loadTrack(a)
+        vm.prefetchWaveform(b)
+        assertEquals(listOf(a.uri), generator.requested)   // b waits for a
+
+        generator.finish(a.uri)
+        assertEquals(listOf(a.uri, b.uri), generator.requested)
+        generator.finish(b.uri)
+
+        vm.loadTrack(b)
+        assertEquals(listOf(a.uri, b.uri), generator.requested)   // served from the cache
+        assertEquals(b.uri, vm.onWaveformDataUpdate.value?.track?.uri)
+    }
+
+    @Test
+    fun `loading another track makes a running prefetch start over after it`() {
+        val generator = ControlledGenerator()
+        val vm = PlayerViewModel(player, scratcher, generator, prefs)
+        player.connect()
+        val a = Track.fromPath("/music/a.mp3")
+        val b = Track.fromPath("/music/b.mp3")
+        val c = Track.fromPath("/music/c.mp3")
+        vm.loadTrack(a)
+        generator.finish(a.uri)
+        vm.prefetchWaveform(c)
+        assertEquals(listOf(a.uri, c.uri), generator.requested)
+
+        vm.loadTrack(b)                       // b first; c is decoded again afterwards
+        assertEquals(listOf(a.uri, c.uri, b.uri), generator.requested)
+        generator.pending.remove(c.uri)
+        generator.finish(b.uri)
+        assertEquals(listOf(a.uri, c.uri, b.uri, c.uri), generator.requested)
+    }
+
+    @Test
+    fun `no prefetch for the loaded track itself`() {
+        val generator = ControlledGenerator()
+        val vm = PlayerViewModel(player, scratcher, generator, prefs)
+        player.connect()
+        val a = Track.fromPath("/music/a.mp3")
+        vm.loadTrack(a)
+        generator.finish(a.uri)
+        vm.prefetchWaveform(a)
+        assertEquals(listOf(a.uri), generator.requested)
     }
 }
