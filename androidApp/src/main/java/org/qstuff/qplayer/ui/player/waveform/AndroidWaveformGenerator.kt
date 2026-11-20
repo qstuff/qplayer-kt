@@ -5,5 +5,6 @@ import org.qstuff.qplayer.ui.player.WaveformGenerator
 
 /** Android [WaveformGenerator]: decodes with MediaExtractor + MediaCodec (see [WaveformAnalyzer]). */
 class AndroidWaveformGenerator(private val context: Context) : WaveformGenerator {
-    override suspend fun generate(uri: String): ByteArray? = WaveformAnalyzer.analyze(context, uri)
+    override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray? =
+        WaveformAnalyzer.analyze(context, uri, onProgress = onProgress)
 }

@@ -126,7 +126,8 @@ class PlayerViewModel(
     // Position timer (runs while playing / scratching)
     private var updateJob: Job? = null
 
-    // Waveform overview generation (native MediaExtractor+MediaCodec, off the main thread)
+    // Waveform overview generation (platform decoder, off the main thread); in-memory cache in
+    // front of the generator's disk cache
     private val waveformCache = LruCache<String, ByteArray>(32)
     private var waveformJob: Job? = null
 
@@ -377,7 +378,8 @@ class PlayerViewModel(
 
     /**
      * Generate (or serve from cache) the overview waveform for [track] and publish it via
-     * [onWaveformDataUpdate]. Decoding runs on a background dispatcher; the previous job is
+     * [onWaveformDataUpdate] — while decoding also the growing previews, so it fills in from the
+     * left. Generated waveforms are also kept on disk by the platform's CachingWaveformGenerator. Decoding runs on a background dispatcher; the previous job is
      * cancelled when a new track is loaded, and stale results for an already-changed track are
      * discarded. viewModelScope cancels any in-flight job when the ViewModel is cleared.
      */
@@ -393,7 +395,12 @@ class PlayerViewModel(
         _onWaveformDataUpdate.value = null
         waveformJob?.cancel()
         waveformJob = viewModelScope.launch {
-            val bytes = waveformGenerator.generate(uri)
+            // Growing previews while decoding (background thread; StateFlow is thread-safe).
+            val bytes = waveformGenerator.generate(uri) { preview ->
+                if (isActive && _playerTrackState.value?.track?.uri == uri) {
+                    _onWaveformDataUpdate.value = TrackData(track, preview)
+                }
+            }
             if (bytes != null && isActive) {
                 waveformCache.put(uri, bytes)
                 // Only publish if this is still the current track.

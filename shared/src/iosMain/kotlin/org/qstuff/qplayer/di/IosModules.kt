@@ -8,6 +8,8 @@ import kotlinx.coroutines.IO
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 import org.qstuff.qplayer.datasource.room.QDeqDatabase
 import org.qstuff.qplayer.datasource.room.PlaylistStore
@@ -19,11 +21,13 @@ import org.qstuff.qplayer.platform.IosScratchEngine
 import org.qstuff.qplayer.platform.IosAudioPlayer
 import org.qstuff.qplayer.platform.IosWaveformGenerator
 import org.qstuff.qplayer.platform.appDataDirectory
+import org.qstuff.qplayer.platform.cachesDirectory
 import org.qstuff.qplayer.platform.IosPaths
 import org.qstuff.qplayer.ui.filebrowser.PathStorageProvider
 import org.qstuff.qplayer.ui.filebrowser.StorageProvider
 import org.qstuff.qplayer.ui.filebrowser.StorageRoot
 import org.qstuff.qplayer.ui.player.AudioPlayer
+import org.qstuff.qplayer.ui.player.CachingWaveformGenerator
 import org.qstuff.qplayer.ui.player.Scratcher
 import org.qstuff.qplayer.ui.player.WaveformGenerator
 import org.qstuff.qplayer.ui.player.jogwheel.HapticFeedback
@@ -51,7 +55,17 @@ private val iosDataModule = module {
 private val iosPlatformModule = module {
     factory<AudioPlayer> { IosAudioPlayer() }
     factory<Scratcher> { IosScratchEngine() }
-    single<WaveformGenerator> { IosWaveformGenerator() }
+    single<WaveformGenerator> {
+        // Waveforms of loaded tracks are kept on disk (Caches: not backed up, iOS may clear it).
+        CachingWaveformGenerator(
+            delegate = IosWaveformGenerator(),
+            cacheDir = "${cachesDirectory()}/waveforms",
+            fileSize = { uri ->
+                if (uri.startsWith("/")) SystemFileSystem.metadataOrNull(Path(IosPaths.toFilePath(uri)))?.size
+                else null
+            }
+        )
+    }
     single<HapticFeedback> { IosHapticFeedback() }
     single<CrashReporter> { NoCrashReporter }
     single<PlatformInfo> { IosPlatformInfo() }

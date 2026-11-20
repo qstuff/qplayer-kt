@@ -80,7 +80,11 @@ class PlayerViewModelTest {
     private val prefs = PreferencesDataSource(MapSettings())
     private val originalLocale = Locale.getDefault()
 
-    private fun viewModel() = PlayerViewModel(player, scratcher, { null }, prefs)
+    private val noWaveform = object : WaveformGenerator {
+        override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray? = null
+    }
+
+    private fun viewModel() = PlayerViewModel(player, scratcher, noWaveform, prefs)
 
     @Before
     fun setUp() {
