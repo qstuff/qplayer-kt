@@ -70,6 +70,7 @@ fun TrackInfoSection(
                 .background(Color.Black, roundedShape)
                 .padding(
                     start = LocalDimens.current.textviewPaddingStart,
+                    end = LocalDimens.current.textviewPaddingEnd,
                     top = if (fitText) 0.dp else 4.dp
                 ),
             contentAlignment = Alignment.CenterStart
