@@ -107,6 +107,7 @@ fun PlayerScreen(
     val jogwheelMode by playerViewModel.jogwheelMode.collectAsStateWithLifecycle()
     val jogwheelSensitivity by playerViewModel.jogwheelSensitivity.collectAsStateWithLifecycle()
     val playerLayout by playerViewModel.playerLayout.collectAsStateWithLifecycle()
+    val playbackSpeed by playerViewModel.playbackSpeed.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
@@ -334,6 +335,8 @@ fun PlayerScreen(
                 ScrollingWaveform(
                     detail = current?.detail,
                     peaksPerSecond = current?.detailPeaksPerSecond ?: 0f,
+                    beatGrid = current?.beatGrid,
+                    playbackSpeed = playbackSpeed,
                     getPositionMs = playerViewModel::getTrackPosition,
                     modifier = Modifier
                         .fillMaxWidth()
