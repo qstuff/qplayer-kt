@@ -24,9 +24,9 @@ playback, decoding, file access and haptics are platform code.
 - **Queue** (reorderable, swipe to remove), **playlists** (stored in the app, M3U import) and a
   **file browser** for local storage and SD cards (Android) or the app's Documents folder (iOS).
 - Background playback with media notification / lock screen controls.
-- **Layouts:** on phones *modern* (jog wheel on top, buttons below, pull-up tab sheet) or *classic*
-  (the original qplayer layout: fader and buttons beside the jog wheel, tabs below) — chosen in
-  Settings; on tablets two panes in landscape.
+- **Layouts:** on phones *qstuff dj* (jog wheel on top, buttons below, pull-up tab sheet) or
+  *transparent* (the original qplayer layout: fader and buttons beside the jog wheel, tabs below) —
+  chosen in Settings; on tablets two panes in landscape.
 - Opt-in crash reporting.
 
 ## Project structure

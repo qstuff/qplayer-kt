@@ -34,7 +34,20 @@
 
     <!-- Index = PlayerLayout ordinal -->
     <string-array name="player_layout_entries">
-        <item>Modern</item>
-        <item>Klassisch</item>
+        <item>qstuff dj</item>
+        <item>transparent</item>
+    </string-array>
+
+    <!-- Jog wheel quick switches: short names. Index = JogwheelMode ordinal / jogwheel_sensitivity_values index -->
+    <string-array name="jogwheel_mode_short">
+        <item>winkel</item>
+        <item>speed</item>
+        <item>scratch</item>
+    </string-array>
+
+    <string-array name="jogwheel_sensitivity_short">
+        <item>langsam</item>
+        <item>mittel</item>
+        <item>schnell</item>
     </string-array>
 </resources>
