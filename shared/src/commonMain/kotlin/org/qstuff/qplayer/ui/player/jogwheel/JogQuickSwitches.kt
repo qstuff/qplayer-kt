@@ -5,12 +5,10 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,9 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import org.jetbrains.compose.resources.stringArrayResource
-import org.jetbrains.compose.resources.stringResource
-import org.qstuff.qplayer.resources.jogwheel_quick_mode_label
-import org.qstuff.qplayer.resources.jogwheel_quick_sensitivity_label
 import org.qstuff.qplayer.resources.Res
 import org.qstuff.qplayer.resources.jogwheel_mode_short
 import org.qstuff.qplayer.resources.jogwheel_sensitivity_short
@@ -57,7 +52,6 @@ fun JogModeSwitch(
 ) {
     val names = stringArrayResource(Res.array.jogwheel_mode_short)
     JogQuickSwitch(
-        label = stringResource(Res.string.jogwheel_quick_mode_label),
         options = JogwheelMode.entries.map { QuickOption(it, names.getOrElse(it.ordinal) { _ -> it.name }) },
         selected = mode,
         onSelect = onModeChange,
@@ -76,7 +70,6 @@ fun JogSensitivitySwitch(
     val names = stringArrayResource(Res.array.jogwheel_sensitivity_short)
     val values = stringArrayResource(Res.array.jogwheel_sensitivity_values).map { it.toInt() }
     JogQuickSwitch(
-        label = stringResource(Res.string.jogwheel_quick_sensitivity_label),
         options = values.mapIndexed { i, value -> QuickOption(value, names.getOrElse(i) { value.toString() }) },
         selected = sensitivity,
         onSelect = onSensitivityChange,
@@ -88,15 +81,13 @@ fun JogSensitivitySwitch(
 private class QuickOption<T>(val value: T, val label: String)
 
 /**
- * A pill showing the [selected] option's name, with a small [label] beside it (on the inner side,
- * at the top edge where the corner is widest); a tap unfolds all [options] below it (in a popup
+ * A pill showing the [selected] option's name; a tap unfolds all [options] below it (in a popup
  * above everything else — left- or right-aligned with the pill, [alignEnd] for the right
  * corner). Choosing one calls [onSelect] and folds the options again; a tap anywhere else just
  * folds them.
  */
 @Composable
 private fun <T> JogQuickSwitch(
-    label: String,
     options: List<QuickOption<T>>,
     selected: T,
     onSelect: (T) -> Unit,
@@ -108,16 +99,12 @@ private fun <T> JogQuickSwitch(
     val current = options.firstOrNull { it.value == selected }
 
     Box(modifier) {
-        Row(verticalAlignment = Alignment.Top) {
-            if (alignEnd) QuickSwitchLabel(label, Modifier.padding(end = 4.dp))
-            QuickOptionChip(
-                label = current?.label ?: "",
-                color = QOrange,
-                height = height,
-                onClick = { expanded = !expanded }
-            )
-            if (!alignEnd) QuickSwitchLabel(label, Modifier.padding(start = 4.dp))
-        }
+        QuickOptionChip(
+            label = current?.label ?: "",
+            color = QOrange,
+            height = height,
+            onClick = { expanded = !expanded }
+        )
 
         if (expanded) {
             val gap = with(LocalDensity.current) { (height + 6.dp).roundToPx() }
@@ -155,20 +142,7 @@ private fun <T> JogQuickSwitch(
     }
 }
 
-@Composable
-private fun QuickSwitchLabel(text: String, modifier: Modifier) {
-    Text(
-        text = text,
-        color = QOrange,
-        fontSize = 10.sp,
-        lineHeight = 12.sp,
-        fontWeight = FontWeight.Bold,
-        maxLines = 1,
-        modifier = modifier
-    )
-}
-
-/** A dark pill with [label] in [color] and a border in the same color. */
+/** A dark pill with [label] in [color]. */
 @Composable
 private fun QuickOptionChip(
     label: String,
@@ -181,7 +155,6 @@ private fun QuickOptionChip(
         modifier = Modifier
             .height(height)
             .background(ButtonBackground, shape)
-            .border(1.5.dp, color, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
