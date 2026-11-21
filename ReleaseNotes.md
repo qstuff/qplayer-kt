@@ -1,5 +1,18 @@
 # Release notes
 
+## qdeq 4.4.1
+
+- **Scrolling waveform on phones:** in the *qstuff dj* layout the scrolling waveform now sits
+  above the overview, as on tablets — 4 bars with beat lines, the BPM, and you can drag it. The
+  overview is slimmer to make room.
+- **New layout names:** the phone layouts are now called *qstuff dj* (was Modern) and
+  *transparent* (was Classic). Your chosen layout stays.
+- **Simpler jog switches:** mode and sensitivity in the jog wheel's corners are now plain text
+  (angle / speed / scratch, slow / mid / fast) instead of icons.
+- **Smaller details:** the BPM label sits centred at the left of the scrolling waveform, long
+  track titles keep a margin at the right edge, and the "calculating waveform data" hint is gone —
+  the waveform fills in from the left instead.
+
 ## qdeq 4.4.0
 
 - **New on tablets: scrolling waveform.** At the top left the music scrolls from right to left
