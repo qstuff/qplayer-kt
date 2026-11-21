@@ -52,7 +52,8 @@ fun WaveformSeekbar(
     cueProgressPos: Int,
     onSeekChange: (fraction: Float) -> Unit,
     onSeekCommit: (fraction: Float) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    height: Dp = LocalDimens.current.seekbarHeight
 ) {
     val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     // The seek gesture runs in pointerInput(Unit), which is launched once and captures these
@@ -64,7 +65,7 @@ fun WaveformSeekbar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(LocalDimens.current.seekbarHeight)
+            .height(height)
     ) {
         // Show the current track's overview, or nothing (on track change or while it's still
         // being generated) so a previous track's waveform never lingers.
