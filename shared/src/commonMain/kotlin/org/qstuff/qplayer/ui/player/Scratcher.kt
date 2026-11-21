@@ -29,6 +29,12 @@ interface Scratcher {
     /** Move the record: [rotationRad] is the wheel's rotation since touch-down (clockwise > 0). */
     fun scratchTo(rotationRad: Double)
 
+    /**
+     * Move the record by track time: [offsetMs] from where scratching started (> 0 forward) —
+     * e.g. dragging the scrolling waveform 1:1, independent of the jog wheel sensitivity.
+     */
+    fun scratchToOffset(offsetMs: Double)
+
     /** Stop scratching; returns the final position in ms. */
     fun stop(): Long
 }

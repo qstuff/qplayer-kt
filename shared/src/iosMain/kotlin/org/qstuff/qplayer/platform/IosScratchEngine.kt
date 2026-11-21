@@ -176,6 +176,12 @@ class IosScratchEngine : Scratcher {
         if (running) targetFrame = startFrame + rotationRad * framesPerRadian
     }
 
+
+    override fun scratchToOffset(offsetMs: Double) {
+        val src = source ?: return
+        if (running) targetFrame = startFrame + offsetMs / 1000.0 * src.sampleRate
+    }
+
     override fun stop(): Long {
         if (running) {
             running = false     // the render thread fades out

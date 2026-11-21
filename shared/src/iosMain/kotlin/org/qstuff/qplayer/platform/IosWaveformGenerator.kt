@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import org.qstuff.qplayer.ui.player.Waveform
 import org.qstuff.qplayer.ui.player.WaveformGenerator
 import org.qstuff.qplayer.ui.player.WaveformPeaks
 import platform.AVFAudio.AVAudioFile
@@ -35,12 +36,12 @@ class IosWaveformGenerator(private val points: Int = 1000) : WaveformGenerator {
         const val BLOCK_FRAMES = 65_536u
     }
 
-    override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray? =
+    override suspend fun generate(uri: String, onProgress: (Waveform) -> Unit): Waveform? =
         withContext(Dispatchers.Default) {
             val file = openAudioFile(uri) ?: return@withContext null
             val buffer = AVAudioPCMBuffer(pCMFormat = file.processingFormat, frameCapacity = BLOCK_FRAMES)
             val channels = file.processingFormat.channelCount.toInt()
-            val peaks = WaveformPeaks(points, expectedFrames = file.length)
+            val peaks = WaveformPeaks(points, expectedFrames = file.length, sampleRate = file.processingFormat.sampleRate)
 
             var framesInPeak = 0
             var currentPeak = 0f

@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.unit.Dp
 import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.ui.player.components.ClassicPlayerDeck
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +50,7 @@ import org.qstuff.qplayer.ui.player.components.PlayerControls
 import org.qstuff.qplayer.ui.player.components.PlayerControlsModel
 import org.qstuff.qplayer.ui.player.components.PlayerTabSheet
 import org.qstuff.qplayer.ui.player.components.PlayerTabs
+import org.qstuff.qplayer.ui.player.components.ScrollingWaveform
 import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
 import org.qstuff.qplayer.ui.player.components.TrackInfoSection
 import org.qstuff.qplayer.ui.player.components.controlChipWidth
@@ -104,6 +107,7 @@ fun PlayerScreen(
     val jogwheelMode by playerViewModel.jogwheelMode.collectAsStateWithLifecycle()
     val jogwheelSensitivity by playerViewModel.jogwheelSensitivity.collectAsStateWithLifecycle()
     val playerLayout by playerViewModel.playerLayout.collectAsStateWithLifecycle()
+    val playbackSpeed by playerViewModel.playbackSpeed.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
@@ -279,17 +283,19 @@ fun PlayerScreen(
         )
         val controls: @Composable () -> Unit = { PlayerControls(controlsModel) }
 
-        val trackInfo: @Composable () -> Unit = {
+        val trackInfo: @Composable (bottomPadding: Dp) -> Unit = { bottomPadding ->
             TrackInfoSection(
                 trackTitleText = trackTitleText,
                 totalDurationText = totalDurationText,
                 dynamicTimeText = dynamicTimeText,
                 dynamicTimeAlpha = dynamicTimeAlpha,
-                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() }
+                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() },
+                bottomPadding = bottomPadding
             )
         }
-        val waveform: @Composable () -> Unit = {
+        val waveform: @Composable (height: Dp) -> Unit = { height ->
             WaveformSeekbar(
+                height = height,
                 waveformData = waveformData,
                 waveformReady = waveformReady,
                 showCalculating = currentTrack != null && !waveformReady,
@@ -319,13 +325,39 @@ fun PlayerScreen(
             )
         }
 
+        // Tablet: the overview waveform is half as tall as on phones (see deckContent).
+        val tabletOverviewHeight = LocalDimens.current.seekbarHeight / 2
+
         // ─── Player deck: title bar, track info, waveform, pitch + jog (+ buttons on phones) ───
         val deckContent: @Composable ColumnScope.() -> Unit = {
             titleBar()
 
-            trackInfo()
-
-            waveform()
+            // Tablet: the track info rows are in the right pane (above the buttons); their place
+            // and half of the overview waveform's height hold the scrolling waveform. Phone:
+            // track info and the overview as usual.
+            if (isTwoPane) {
+                val current = waveformData?.takeIf { it.track == currentTrack }
+                ScrollingWaveform(
+                    detail = current?.detail,
+                    peaksPerSecond = current?.detailPeaksPerSecond ?: 0f,
+                    beatGrid = current?.beatGrid,
+                    playbackSpeed = playbackSpeed,
+                    getPositionMs = playerViewModel::getTrackPosition,
+                    onDragStart = playerViewModel::startWaveformDrag,
+                    onDrag = playerViewModel::dragWaveform,
+                    onDragEnd = playerViewModel::endWaveformDrag,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp + tabletOverviewHeight)
+                )
+                // Half its usual height: the other half went to the scrolling waveform above,
+                // so the jog wheel below keeps its size.
+                waveform(tabletOverviewHeight)
+            } else {
+                trackInfo(4.dp)
+                waveform(LocalDimens.current.seekbarHeight)
+            }
 
             PitchJogSection(
                 pitchProgress = pitchValue,
@@ -356,10 +388,10 @@ fun PlayerScreen(
                 jogActions = jogActions,
                 jogEnabled = true,
                 trackInfoRowHeight = LocalDimens.current.trackInfoRowHeight,
-                trackInfo = trackInfo,
+                trackInfo = { trackInfo(4.dp) },
                 modifier = Modifier.padding(top = 4.dp)
             )
-            waveform()
+            waveform(LocalDimens.current.seekbarHeight)
         }
 
         val titleBarHeight = LocalDimens.current.titleTextviewHeight
@@ -369,7 +401,7 @@ fun PlayerScreen(
 
         if (isTwoPane) {
             // The jog wheel gets all the height below the waveform (title bar incl. 4dp top
-            // padding, track info = 2 rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
+            // padding, the scrolling waveform slot = 2 track info rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
             // the button bar's own bottom gap). The deck is exactly as wide as fader + wheel, so
             // there's no white space beside them; the right pane takes the rest of the width.
             val deckFixedHeight = 4.dp + titleBarHeight + trackInfoRowHeight * 2 + 12.dp +
@@ -403,6 +435,8 @@ fun PlayerScreen(
                             .clip(RoundedCornerShape(LocalDimens.current.roundedShapeRadius))
                             .background(Color.Black)
                     )
+                    // 4dp above (from the tabs); the buttons add their own 4dp gap below.
+                    trackInfo(0.dp)
                     controls()
                 }
             }

@@ -3,6 +3,9 @@ package org.qstuff.qplayer.ui.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlin.time.TimeSource
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,6 +121,9 @@ class PlayerViewModel(
     // lifecycle callback, and the pitch was then restored from an old value.
     private var pitchSaveJob: Job? = null
     private var currentTrackSpeed = 0.0f
+    // The playback speed (1 = original tempo), e.g. for the current BPM
+    private val _playbackSpeed = MutableStateFlow(1f)
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
     private var showRemainingTrackTime = true
 
     // Settings
@@ -133,8 +139,11 @@ class PlayerViewModel(
 
     // Waveform overview generation (platform decoder, off the main thread); in-memory cache in
     // front of the generator's disk cache
-    private val waveformCache = LruCache<String, ByteArray>(32)
+    private val waveformCache = LruCache<String, Waveform>(32)
     private var waveformJob: Job? = null
+    // Beat grids by track uri; a cached null = no steady beat found (detected once per track)
+    private val beatGridCache = LruCache<String, BeatResult>(64)
+    private var beatJob: Job? = null
     // Background generation for the track that is likely loaded next (see prefetchWaveform)
     private var prefetchTrack: Track? = null
     private var prefetchJob: Job? = null
@@ -254,6 +263,7 @@ class PlayerViewModel(
         }
 
         currentTrackSpeed = 1.0f + diff / 100
+        _playbackSpeed.value = currentTrackSpeed
 
         if (isConnected) {
             audioPlayer.setSpeed(currentTrackSpeed, _masterTempo.value)
@@ -397,9 +407,11 @@ class PlayerViewModel(
         waveformJob?.cancel()
         waveformJob = null
 
+        beatJob?.cancel()
         val cached = waveformCache.get(uri)
         if (cached != null) {
-            _onWaveformDataUpdate.value = TrackData(track, cached)
+            _onWaveformDataUpdate.value = cached.toTrackData(track, beatGridCache.get(uri)?.grid)
+            detectBeats(track, cached)
             // Nothing to decode: a prefetch can go on, unless it is for this very track.
             if (prefetchTrack?.uri == uri) startPrefetch()
         } else {
@@ -416,17 +428,46 @@ class PlayerViewModel(
         _onWaveformDataUpdate.value = null
         waveformJob = viewModelScope.launch {
             // Growing previews while decoding (background thread; StateFlow is thread-safe).
-            val bytes = waveformGenerator.generate(uri) { preview ->
+            val waveform = waveformGenerator.generate(uri) { preview ->
                 if (isActive && _playerTrackState.value?.track?.uri == uri) {
-                    _onWaveformDataUpdate.value = TrackData(track, preview)
+                    _onWaveformDataUpdate.value = preview.toTrackData(track)
                 }
             }
-            if (bytes != null && isActive) {
-                waveformCache.put(uri, bytes)
+            if (waveform != null && isActive) {
+                waveformCache.put(uri, waveform)
                 // Only publish if this is still the current track.
                 if (_playerTrackState.value?.track?.uri == uri) {
-                    _onWaveformDataUpdate.value = TrackData(track, bytes)
+                    _onWaveformDataUpdate.value = waveform.toTrackData(track)
+                    detectBeats(track, waveform)
                 }
+            }
+        }
+    }
+
+    /**
+     * Detect tempo and beats of the current [track] from its finished [waveform] (off the main
+     * thread, once per track — the result, also "none found", is cached) and publish them with
+     * the waveform.
+     */
+    private fun detectBeats(track: Track, waveform: Waveform) {
+        val uri = track.uri
+        if (beatGridCache.get(uri) != null) return
+        beatJob?.cancel()
+        // Too short to find a tempo: no background job at all.
+        if (!BeatDetector.canDetect(waveform.detail, waveform.detailPeaksPerSecond)) {
+            beatGridCache.put(uri, BeatResult(null))
+            return
+        }
+        beatJob = viewModelScope.launch {
+            val started = TimeSource.Monotonic.markNow()
+            val grid = withContext(Dispatchers.Default) {
+                BeatDetector.detect(waveform.detail, waveform.detailPeaksPerSecond)
+            }
+            log.i { "beats of ${track.name}: ${grid?.bpm ?: "none"} BPM in ${started.elapsedNow()}" }
+            if (!isActive) return@launch
+            beatGridCache.put(uri, BeatResult(grid))
+            if (_playerTrackState.value?.track?.uri == uri) {
+                _onWaveformDataUpdate.value = waveform.toTrackData(track, grid)
             }
         }
     }
@@ -450,8 +491,8 @@ class PlayerViewModel(
         prefetchJob = viewModelScope.launch {
             current?.join()
             if (waveformCache.get(uri) != null) return@launch
-            val bytes = waveformGenerator.generate(uri) ?: return@launch
-            if (isActive) waveformCache.put(uri, bytes)
+            val waveform = waveformGenerator.generate(uri) ?: return@launch
+            if (isActive) waveformCache.put(uri, waveform)
         }
     }
 
@@ -491,6 +532,54 @@ class PlayerViewModel(
      * Jog wheel released: the player takes over where the scratch ended, playing again only if it
      * was playing before.
      */
+    //
+    // Dragging the scrolling waveform (tablet): like grabbing the record. With the jog wheel in
+    // SCRATCH mode (and the track prepared) it scratches audibly; otherwise a silent move — paused
+    // while dragging, then on at the new position. 1:1 in track time either way.
+    //
+
+    private var waveformDragMs: Long? = null
+    private var waveformDragStartMs = 0L
+    private var wasPlayingBeforeWaveformDrag = false
+
+    fun startWaveformDrag() {
+        if (!isConnected || waveformDragMs != null || scratchEngine.isScratching) return
+        if (startScratch()) return
+        wasPlayingBeforeWaveformDrag = _playerStatus.value == PlayerStatus.PLAYING
+        waveformDragStartMs = audioPlayer.positionMs
+        waveformDragMs = waveformDragStartMs
+        audioPlayer.pause()
+        startUpdateTimer()
+    }
+
+    /** [offsetMs]: track time moved since the drag started (> 0 forward). */
+    fun dragWaveform(offsetMs: Double) {
+        if (scratchEngine.isScratching) {
+            scratchEngine.scratchToOffset(offsetMs)
+            return
+        }
+        if (waveformDragMs == null) return
+        val duration = _playerTrackState.value?.track?.duration ?: 0L
+        val target = (waveformDragStartMs + offsetMs.toLong()).coerceAtLeast(0L)
+        waveformDragMs = if (duration > 0) target.coerceAtMost(duration) else target
+    }
+
+    fun endWaveformDrag() {
+        if (scratchEngine.isScratching) {
+            endScratch()
+            return
+        }
+        val position = waveformDragMs ?: return
+        waveformDragMs = null
+        if (wasPlayingBeforeWaveformDrag) {
+            seekTo(position.toDouble(), false)
+            audioPlayer.play()
+        } else {
+            seekTo(position.toDouble(), true)
+            resetUpdateTimer()
+        }
+    }
+
     fun endScratch() {
         if (!scratchEngine.isScratching) return
         val position = scratchEngine.stop()
@@ -523,7 +612,7 @@ class PlayerViewModel(
     }
 
     private fun currentPositionMillis() =
-        if (scratchEngine.isScratching) scratchEngine.positionMs
+        waveformDragMs ?: if (scratchEngine.isScratching) scratchEngine.positionMs
         else audioPlayer.positionMs
 
     //
@@ -592,3 +681,9 @@ class PlayerViewModel(
         super.onCleared()
     }
 }
+
+private fun Waveform.toTrackData(track: Track, beatGrid: BeatGrid? = null) =
+    TrackData(track, overview, detail, detailPeaksPerSecond, beatGrid)
+
+/** A beat detection result; [grid] null = no steady beat found. */
+private class BeatResult(val grid: BeatGrid?)
