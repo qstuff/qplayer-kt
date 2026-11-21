@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.unit.Dp
 import org.qstuff.qplayer.util.PlayerLayout
 import org.qstuff.qplayer.ui.player.components.ClassicPlayerDeck
 import androidx.compose.runtime.LaunchedEffect
@@ -279,13 +281,14 @@ fun PlayerScreen(
         )
         val controls: @Composable () -> Unit = { PlayerControls(controlsModel) }
 
-        val trackInfo: @Composable () -> Unit = {
+        val trackInfo: @Composable (bottomPadding: Dp) -> Unit = { bottomPadding ->
             TrackInfoSection(
                 trackTitleText = trackTitleText,
                 totalDurationText = totalDurationText,
                 dynamicTimeText = dynamicTimeText,
                 dynamicTimeAlpha = dynamicTimeAlpha,
-                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() }
+                onToggleTimeDisplay = { playerViewModel.toggleDynamicTrackLengthDisplay() },
+                bottomPadding = bottomPadding
             )
         }
         val waveform: @Composable () -> Unit = {
@@ -323,7 +326,20 @@ fun PlayerScreen(
         val deckContent: @Composable ColumnScope.() -> Unit = {
             titleBar()
 
-            trackInfo()
+            // Tablet: the track info rows are in the right pane (above the buttons); their place
+            // holds the scrolling waveform, same height. Phone: track info here.
+            if (isTwoPane) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp)
+                        .clip(RoundedCornerShape(LocalDimens.current.roundedShapeRadius))
+                        .background(Color.Black)
+                )
+            } else {
+                trackInfo(4.dp)
+            }
 
             waveform()
 
@@ -356,7 +372,7 @@ fun PlayerScreen(
                 jogActions = jogActions,
                 jogEnabled = true,
                 trackInfoRowHeight = LocalDimens.current.trackInfoRowHeight,
-                trackInfo = trackInfo,
+                trackInfo = { trackInfo(4.dp) },
                 modifier = Modifier.padding(top = 4.dp)
             )
             waveform()
@@ -369,7 +385,7 @@ fun PlayerScreen(
 
         if (isTwoPane) {
             // The jog wheel gets all the height below the waveform (title bar incl. 4dp top
-            // padding, track info = 2 rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
+            // padding, the scrolling waveform slot = 2 track info rows + 12dp, waveform, 4dp above the jog, 8dp bottom gap —
             // the button bar's own bottom gap). The deck is exactly as wide as fader + wheel, so
             // there's no white space beside them; the right pane takes the rest of the width.
             val deckFixedHeight = 4.dp + titleBarHeight + trackInfoRowHeight * 2 + 12.dp +
@@ -403,6 +419,8 @@ fun PlayerScreen(
                             .clip(RoundedCornerShape(LocalDimens.current.roundedShapeRadius))
                             .background(Color.Black)
                     )
+                    // 4dp above (from the tabs); the buttons add their own 4dp gap below.
+                    trackInfo(0.dp)
                     controls()
                 }
             }
