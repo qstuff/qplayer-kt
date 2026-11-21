@@ -192,6 +192,12 @@ class ScratchEngine(private val context: Context) : Scratcher {
         if (running) targetFrame = startFrame + rotationRad * framesPerRadian
     }
 
+
+    override fun scratchToOffset(offsetMs: Double) {
+        val src = source ?: return
+        if (running) targetFrame = startFrame + offsetMs / 1000.0 * src.sampleRate
+    }
+
     /** Stop scratching (with a short fade-out); returns the final position in ms. */
     override fun stop(): Long {
         if (running) {
