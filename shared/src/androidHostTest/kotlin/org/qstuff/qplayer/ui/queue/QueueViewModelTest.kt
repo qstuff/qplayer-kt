@@ -11,6 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import org.qstuff.qplayer.datasource.model.Track
 import org.qstuff.qplayer.datasource.preferences.PreferencesDataSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -57,5 +58,46 @@ class QueueViewModelTest {
 
         assertEquals(listOf("/music/b.mp3", "/music/c.mp3", "/music/a.mp3"), uris())
         assertEquals(0, vm.onTrackSelectedIndex.value)
+    }
+
+    @Test
+    fun `adding a folder skips tracks already in the queue`() {
+        vm.addPath("/music/a.mp3")
+        vm.addPaths(listOf("/music/a.mp3", "/music/b.mp3", "/music/b.mp3"))
+        assertEquals(listOf("/music/a.mp3", "/music/b.mp3"), uris())
+    }
+
+    @Test
+    fun `adding a playlist skips tracks already in the queue`() {
+        vm.addPath("/music/a.mp3")
+        vm.addTrackList(listOf("/music/b.mp3", "/music/a.mp3").map { Track.fromPath(it) })
+        assertEquals(listOf("/music/a.mp3", "/music/b.mp3"), uris())
+    }
+
+    @Test
+    fun `replacing the queue with a playlist keeps each track once`() {
+        vm.replaceTrackList(listOf("/music/a.mp3", "/music/b.mp3", "/music/a.mp3").map { Track.fromPath(it) })
+        assertEquals(listOf("/music/a.mp3", "/music/b.mp3"), uris())
+    }
+
+    @Test
+    fun `undo doesn't add a track that was queued again meanwhile`() {
+        val a = vm.addPath("/music/a.mp3")!!
+        vm.removeTrack(a)
+        vm.addPath("/music/a.mp3")
+        vm.restoreTrackAt(a, 0)
+        assertEquals(listOf("/music/a.mp3"), uris())
+    }
+
+    @Test
+    fun `a saved queue with a duplicate is loaded and saved once each`() {
+        val prefs = PreferencesDataSource(MapSettings())
+        val tracks = listOf("/music/a.mp3", "/music/b.mp3", "/music/a.mp3").map { Track.fromPath(it) }
+        prefs.saveTrackList(PreferencesDataSource.PREF_QUEUE_LIST, ArrayList(tracks))
+
+        val loaded = QueueViewModel(prefs).apply { readTrackList() }
+
+        assertEquals(listOf("/music/a.mp3", "/music/b.mp3"), loaded.trackList.value.map { it.uri })
+        assertEquals(2, prefs.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)!!.size)
     }
 }
