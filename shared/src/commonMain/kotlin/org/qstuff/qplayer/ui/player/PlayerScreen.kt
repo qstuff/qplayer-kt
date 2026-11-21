@@ -343,6 +343,9 @@ fun PlayerScreen(
                     beatGrid = current?.beatGrid,
                     playbackSpeed = playbackSpeed,
                     getPositionMs = playerViewModel::getTrackPosition,
+                    onDragStart = playerViewModel::startWaveformDrag,
+                    onDrag = playerViewModel::dragWaveform,
+                    onDragEnd = playerViewModel::endWaveformDrag,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)

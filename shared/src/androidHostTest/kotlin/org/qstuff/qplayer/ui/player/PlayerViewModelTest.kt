@@ -69,9 +69,12 @@ class PlayerViewModelTest {
             if (!startPossible) return false
             isScratching = true
             this.positionMs = positionMs
+            startMs = positionMs
             return true
         }
         override fun scratchTo(rotationRad: Double) { positionMs += (rotationRad * 1000).toLong() }
+        var startMs = 0L
+        override fun scratchToOffset(offsetMs: Double) { positionMs = startMs + offsetMs.toLong() }
         override fun stop(): Long { isScratching = false; return positionMs }
     }
 
@@ -288,6 +291,60 @@ class PlayerViewModelTest {
 
         vm.loadSettings()               // what PlaybackCoordinator does on settingsChanged
         assertEquals(20, vm.jogwheelSensitivity.value)
+    }
+
+    @Test
+    fun `dragging the waveform outside scratch mode moves silently and plays on`() {
+        val vm = viewModel()
+        player.connect()
+        player.play()
+        player.position = 10_000
+        player.calls.clear()
+
+        vm.startWaveformDrag()
+        assertEquals(listOf("pause"), player.calls)
+        vm.dragWaveform(2_500.0)
+        assertEquals(12_500L, vm.getTrackPosition())        // the waveform follows the finger
+        vm.dragWaveform(-20_000.0)
+        assertEquals(0L, vm.getTrackPosition())             // not before the start
+        vm.dragWaveform(3_000.0)
+        vm.endWaveformDrag()
+
+        assertEquals(listOf("pause", "seek 13000", "play"), player.calls)
+        assertEquals(13_000L, vm.getTrackPosition())
+    }
+
+    @Test
+    fun `dragging the waveform while paused stays paused at the new position`() {
+        val vm = viewModel()
+        player.connect()
+        player.position = 5_000
+        player.calls.clear()
+
+        vm.startWaveformDrag()
+        vm.dragWaveform(-1_000.0)
+        vm.endWaveformDrag()
+
+        assertEquals(listOf("pause", "seek 4000 pause"), player.calls)
+    }
+
+    @Test
+    fun `dragging the waveform in scratch mode scratches 1 to 1 in track time`() {
+        prefs.setJogWheelMode(2)        // SCRATCH
+        prefs.setJogWheelSensitivity(20) // must not matter for the waveform
+        val vm = viewModel()
+        player.connect()
+        player.play()
+        player.position = 10_000
+        player.calls.clear()
+
+        vm.startWaveformDrag()
+        assertTrue(scratcher.isScratching)
+        vm.dragWaveform(1_500.0)
+        assertEquals(11_500L, vm.getTrackPosition())
+        vm.endWaveformDrag()
+
+        assertEquals(listOf("pause", "seek 11500", "play"), player.calls)
     }
 
     @Test

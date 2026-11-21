@@ -1,6 +1,8 @@
 package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import org.qstuff.qplayer.util.Formatting
 import org.qstuff.qplayer.ui.player.BeatGrid
 import androidx.compose.ui.unit.sp
@@ -57,13 +59,17 @@ private const val BEATS_SHOWN = 16
  * playback position — or [FALLBACK_WINDOW_SECONDS] without a steady beat — with the playhead
  * fixed in the middle, scrolling right to left while playing (and following the jog wheel while
  * scratching). With a beat grid: orange bar lines, grey beat lines and the current tempo (the
- * track's BPM × [playbackSpeed]) top left. Display only.
+ * track's BPM × [playbackSpeed]) top left.
  *
  * Built for slow devices: the bars are rendered once into strips of [TILE_PX] px; per frame only
  * the visible strips are drawn, shifted by the position — no per-bar drawing, no recomposition
  * (the position is read in the draw phase), and in its own graphics layer, so the rest of the
  * screen isn't redrawn with it. The window is in track time, so pitch only changes the scrolling
  * speed, not the scale.
+ *
+ * Dragging it horizontally moves the track like grabbing the record: [onDragStart], then
+ * [onDrag] with the track time moved since (> 0 forward; the waveform follows the finger, a full
+ * width = the shown window), then [onDragEnd] (also when the gesture is cancelled).
  *
  * @param detail one peak 0..127 per [peaksPerSecond]-th of a second of the track (may cover only
  *        the decoded part while the waveform is generated); null: an empty waveform.
@@ -76,7 +82,10 @@ fun ScrollingWaveform(
     beatGrid: BeatGrid?,
     playbackSpeed: Float,
     getPositionMs: () -> Long,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDragStart: () -> Unit = {},
+    onDrag: (offsetMs: Double) -> Unit = {},
+    onDragEnd: () -> Unit = {}
 ) {
     val currentGetPosition by rememberUpdatedState(getPositionMs)
     val positionMs = remember { mutableLongStateOf(0L) }
@@ -92,8 +101,29 @@ fun ScrollingWaveform(
         else WaveformTiles(detail, peaksPerSecond, windowSeconds)
     }
     val shape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
+    val currentWindow by rememberUpdatedState(windowSeconds)
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
 
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier
+            // Drag like grabbing the record: the waveform follows the finger, so dragging left
+            // moves forward. A full width = the shown window.
+            .pointerInput(Unit) {
+                var dragged = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { dragged = 0f; currentOnDragStart() },
+                    onDragEnd = { currentOnDragEnd() },
+                    onDragCancel = { currentOnDragEnd() }
+                ) { change, dx ->
+                    change.consume()
+                    dragged += dx
+                    val msPerPx = currentWindow * 1000.0 / size.width
+                    currentOnDrag(-dragged * msPerPx)
+                }
+            }
+    ) {
         // Own graphics layer: redrawing every frame then only re-records this view, not the whole
         // screen (jog wheel, lists, …).
         Canvas(modifier = Modifier.fillMaxSize().graphicsLayer().clip(shape).background(Color.Black)) {

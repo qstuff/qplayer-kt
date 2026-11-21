@@ -532,6 +532,54 @@ class PlayerViewModel(
      * Jog wheel released: the player takes over where the scratch ended, playing again only if it
      * was playing before.
      */
+    //
+    // Dragging the scrolling waveform (tablet): like grabbing the record. With the jog wheel in
+    // SCRATCH mode (and the track prepared) it scratches audibly; otherwise a silent move — paused
+    // while dragging, then on at the new position. 1:1 in track time either way.
+    //
+
+    private var waveformDragMs: Long? = null
+    private var waveformDragStartMs = 0L
+    private var wasPlayingBeforeWaveformDrag = false
+
+    fun startWaveformDrag() {
+        if (!isConnected || waveformDragMs != null || scratchEngine.isScratching) return
+        if (startScratch()) return
+        wasPlayingBeforeWaveformDrag = _playerStatus.value == PlayerStatus.PLAYING
+        waveformDragStartMs = audioPlayer.positionMs
+        waveformDragMs = waveformDragStartMs
+        audioPlayer.pause()
+        startUpdateTimer()
+    }
+
+    /** [offsetMs]: track time moved since the drag started (> 0 forward). */
+    fun dragWaveform(offsetMs: Double) {
+        if (scratchEngine.isScratching) {
+            scratchEngine.scratchToOffset(offsetMs)
+            return
+        }
+        if (waveformDragMs == null) return
+        val duration = _playerTrackState.value?.track?.duration ?: 0L
+        val target = (waveformDragStartMs + offsetMs.toLong()).coerceAtLeast(0L)
+        waveformDragMs = if (duration > 0) target.coerceAtMost(duration) else target
+    }
+
+    fun endWaveformDrag() {
+        if (scratchEngine.isScratching) {
+            endScratch()
+            return
+        }
+        val position = waveformDragMs ?: return
+        waveformDragMs = null
+        if (wasPlayingBeforeWaveformDrag) {
+            seekTo(position.toDouble(), false)
+            audioPlayer.play()
+        } else {
+            seekTo(position.toDouble(), true)
+            resetUpdateTimer()
+        }
+    }
+
     fun endScratch() {
         if (!scratchEngine.isScratching) return
         val position = scratchEngine.stop()
@@ -564,7 +612,7 @@ class PlayerViewModel(
     }
 
     private fun currentPositionMillis() =
-        if (scratchEngine.isScratching) scratchEngine.positionMs
+        waveformDragMs ?: if (scratchEngine.isScratching) scratchEngine.positionMs
         else audioPlayer.positionMs
 
     //
