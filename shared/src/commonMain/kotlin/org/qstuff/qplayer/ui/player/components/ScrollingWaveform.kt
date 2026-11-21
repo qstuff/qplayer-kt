@@ -59,7 +59,7 @@ private const val BEATS_SHOWN = 16
  * playback position — or [FALLBACK_WINDOW_SECONDS] without a steady beat — with the playhead
  * fixed in the middle, scrolling right to left while playing (and following the jog wheel while
  * scratching). With a beat grid: orange bar lines, grey beat lines and the current tempo (the
- * track's BPM × [playbackSpeed]) top left.
+ * track's BPM × [playbackSpeed]) at the left, vertically centred.
  *
  * Built for slow devices: the bars are rendered once into strips of [TILE_PX] px; per frame only
  * the visible strips are drawn, shifted by the position — no per-bar drawing, no recomposition
@@ -142,7 +142,7 @@ fun ScrollingWaveform(
                 color = Color.White,
                 fontSize = 12.sp,
                 modifier = Modifier
-                    .align(Alignment.TopStart)
+                    .align(Alignment.CenterStart)
                     .padding(6.dp)
                     .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
                     .padding(horizontal = 4.dp, vertical = 1.dp)
