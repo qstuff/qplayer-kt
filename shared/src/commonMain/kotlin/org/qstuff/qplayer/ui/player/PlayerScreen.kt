@@ -325,8 +325,23 @@ fun PlayerScreen(
             )
         }
 
-        // Tablet: the overview waveform is half as tall as on phones (see deckContent).
-        val tabletOverviewHeight = LocalDimens.current.seekbarHeight / 2
+        // The overview waveform is half its usual height next to the scrolling waveform
+        // (tablet, and the phone's qstuff dj layout — see deckContent).
+        val halfWaveformHeight = LocalDimens.current.seekbarHeight / 2
+        val scrollingWaveform: @Composable (Modifier) -> Unit = { modifier ->
+            val current = waveformData?.takeIf { it.track == currentTrack }
+            ScrollingWaveform(
+                detail = current?.detail,
+                peaksPerSecond = current?.detailPeaksPerSecond ?: 0f,
+                beatGrid = current?.beatGrid,
+                playbackSpeed = playbackSpeed,
+                getPositionMs = playerViewModel::getTrackPosition,
+                onDragStart = playerViewModel::startWaveformDrag,
+                onDrag = playerViewModel::dragWaveform,
+                onDragEnd = playerViewModel::endWaveformDrag,
+                modifier = modifier
+            )
+        }
 
         // ─── Player deck: title bar, track info, waveform, pitch + jog (+ buttons on phones) ───
         val deckContent: @Composable ColumnScope.() -> Unit = {
@@ -334,30 +349,27 @@ fun PlayerScreen(
 
             // Tablet: the track info rows are in the right pane (above the buttons); their place
             // and half of the overview waveform's height hold the scrolling waveform. Phone:
-            // track info and the overview as usual.
+            // track info, then the scrolling waveform and the overview, each half the usual
+            // waveform height.
             if (isTwoPane) {
-                val current = waveformData?.takeIf { it.track == currentTrack }
-                ScrollingWaveform(
-                    detail = current?.detail,
-                    peaksPerSecond = current?.detailPeaksPerSecond ?: 0f,
-                    beatGrid = current?.beatGrid,
-                    playbackSpeed = playbackSpeed,
-                    getPositionMs = playerViewModel::getTrackPosition,
-                    onDragStart = playerViewModel::startWaveformDrag,
-                    onDrag = playerViewModel::dragWaveform,
-                    onDragEnd = playerViewModel::endWaveformDrag,
-                    modifier = Modifier
+                scrollingWaveform(
+                    Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
-                        .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp + tabletOverviewHeight)
+                        .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp + halfWaveformHeight)
                 )
-                // Half its usual height: the other half went to the scrolling waveform above,
-                // so the jog wheel below keeps its size.
-                waveform(tabletOverviewHeight)
             } else {
                 trackInfo(4.dp)
-                waveform(LocalDimens.current.seekbarHeight)
+                scrollingWaveform(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                        .height(halfWaveformHeight)
+                )
             }
+            // Half its usual height: the other half went to the scrolling waveform above, so the
+            // jog wheel below keeps its size.
+            waveform(halfWaveformHeight)
 
             PitchJogSection(
                 pitchProgress = pitchValue,
@@ -473,8 +485,9 @@ fun PlayerScreen(
             val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
             // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
             val btnRowsHeight = textviewHeight * 2 + 16.dp
+            // Scrolling + overview waveform: two halves of seekbarHeight with a 4dp gap between.
             // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
-            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 8.dp).coerceAtLeast(48.dp)
+            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 4.dp - 8.dp).coerceAtLeast(48.dp)
             val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
             val density = LocalDensity.current
