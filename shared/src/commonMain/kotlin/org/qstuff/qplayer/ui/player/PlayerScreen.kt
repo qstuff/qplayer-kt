@@ -349,8 +349,8 @@ fun PlayerScreen(
 
             // Tablet: the track info rows are in the right pane (above the buttons); their place
             // and half of the overview waveform's height hold the scrolling waveform. Phone:
-            // track info, then the scrolling waveform and the overview, each half the usual
-            // waveform height.
+            // track info, then the scrolling waveform (the usual waveform height) and the overview
+            // (half of it).
             if (isTwoPane) {
                 scrollingWaveform(
                     Modifier
@@ -364,7 +364,7 @@ fun PlayerScreen(
                     Modifier
                         .fillMaxWidth()
                         .padding(bottom = 4.dp)
-                        .height(halfWaveformHeight)
+                        .height(LocalDimens.current.seekbarHeight)
                 )
             }
             // Half its usual height: the other half went to the scrolling waveform above, so the
@@ -485,9 +485,9 @@ fun PlayerScreen(
             val trackInfoHeight = trackInfoRowHeight * 2 + 4.dp
             // Two button rows, each textviewHeight tall, with 4dp above row1 / between, 8dp below row2.
             val btnRowsHeight = textviewHeight * 2 + 16.dp
-            // Scrolling + overview waveform: two halves of seekbarHeight with a 4dp gap between.
+            // Scrolling waveform (seekbarHeight), 4dp gap, overview (half of it).
             // -8.dp leaves a visible white gap between the button row and the collapsed panel top.
-            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 4.dp - 8.dp).coerceAtLeast(48.dp)
+            val peekHeight = (maxHeight - titleBarHeight - jogSectionHeight - trackInfoHeight - btnRowsHeight - seekbarHeight - 4.dp - halfWaveformHeight - 8.dp).coerceAtLeast(48.dp)
             val expandedHeight = (maxHeight - titleBarHeight - jogSectionHeight).coerceAtLeast(peekHeight)
 
             val density = LocalDensity.current
