@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -41,7 +42,8 @@ import org.qstuff.qplayer.ui.theme.boxFittedTextStyle
 
 /**
  * Track title (marquee when it overflows) plus the duration row (total on the left, the
- * remaining/current time on the right — tap it to toggle, [onToggleTimeDisplay]).
+ * remaining/current time on the right — tap it to toggle, [onToggleTimeDisplay]). 4dp above, and
+ * [bottomPadding] below.
  */
 @Composable
 fun TrackInfoSection(
@@ -50,14 +52,15 @@ fun TrackInfoSection(
     dynamicTimeText: String,
     dynamicTimeAlpha: Float,
     onToggleTimeDisplay: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    bottomPadding: Dp = 4.dp
 ) {
     val roundedShape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
     val fitText = LocalDimens.current.fitTextToBoxes
     val textStyle = boxFittedTextStyle(LocalDimens.current.trackInfoRowHeight)
 
     Column(
-        modifier = modifier.padding(vertical = 4.dp),
+        modifier = modifier.padding(top = 4.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Box(
