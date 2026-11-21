@@ -22,8 +22,9 @@ enum class TrackRepeatStatus {
 
 /**
  * Arrangement of the player screen on phones (Settings). Tablets always use the two-pane layout.
- * MODERN: fader + jog wheel on top, two button rows below. CLASSIC: the original qplayer layout —
- * fader on the left, buttons beside the jog wheel, track info and waveform below.
+ * MODERN, shown as "qstuff dj": fader + jog wheel on top, two button rows below. CLASSIC, shown
+ * as "transparent": the original qplayer layout — fader on the left, buttons beside the jog
+ * wheel, track info and waveform below. (The enum names stay: they are stored.)
  */
 enum class PlayerLayout {
     MODERN,
