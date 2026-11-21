@@ -82,7 +82,7 @@ class PlayerViewModelTest {
     private val originalLocale = Locale.getDefault()
 
     private val noWaveform = object : WaveformGenerator {
-        override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray? = null
+        override suspend fun generate(uri: String, onProgress: (Waveform) -> Unit): Waveform? = null
     }
 
     private fun viewModel() = PlayerViewModel(player, scratcher, noWaveform, prefs)
@@ -302,12 +302,12 @@ class PlayerViewModelTest {
     /** Records the requested uris; decodes only finish when the test completes them. */
     private class ControlledGenerator : WaveformGenerator {
         val requested = mutableListOf<String>()
-        val pending = mutableMapOf<String, CompletableDeferred<ByteArray?>>()
-        override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray? {
+        val pending = mutableMapOf<String, CompletableDeferred<Waveform?>>()
+        override suspend fun generate(uri: String, onProgress: (Waveform) -> Unit): Waveform? {
             requested += uri
             return pending.getOrPut(uri) { CompletableDeferred() }.await()
         }
-        fun finish(uri: String) { pending.getValue(uri).complete(byteArrayOf(1)) }
+        fun finish(uri: String) { pending.getValue(uri).complete(Waveform(byteArrayOf(1), byteArrayOf(1), 86f)) }
     }
 
     @Test

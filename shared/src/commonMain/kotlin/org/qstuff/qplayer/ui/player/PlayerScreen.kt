@@ -50,6 +50,7 @@ import org.qstuff.qplayer.ui.player.components.PlayerControls
 import org.qstuff.qplayer.ui.player.components.PlayerControlsModel
 import org.qstuff.qplayer.ui.player.components.PlayerTabSheet
 import org.qstuff.qplayer.ui.player.components.PlayerTabs
+import org.qstuff.qplayer.ui.player.components.ScrollingWaveform
 import org.qstuff.qplayer.ui.player.components.PlayerTitleBar
 import org.qstuff.qplayer.ui.player.components.TrackInfoSection
 import org.qstuff.qplayer.ui.player.components.controlChipWidth
@@ -329,13 +330,15 @@ fun PlayerScreen(
             // Tablet: the track info rows are in the right pane (above the buttons); their place
             // holds the scrolling waveform, same height. Phone: track info here.
             if (isTwoPane) {
-                Box(
+                val current = waveformData?.takeIf { it.track == currentTrack }
+                ScrollingWaveform(
+                    detail = current?.detail,
+                    peaksPerSecond = current?.detailPeaksPerSecond ?: 0f,
+                    getPositionMs = playerViewModel::getTrackPosition,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                         .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp)
-                        .clip(RoundedCornerShape(LocalDimens.current.roundedShapeRadius))
-                        .background(Color.Black)
                 )
             } else {
                 trackInfo(4.dp)
