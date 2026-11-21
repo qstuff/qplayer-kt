@@ -107,6 +107,7 @@ fun PlayerScreen(
     val jogwheelMode by playerViewModel.jogwheelMode.collectAsStateWithLifecycle()
     val jogwheelSensitivity by playerViewModel.jogwheelSensitivity.collectAsStateWithLifecycle()
     val playerLayout by playerViewModel.playerLayout.collectAsStateWithLifecycle()
+    val playbackSpeed by playerViewModel.playbackSpeed.collectAsStateWithLifecycle()
     val repeat by queueViewModel.repeat.collectAsStateWithLifecycle()
     val shuffle by queueViewModel.shuffle.collectAsStateWithLifecycle()
 
@@ -292,8 +293,9 @@ fun PlayerScreen(
                 bottomPadding = bottomPadding
             )
         }
-        val waveform: @Composable () -> Unit = {
+        val waveform: @Composable (height: Dp) -> Unit = { height ->
             WaveformSeekbar(
+                height = height,
                 waveformData = waveformData,
                 waveformReady = waveformReady,
                 showCalculating = currentTrack != null && !waveformReady,
@@ -323,28 +325,36 @@ fun PlayerScreen(
             )
         }
 
+        // Tablet: the overview waveform is half as tall as on phones (see deckContent).
+        val tabletOverviewHeight = LocalDimens.current.seekbarHeight / 2
+
         // ─── Player deck: title bar, track info, waveform, pitch + jog (+ buttons on phones) ───
         val deckContent: @Composable ColumnScope.() -> Unit = {
             titleBar()
 
             // Tablet: the track info rows are in the right pane (above the buttons); their place
-            // holds the scrolling waveform, same height. Phone: track info here.
+            // and half of the overview waveform's height hold the scrolling waveform. Phone:
+            // track info and the overview as usual.
             if (isTwoPane) {
                 val current = waveformData?.takeIf { it.track == currentTrack }
                 ScrollingWaveform(
                     detail = current?.detail,
                     peaksPerSecond = current?.detailPeaksPerSecond ?: 0f,
+                    beatGrid = current?.beatGrid,
+                    playbackSpeed = playbackSpeed,
                     getPositionMs = playerViewModel::getTrackPosition,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
-                        .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp)
+                        .height(LocalDimens.current.trackInfoRowHeight * 2 + 4.dp + tabletOverviewHeight)
                 )
+                // Half its usual height: the other half went to the scrolling waveform above,
+                // so the jog wheel below keeps its size.
+                waveform(tabletOverviewHeight)
             } else {
                 trackInfo(4.dp)
+                waveform(LocalDimens.current.seekbarHeight)
             }
-
-            waveform()
 
             PitchJogSection(
                 pitchProgress = pitchValue,
@@ -378,7 +388,7 @@ fun PlayerScreen(
                 trackInfo = { trackInfo(4.dp) },
                 modifier = Modifier.padding(top = 4.dp)
             )
-            waveform()
+            waveform(LocalDimens.current.seekbarHeight)
         }
 
         val titleBarHeight = LocalDimens.current.titleTextviewHeight

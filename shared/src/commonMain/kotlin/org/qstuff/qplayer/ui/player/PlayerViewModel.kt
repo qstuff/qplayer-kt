@@ -3,6 +3,9 @@ package org.qstuff.qplayer.ui.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlin.time.TimeSource
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,6 +121,9 @@ class PlayerViewModel(
     // lifecycle callback, and the pitch was then restored from an old value.
     private var pitchSaveJob: Job? = null
     private var currentTrackSpeed = 0.0f
+    // The playback speed (1 = original tempo), e.g. for the current BPM
+    private val _playbackSpeed = MutableStateFlow(1f)
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
     private var showRemainingTrackTime = true
 
     // Settings
@@ -135,6 +141,9 @@ class PlayerViewModel(
     // front of the generator's disk cache
     private val waveformCache = LruCache<String, Waveform>(32)
     private var waveformJob: Job? = null
+    // Beat grids by track uri; a cached null = no steady beat found (detected once per track)
+    private val beatGridCache = LruCache<String, BeatResult>(64)
+    private var beatJob: Job? = null
     // Background generation for the track that is likely loaded next (see prefetchWaveform)
     private var prefetchTrack: Track? = null
     private var prefetchJob: Job? = null
@@ -254,6 +263,7 @@ class PlayerViewModel(
         }
 
         currentTrackSpeed = 1.0f + diff / 100
+        _playbackSpeed.value = currentTrackSpeed
 
         if (isConnected) {
             audioPlayer.setSpeed(currentTrackSpeed, _masterTempo.value)
@@ -397,9 +407,11 @@ class PlayerViewModel(
         waveformJob?.cancel()
         waveformJob = null
 
+        beatJob?.cancel()
         val cached = waveformCache.get(uri)
         if (cached != null) {
-            _onWaveformDataUpdate.value = cached.toTrackData(track)
+            _onWaveformDataUpdate.value = cached.toTrackData(track, beatGridCache.get(uri)?.grid)
+            detectBeats(track, cached)
             // Nothing to decode: a prefetch can go on, unless it is for this very track.
             if (prefetchTrack?.uri == uri) startPrefetch()
         } else {
@@ -426,7 +438,36 @@ class PlayerViewModel(
                 // Only publish if this is still the current track.
                 if (_playerTrackState.value?.track?.uri == uri) {
                     _onWaveformDataUpdate.value = waveform.toTrackData(track)
+                    detectBeats(track, waveform)
                 }
+            }
+        }
+    }
+
+    /**
+     * Detect tempo and beats of the current [track] from its finished [waveform] (off the main
+     * thread, once per track — the result, also "none found", is cached) and publish them with
+     * the waveform.
+     */
+    private fun detectBeats(track: Track, waveform: Waveform) {
+        val uri = track.uri
+        if (beatGridCache.get(uri) != null) return
+        beatJob?.cancel()
+        // Too short to find a tempo: no background job at all.
+        if (!BeatDetector.canDetect(waveform.detail, waveform.detailPeaksPerSecond)) {
+            beatGridCache.put(uri, BeatResult(null))
+            return
+        }
+        beatJob = viewModelScope.launch {
+            val started = TimeSource.Monotonic.markNow()
+            val grid = withContext(Dispatchers.Default) {
+                BeatDetector.detect(waveform.detail, waveform.detailPeaksPerSecond)
+            }
+            log.i { "beats of ${track.name}: ${grid?.bpm ?: "none"} BPM in ${started.elapsedNow()}" }
+            if (!isActive) return@launch
+            beatGridCache.put(uri, BeatResult(grid))
+            if (_playerTrackState.value?.track?.uri == uri) {
+                _onWaveformDataUpdate.value = waveform.toTrackData(track, grid)
             }
         }
     }
@@ -593,4 +634,8 @@ class PlayerViewModel(
     }
 }
 
-private fun Waveform.toTrackData(track: Track) = TrackData(track, overview, detail, detailPeaksPerSecond)
+private fun Waveform.toTrackData(track: Track, beatGrid: BeatGrid? = null) =
+    TrackData(track, overview, detail, detailPeaksPerSecond, beatGrid)
+
+/** A beat detection result; [grid] null = no steady beat found. */
+private class BeatResult(val grid: BeatGrid?)

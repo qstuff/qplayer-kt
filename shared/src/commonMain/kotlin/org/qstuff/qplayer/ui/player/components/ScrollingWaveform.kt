@@ -1,6 +1,14 @@
 package org.qstuff.qplayer.ui.player.components
 
 import androidx.compose.foundation.Canvas
+import org.qstuff.qplayer.util.Formatting
+import org.qstuff.qplayer.ui.player.BeatGrid
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -41,15 +49,21 @@ private const val TILE_PX = 512
 /** Strips kept in memory: the visible ones (2–3) plus a few around them. */
 private const val MAX_TILES = 8
 
+/** Beats shown at once when the tempo is known: 4 bars of 4/4. */
+private const val BEATS_SHOWN = 16
+
 /**
- * Scrolling detail waveform: [windowSeconds] of the track around the playback position, the
- * playhead fixed in the middle, scrolling right to left while playing (and following the jog
- * wheel while scratching). Display only.
+ * Scrolling detail waveform: 4 bars ([BEATS_SHOWN] beats of [beatGrid]) of the track around the
+ * playback position — or [FALLBACK_WINDOW_SECONDS] without a steady beat — with the playhead
+ * fixed in the middle, scrolling right to left while playing (and following the jog wheel while
+ * scratching). With a beat grid: orange bar lines, grey beat lines and the current tempo (the
+ * track's BPM × [playbackSpeed]) top left. Display only.
  *
  * Built for slow devices: the bars are rendered once into strips of [TILE_PX] px; per frame only
  * the visible strips are drawn, shifted by the position — no per-bar drawing, no recomposition
  * (the position is read in the draw phase), and in its own graphics layer, so the rest of the
- * screen isn't redrawn with it.
+ * screen isn't redrawn with it. The window is in track time, so pitch only changes the scrolling
+ * speed, not the scale.
  *
  * @param detail one peak 0..127 per [peaksPerSecond]-th of a second of the track (may cover only
  *        the decoded part while the waveform is generated); null: an empty waveform.
@@ -59,9 +73,10 @@ private const val MAX_TILES = 8
 fun ScrollingWaveform(
     detail: ByteArray?,
     peaksPerSecond: Float,
+    beatGrid: BeatGrid?,
+    playbackSpeed: Float,
     getPositionMs: () -> Long,
-    modifier: Modifier = Modifier,
-    windowSeconds: Float = FALLBACK_WINDOW_SECONDS
+    modifier: Modifier = Modifier
 ) {
     val currentGetPosition by rememberUpdatedState(getPositionMs)
     val positionMs = remember { mutableLongStateOf(0L) }
@@ -71,24 +86,62 @@ fun ScrollingWaveform(
             withFrameMillis { positionMs.longValue = currentGetPosition() }
         }
     }
+    val windowSeconds = beatGrid?.let { it.beatSeconds * BEATS_SHOWN } ?: FALLBACK_WINDOW_SECONDS
     val tiles = remember(detail, peaksPerSecond, windowSeconds) {
         if (detail == null || detail.isEmpty() || peaksPerSecond <= 0f) null
         else WaveformTiles(detail, peaksPerSecond, windowSeconds)
     }
     val shape = RoundedCornerShape(LocalDimens.current.roundedShapeRadius)
 
-    // Own graphics layer: redrawing every frame then only re-records this view, not the whole
-    // screen (jog wheel, lists, …) — that made a measurable difference on the Galaxy Tab A.
-    Canvas(modifier = modifier.graphicsLayer().clip(shape).background(Color.Black)) {
-        val centerX = size.width / 2f
-        val centerY = size.height / 2f
-        drawLine(QOrange, Offset(0f, centerY), Offset(size.width, centerY), strokeWidth = 1f)
-        tiles?.drawAt(this, positionMs.longValue)
-        // Played part (left of the playhead) and the playhead, like the overview waveform
-        drawRect(QOrange.copy(alpha = 0.35f), size = Size(centerX, size.height))
-        drawLine(QOrange, Offset(centerX, 0f), Offset(centerX, size.height), strokeWidth = 2.dp.toPx())
+    Box(modifier = modifier) {
+        // Own graphics layer: redrawing every frame then only re-records this view, not the whole
+        // screen (jog wheel, lists, …).
+        Canvas(modifier = Modifier.fillMaxSize().graphicsLayer().clip(shape).background(Color.Black)) {
+            val centerX = size.width / 2f
+            val centerY = size.height / 2f
+            drawLine(QOrange, Offset(0f, centerY), Offset(size.width, centerY), strokeWidth = 1f)
+            tiles?.drawAt(this, positionMs.longValue)
+            beatGrid?.let { drawBeatLines(it, positionMs.longValue, windowSeconds) }
+            // Played part (left of the playhead) and the playhead, like the overview waveform
+            drawRect(QOrange.copy(alpha = 0.35f), size = Size(centerX, size.height))
+            drawLine(QOrange, Offset(centerX, 0f), Offset(centerX, size.height), strokeWidth = 2.dp.toPx())
+        }
+        if (beatGrid != null) {
+            Text(
+                text = "${Formatting.oneDecimal(beatGrid.bpm * playbackSpeed)} BPM",
+                color = Color.White,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 4.dp, vertical = 1.dp)
+            )
+        }
     }
 }
+
+/** Grey beat lines and orange bar lines (every 4th beat from the downbeat) in the window. */
+private fun DrawScope.drawBeatLines(grid: BeatGrid, positionMs: Long, windowSeconds: Float) {
+    val start = positionMs / 1000f - windowSeconds / 2f
+    val pxPerSecond = size.width / windowSeconds
+    var k = ceil((start - grid.firstBeatSeconds) / grid.beatSeconds).toInt().coerceAtLeast(0)
+    while (true) {
+        val x = (grid.firstBeatSeconds + k * grid.beatSeconds - start) * pxPerSecond
+        if (x > size.width) break
+        val isBar = ((k - grid.downbeatIndex) % 4 + 4) % 4 == 0
+        drawLine(
+            color = if (isBar) QOrange.copy(alpha = 0.8f) else BEAT_LINE,
+            start = Offset(x, 0f),
+            end = Offset(x, size.height),
+            strokeWidth = (if (isBar) 2.dp else 1.dp).toPx()
+        )
+        k++
+    }
+}
+
+/** Grey: visible on the white bars and on black. */
+private val BEAT_LINE = Color(0xFF8C8C8C)
 
 /**
  * The detail waveform cut into pre-rendered strips: white bars (symmetric around the centre) on

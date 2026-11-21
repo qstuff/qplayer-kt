@@ -1,5 +1,7 @@
 package org.qstuff.qplayer.datasource.model
 
+import org.qstuff.qplayer.ui.player.BeatGrid
+
 /**
  * The waveform of [track]: [bytes] the overview (one peak 0..127 per point), [detail] one peak
  * 0..127 per WaveformPeaks.FRAMES_PER_PEAK frames, [detailPeaksPerSecond] of them per second of
@@ -9,5 +11,7 @@ class TrackData(
     var track: Track,
     var bytes: ByteArray?,
     val detail: ByteArray? = null,
-    val detailPeaksPerSecond: Float = 0f
+    val detailPeaksPerSecond: Float = 0f,
+    /** Tempo and beats, once detected; null before that or when no steady beat was found. */
+    val beatGrid: BeatGrid? = null
 )
