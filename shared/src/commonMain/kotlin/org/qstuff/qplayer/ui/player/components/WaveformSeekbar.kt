@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
@@ -32,8 +30,8 @@ import org.qstuff.qplayer.ui.theme.QOrange
 import org.qstuff.qplayer.ui.theme.LocalDimens
 
 /**
- * The seekbar area: the overview waveform, a "calculating…" hint while the overview is still
- * being generated, a translucent-orange progress fill + playhead line that can be dragged/tapped
+ * The seekbar area: the overview waveform (growing from the left while it's generated), a
+ * translucent-orange progress fill + playhead line that can be dragged/tapped
  * to seek, and the cue-point marker overlay. All plain Compose drawing; the waveform, the
  * progress and the cue marker use the same full width, so a cue sits exactly where the playhead
  * was when it was set.
@@ -45,7 +43,6 @@ import org.qstuff.qplayer.ui.theme.LocalDimens
 fun WaveformSeekbar(
     waveformData: TrackData?,
     waveformReady: Boolean,
-    showCalculating: Boolean,
     displayedProgress: Float,
     dynamicTimeAlpha: Float,
     cueActive: Boolean,
@@ -77,13 +74,6 @@ fun WaveformSeekbar(
                 .clip(roundedShape)
                 .background(Color.Black, roundedShape)
         )
-        if (showCalculating) {
-            Text(
-                text = "calculating waveform data…",
-                color = QOrange.copy(alpha = 0.67f),
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
         // Progress: translucent orange fill over the played portion + a full-height QOrange
         // playhead line. Drag/tap to seek — the parent short-circuits its timer while dragging.
         Canvas(

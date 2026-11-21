@@ -187,7 +187,7 @@ fun PlayerScreen(
         }
     }
     // The overview waveform is generated asynchronously; it's "ready" only once data for the
-    // current track has arrived. Until then we show the calculating indicator.
+    // current track has arrived (previews while it's generated count: it grows from the left).
     val waveformReady = waveformData?.let { it.bytes != null && it.track == currentTrack } == true
     val trackTitleText = when {
         currentTrack == null -> ""
@@ -298,7 +298,6 @@ fun PlayerScreen(
                 height = height,
                 waveformData = waveformData,
                 waveformReady = waveformReady,
-                showCalculating = currentTrack != null && !waveformReady,
                 displayedProgress = displayedProgress,
                 dynamicTimeAlpha = dynamicTimeAlpha,
                 cueActive = cueActive,
