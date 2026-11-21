@@ -80,6 +80,12 @@ class QueueViewModel(
         return true
     }
 
+    /** [tracks] without the ones already queued, each uri once. */
+    private fun notQueued(tracks: List<Track>): List<Track> {
+        val queued = currentTrackList.mapTo(HashSet()) { it.uri }
+        return tracks.filter { queued.add(it.uri) }
+    }
+
     private fun containsTrack(track: Track) : Boolean {
         for (t in currentTrackList) {
             if (t.uri == track.uri) {
@@ -99,7 +105,9 @@ class QueueViewModel(
     fun restoreTrackAt(track: Track, position: Int) {
         log.d { "restoreTrackAt(): pos: $position, selected: ${_onTrackSelectedIndex.value}" }
 
-        addTrackAt(track, position)
+        // Queued again meanwhile (e.g. re-added before the undo): don't add it twice.
+        if (containsTrack(track)) return
+        addTrackAt(track, position.coerceIn(0, currentTrackList.size))
 
         if (position <= _onTrackSelectedIndex.value) {
             _onTrackSelectedIndex.value = (_onTrackSelectedIndex.value + 1)
@@ -143,17 +151,18 @@ class QueueViewModel(
         }
     }
 
+    /** Appends [tracks], except those already queued (and repeats within [tracks]). */
     fun addTrackList(tracks: List<Track>) {
 
-        currentTrackList.addAll(tracks)
+        currentTrackList.addAll(notQueued(tracks))
         _trackList.value = ArrayList(currentTrackList)
         saveTrackList()
     }
 
-    /** Add the audio files at [paths]. */
+    /** Add the audio files at [paths], except those already queued. */
     fun addPaths(paths: List<String>) {
 
-        paths.forEach { currentTrackList.add(Track.fromPath(it)) }
+        currentTrackList.addAll(notQueued(paths.map { Track.fromPath(it) }))
         _trackList.value = ArrayList(currentTrackList)
         saveTrackList()
     }
@@ -161,7 +170,8 @@ class QueueViewModel(
     fun replaceTrackList(tracks: List<Track>) {
 
         currentTrackList.clear()
-        currentTrackList.addAll(tracks)
+        // A playlist (M3U) may list a file twice; the queue holds each track once.
+        currentTrackList.addAll(tracks.distinctBy { it.uri })
         _trackList.value = ArrayList(currentTrackList)
         _shuffle.value = false
         _repeat.value = TrackRepeatStatus.NONE
@@ -175,7 +185,7 @@ class QueueViewModel(
         val selectedUri = currentTrackList.getOrNull(_onTrackSelectedIndex.value)?.uri
 
         currentTrackList.clear()
-        currentTrackList.addAll(tracks)
+        currentTrackList.addAll(tracks.distinctBy { it.uri })
         _trackList.value = ArrayList(currentTrackList)
         if (selectedUri != null) {
             _onTrackSelectedIndex.value = currentTrackList.indexOfFirst { it.uri == selectedUri }
@@ -351,7 +361,14 @@ class QueueViewModel(
     fun readTrackList() {
 
         val list = preferencesDataSource.readTrackList(PreferencesDataSource.PREF_QUEUE_LIST)
-        currentTrackList = list ?: arrayListOf()
+        // Each track once: the queue list is keyed by uri (a duplicate crashed it). Heals queues
+        // saved with a duplicate by earlier versions.
+        val distinct = list?.distinctBy { it.uri }
+        currentTrackList = distinct?.let { ArrayList(it) } ?: arrayListOf()
         _trackList.value = ArrayList(currentTrackList)
+        if (list != null && distinct!!.size != list.size) {
+            log.w { "readTrackList(): dropped ${list.size - distinct.size} duplicate(s)" }
+            saveTrackList()
+        }
     }
 }
