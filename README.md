@@ -14,11 +14,13 @@ playback, decoding, file access and haptics are platform code.
   and **master tempo** (change the speed, keep the key).
 - **Jog wheel** with three modes — speed by angle, speed by velocity, and **scratch** (moves the
   playback position directly, like vinyl) — adjustable sensitivity and optional haptic feedback.
+  Mode and sensitivity are switched right on the jog wheel (or in Settings in the transparent layout).
 - **Cue** point, previous / next, repeat (one / all) and shuffle.
 - **Waveforms:** an overview of the whole track, also used as the seek bar, that fills in while it's
-  created. On tablets also a **scrolling waveform** of exactly **4 bars** around the playhead, with
-  beat and bar lines and the current **BPM** (following the pitch); drag it to move the track like
-  a record (audible scratching in scratch mode). Waveforms are saved, so a track loaded again
+  created. On tablets and in the phones' *qstuff dj* layout also a **scrolling waveform** of
+  exactly **4 bars** around the playhead, with beat and bar lines and the current **BPM**
+  (following the pitch); drag it to move the track like a record (audible scratching in scratch
+  mode). Waveforms are saved, so a track loaded again
   shows them at once, and the next queue track's is prepared in the background.
 - **BPM / beat detection** for tracks with a steady beat (88–176 BPM, the usual DJ range).
 - **Queue** (reorderable, swipe to remove), **playlists** (stored in the app, M3U import) and a
