@@ -40,7 +40,9 @@ import org.qstuff.qplayer.util.JogwheelMode
 // Quick switches for the jog wheel settings, for the top corners of the jog wheel's square
 // (outside the wheel): mode (top left), sensitivity (top right). Same settings as in Settings.
 
-private val ButtonBackground = Color(0xFF1A1A1A)
+// The same black as the jog square around it: only the text shows. (The unfolded options keep
+// it too, so their text stays readable where they pass over the wheel's white rim.)
+private val ButtonBackground = Color.Black
 private val QuickSwitchHeight = 32.dp
 
 /** The jog wheel mode: by angle, by velocity, scratch. */
@@ -142,7 +144,7 @@ private fun <T> JogQuickSwitch(
     }
 }
 
-/** A dark pill with [label] in [color]. */
+/** [label] in [color] on a black pill (invisible on the black jog square). */
 @Composable
 private fun QuickOptionChip(
     label: String,
