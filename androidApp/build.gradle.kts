@@ -31,7 +31,7 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 300 + commitCount.get()
-        versionName = "4.3.0"
+        versionName = "4.4.0"
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
 

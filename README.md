@@ -15,11 +15,18 @@ playback, decoding, file access and haptics are platform code.
 - **Jog wheel** with three modes — speed by angle, speed by velocity, and **scratch** (moves the
   playback position directly, like vinyl) — adjustable sensitivity and optional haptic feedback.
 - **Cue** point, previous / next, repeat (one / all) and shuffle.
-- **Overview waveform** of the current track, also used as the seek bar.
+- **Waveforms:** an overview of the whole track, also used as the seek bar, that fills in while it's
+  created. On tablets also a **scrolling waveform** of exactly **4 bars** around the playhead, with
+  beat and bar lines and the current **BPM** (following the pitch); drag it to move the track like
+  a record (audible scratching in scratch mode). Waveforms are saved, so a track loaded again
+  shows them at once, and the next queue track's is prepared in the background.
+- **BPM / beat detection** for tracks with a steady beat (88–176 BPM, the usual DJ range).
 - **Queue** (reorderable, swipe to remove), **playlists** (stored in the app, M3U import) and a
   **file browser** for local storage and SD cards (Android) or the app's Documents folder (iOS).
 - Background playback with media notification / lock screen controls.
-- Layouts for phones (player + pull-up tab sheet) and tablets (two panes, landscape).
+- **Layouts:** on phones *modern* (jog wheel on top, buttons below, pull-up tab sheet) or *classic*
+  (the original qplayer layout: fader and buttons beside the jog wheel, tabs below) — chosen in
+  Settings; on tablets two panes in landscape.
 - Opt-in crash reporting.
 
 ## Project structure
@@ -72,7 +79,12 @@ cd iosApp && xcodegen
 ```
 
 Music for the iOS app goes into the app's Documents folder (Files app / Finder), or is handed
-over from other apps ("Open in…", share sheet, AirDrop).
+over from other apps ("Open in…", share sheet, AirDrop). In the simulator, drag audio files from
+Finder onto the simulator window and choose qdeq, or copy a folder into the app's Documents:
+
+```bash
+cp -R ~/Music/your-folder "$(xcrun simctl get_app_container booted org.qstuff.qdeq data)/Documents/"
+```
 
 ### Tests
 
@@ -88,7 +100,9 @@ The shared tests currently run on the JVM only.
 
 ## Contributing
 
-Work happens on feature branches with pull requests into `develop`.
+Work happens on feature branches with pull requests into `develop`. Larger features that take
+several steps can use an integration branch: the steps' pull requests go into it, and one final
+pull request brings the finished feature into `develop`.
 
 ## License
 
