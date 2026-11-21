@@ -1,6 +1,6 @@
 # Kotlin Multiplatform migration plan
 
-Status: **Phases 0–3 done, open tasks below** (October 2026; integration branch `kmp-migration`)
+Status: **Phases 0–3 done (October 2026, merged into `develop` with #72), open tasks below** (updated November 2026, version 4.4.1)
 
 ## Goal
 
@@ -163,10 +163,17 @@ dependencies, exported at build time), privacy statement with Android and iOS se
 
 Not yet scheduled; roughly by benefit.
 
-**Done since:** importing files on iOS (PR #79, by Miriam Busch): audio files and M3U playlists
-handed over by other apps ("Open in…", share sheet, AirDrop, also from iCloud Drive and other file
-providers) are copied into the Documents folder (`IosFileImport`); the file browser refreshes when
-the app returns to the foreground.
+**Done since:**
+- Importing files on iOS (PR #79, by Miriam Busch): audio files and M3U playlists handed over by
+  other apps ("Open in…", share sheet, AirDrop, also from iCloud Drive and other file providers)
+  are copied into the Documents folder (`IosFileImport`); the file browser refreshes when the app
+  returns to the foreground.
+- Waveform speed (#92): iOS finds the peaks with Accelerate (`vDSP_maxmgv`), 9.8 s → 0.3 s for a
+  4-minute track in the simulator (was listed as a glitch below); Android 20 s → 13 s on the Tab A.
+  Waveforms are saved on disk, grow from the left while created, and the next queue track's is
+  prepared in the background (#93).
+- Scrolling 4-bar waveform with BPM / beat detection and dragging (#97–#102), also on phones in the
+  qstuff dj layout (#105).
 
 **iOS features**
 - **Linked folders:** an "add folder" action in the file browser with the system folder picker
@@ -184,8 +191,6 @@ the app returns to the foreground.
 **iOS glitches seen in the simulator**
 - The first tap right after the app starts is sometimes lost (UIKit logs "Failed to receive
   system gesture state notification before next touch").
-- The overview waveform takes ~10 s for a 4-minute track in the simulator debug build; check in a
-  release build on a device, otherwise reuse the scratch decode (see below).
 
 **Both platforms**
 - **Scratch fill-up:** after loading, only the start of a track can be scratched until the
@@ -197,6 +202,20 @@ the app returns to the foreground.
 - **Unit tests to `commonTest`** (kotlin.test), so they also run on the iOS simulator
   (`iosSimulatorArm64Test`); today they run on the JVM only (`androidHostTest`).
 - Deprecation warnings: `TabRow` → `PrimaryTabRow`, `ContextCompat.getExternalFilesDirs`.
+
+**Waveform and beat detection**
+- **Downbeat correction:** the bar's "1" is guessed from the strongest accents and can be a beat
+  or two off. A way to shift it by hand, and to halve or double the BPM (tracks below 88 BPM show
+  double tempo), would make the bar lines right for every track; the correction would be saved per
+  track.
+- **Saved waveforms:** no size limit or cleanup (~1 KB overview + ~5 KB detail per minute of
+  audio, in the cache folder). A file replaced by another one of exactly the same size keeps the
+  old waveform (the cache key is id + size; kotlinx-io can't read the modification time on both
+  platforms).
+- **Stutter while preparing:** on the Tab A the scrolling waveform drops more frames (25–32 %
+  janky instead of 9–14 %) while the next track's waveform is decoded in the background; that
+  background decode can also overlap with the scratch preparation in SCRATCH mode. Ideas: lower
+  priority for the prefetch, or wait until the scratch decode is done.
 
 ## Testing
 
