@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -13,12 +14,20 @@ class CachingWaveformGeneratorTest {
     @get:Rule
     val tmp = TemporaryFolder()
 
-    private class CountingGenerator : WaveformGenerator {
+    private val waveform = Waveform(byteArrayOf(1, 2, 3), byteArrayOf(4, 5, 6, 7), 86.13f)
+
+    private fun assertSame(expected: Waveform, actual: Waveform?) {
+        assertArrayEquals(expected.overview, actual!!.overview)
+        assertArrayEquals(expected.detail, actual.detail)
+        assertEquals(expected.detailPeaksPerSecond, actual.detailPeaksPerSecond, 0f)
+    }
+
+    private inner class CountingGenerator : WaveformGenerator {
         var calls = 0
-        override suspend fun generate(uri: String, onProgress: (ByteArray) -> Unit): ByteArray {
+        override suspend fun generate(uri: String, onProgress: (Waveform) -> Unit): Waveform {
             calls++
-            onProgress(byteArrayOf(1))
-            return byteArrayOf(1, 2, 3)
+            onProgress(Waveform(byteArrayOf(1), byteArrayOf(), 86f))
+            return waveform
         }
     }
 
@@ -27,11 +36,11 @@ class CachingWaveformGeneratorTest {
         val dir = tmp.root.resolve("waveforms").path
         val delegate = CountingGenerator()
         val first = CachingWaveformGenerator(delegate, dir) { 42L }
-        assertArrayEquals(byteArrayOf(1, 2, 3), first.generate("/music/a.mp3"))
+        assertSame(waveform, first.generate("/music/a.mp3"))
 
         val afterRestart = CachingWaveformGenerator(delegate, dir) { 42L }
-        val progress = mutableListOf<ByteArray>()
-        assertArrayEquals(byteArrayOf(1, 2, 3), afterRestart.generate("/music/a.mp3") { progress += it })
+        val progress = mutableListOf<Waveform>()
+        assertSame(waveform, afterRestart.generate("/music/a.mp3") { progress += it })
         assertEquals(1, delegate.calls)
         assertEquals(0, progress.size)   // cached: no previews needed
     }
@@ -54,6 +63,14 @@ class CachingWaveformGeneratorTest {
         assertEquals(a, CachingWaveformGenerator.cacheFileName("/a.mp3", 1))
         assertNotEquals(a, CachingWaveformGenerator.cacheFileName("/b.mp3", 1))
         assertNotEquals(a, CachingWaveformGenerator.cacheFileName("/a.mp3", 2))
-        assertEquals(19, a.length)   // 16 hex digits + ".wf"
+        assertEquals(20, a.length)   // 16 hex digits + ".wf2"
+    }
+
+    @Test
+    fun `the file format round-trips and rejects other files`() {
+        val bytes = CachingWaveformGenerator.encode(waveform)
+        assertSame(waveform, CachingWaveformGenerator.decode(bytes))
+        assertNull(CachingWaveformGenerator.decode(ByteArray(1000) { 64 }))      // old overview-only file
+        assertNull(CachingWaveformGenerator.decode(bytes.copyOf(bytes.size - 1))) // cut off
     }
 }

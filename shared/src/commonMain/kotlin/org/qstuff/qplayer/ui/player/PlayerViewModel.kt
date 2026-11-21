@@ -133,7 +133,7 @@ class PlayerViewModel(
 
     // Waveform overview generation (platform decoder, off the main thread); in-memory cache in
     // front of the generator's disk cache
-    private val waveformCache = LruCache<String, ByteArray>(32)
+    private val waveformCache = LruCache<String, Waveform>(32)
     private var waveformJob: Job? = null
     // Background generation for the track that is likely loaded next (see prefetchWaveform)
     private var prefetchTrack: Track? = null
@@ -399,7 +399,7 @@ class PlayerViewModel(
 
         val cached = waveformCache.get(uri)
         if (cached != null) {
-            _onWaveformDataUpdate.value = TrackData(track, cached)
+            _onWaveformDataUpdate.value = cached.toTrackData(track)
             // Nothing to decode: a prefetch can go on, unless it is for this very track.
             if (prefetchTrack?.uri == uri) startPrefetch()
         } else {
@@ -416,16 +416,16 @@ class PlayerViewModel(
         _onWaveformDataUpdate.value = null
         waveformJob = viewModelScope.launch {
             // Growing previews while decoding (background thread; StateFlow is thread-safe).
-            val bytes = waveformGenerator.generate(uri) { preview ->
+            val waveform = waveformGenerator.generate(uri) { preview ->
                 if (isActive && _playerTrackState.value?.track?.uri == uri) {
-                    _onWaveformDataUpdate.value = TrackData(track, preview)
+                    _onWaveformDataUpdate.value = preview.toTrackData(track)
                 }
             }
-            if (bytes != null && isActive) {
-                waveformCache.put(uri, bytes)
+            if (waveform != null && isActive) {
+                waveformCache.put(uri, waveform)
                 // Only publish if this is still the current track.
                 if (_playerTrackState.value?.track?.uri == uri) {
-                    _onWaveformDataUpdate.value = TrackData(track, bytes)
+                    _onWaveformDataUpdate.value = waveform.toTrackData(track)
                 }
             }
         }
@@ -450,8 +450,8 @@ class PlayerViewModel(
         prefetchJob = viewModelScope.launch {
             current?.join()
             if (waveformCache.get(uri) != null) return@launch
-            val bytes = waveformGenerator.generate(uri) ?: return@launch
-            if (isActive) waveformCache.put(uri, bytes)
+            val waveform = waveformGenerator.generate(uri) ?: return@launch
+            if (isActive) waveformCache.put(uri, waveform)
         }
     }
 
@@ -592,3 +592,5 @@ class PlayerViewModel(
         super.onCleared()
     }
 }
+
+private fun Waveform.toTrackData(track: Track) = TrackData(track, overview, detail, detailPeaksPerSecond)

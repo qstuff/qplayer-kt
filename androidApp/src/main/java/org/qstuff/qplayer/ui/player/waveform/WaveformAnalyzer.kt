@@ -2,12 +2,13 @@ package org.qstuff.qplayer.ui.player.waveform
 
 import android.content.Context
 import kotlinx.coroutines.isActive
+import org.qstuff.qplayer.ui.player.Waveform
 import org.qstuff.qplayer.ui.player.WaveformPeaks
 import org.qstuff.qplayer.ui.player.audio.AudioDecoder
 import kotlin.coroutines.coroutineContext
 
 /**
- * Generates an overview waveform (one peak-amplitude byte per output point) from an audio file,
+ * Generates the [Waveform] (overview + detail peaks) of an audio file,
  * decoded by [AudioDecoder] (platform codecs only — no native/3rd-party deps).
  *
  * Cooperates with cancellation, so the caller can cancel it when the track changes. Streams the
@@ -22,9 +23,10 @@ object WaveformAnalyzer {
         context: Context,
         uri: String,
         points: Int = DEFAULT_POINTS,
-        onProgress: (ByteArray) -> Unit = {}
-    ): ByteArray? {
-        var peaks = WaveformPeaks(points, expectedFrames = -1)
+        onProgress: (Waveform) -> Unit = {}
+    ): Waveform? {
+        // Replaced in onFormat (before the first PCM chunk) with the decoder's real format.
+        var peaks = WaveformPeaks(points, expectedFrames = -1, sampleRate = 44_100.0)
         var framesInPeak = 0
         var currentPeak = 0
         // Reused copy of each PCM chunk: a bulk get() into a ShortArray is several times faster
@@ -35,7 +37,7 @@ object WaveformAnalyzer {
             context, uri,
             onFormat = { sampleRate, _, durationUs ->
                 val frames = if (durationUs > 0) durationUs * sampleRate / 1_000_000 else -1L
-                peaks = WaveformPeaks(points, frames)
+                peaks = WaveformPeaks(points, frames, sampleRate.toDouble())
             }
         ) { shorts, channels ->
             val count = shorts.remaining()
